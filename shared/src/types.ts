@@ -122,6 +122,39 @@ export interface Bootstrap {
   members: Member[];
 }
 
+/** A to-do ("Call the plumber"), or prep: something to pack or do before a day ("Gym shoes"). */
+export type TodoKind = 'todo' | 'prep';
+
+export interface Todo {
+  id: number;
+  kind: TodoKind;
+  text: string;
+  icon: string;
+  /** Null means anyone in the family. */
+  assigneeId: number | null;
+  /** Null means someday (to-dos only; prep always has a day). */
+  due: Ymd | null;
+  doneAt: string | null;
+}
+
+/** One thing to get ready for a day: an event's "bring" note or a prep item. */
+export interface PrepItem {
+  /** `event:<eventId>:<date>` or `todo:<id>`. */
+  key: string;
+  date: Ymd;
+  text: string;
+  icon: string;
+  memberIds: number[];
+  done: boolean;
+  /** Set for an event's bring note. */
+  eventId: number | null;
+  eventTitle: string | null;
+  /** When the event starts (minutes after midnight); null for all-day events and prep items. */
+  startMin: number | null;
+  /** Set for a prep item. */
+  todoId: number | null;
+}
+
 /** A subscribed ICS feed (school, team, a Google/Outlook secret link). */
 export interface Calendar {
   id: number;
@@ -158,4 +191,4 @@ export interface SyncResult {
 }
 
 /** Topics pushed over the live socket so every screen refreshes what changed. */
-export type LiveTopic = 'events' | 'plans' | 'chores' | 'bills' | 'members' | 'settings' | 'calendars';
+export type LiveTopic = 'events' | 'plans' | 'chores' | 'bills' | 'members' | 'settings' | 'calendars' | 'todos';

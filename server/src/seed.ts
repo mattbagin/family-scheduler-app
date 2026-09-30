@@ -84,6 +84,16 @@ export function seedSample(db: Db, today: Ymd): { adultIds: number[] } {
     run(db, 'INSERT INTO bills (name, icon, amount_cents, due, monthly, autopay) VALUES (?, ?, ?, ?, 1, 1)', 'Internet', '📶', 8900, d(5));
     run(db, 'INSERT INTO bills (name, icon, amount_cents, due) VALUES (?, ?, ?, ?)', 'Swim lessons (fall)', '🏊', 12000, d(9));
 
+    const now = new Date().toISOString();
+    const todo = (kind: 'todo' | 'prep', text: string, icon: string, who: number | null, due: number | null) =>
+      run(db, 'INSERT INTO todos (kind, text, icon, assignee_id, due, created_at) VALUES (?, ?, ?, ?, ?, ?)',
+        kind, text, icon, who, due === null ? null : d(due), now);
+    todo('todo', 'Sign Emma’s field trip form', '✍️', mom, 1);
+    todo('todo', 'Call the plumber about the drip', '📞', dad, 2);
+    todo('todo', 'Book flu shots', '💉', mom, null);
+    todo('prep', 'Gym shoes', '👟', emma, 2);
+    todo('prep', 'Water bottle', '💧', leo, 1);
+
     return { adultIds: [mom, dad] };
   });
 }

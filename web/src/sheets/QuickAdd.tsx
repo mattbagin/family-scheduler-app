@@ -1,58 +1,86 @@
 import { useMemo, useState } from 'react';
 import {
-  addDays, addMinutes, dayLabel, fmtShortDate, fmtTime, parseQuickAdd, weekdayMon, withMinutes, type Plan,
+  addDays, addMinutes, dayLabel, describeRRule, EVENT_ICONS, fmtShortDate, fmtTime, parseQuickAdd, withMinutes, type Plan, type TodoKind,
 } from '@shared';
 import { api } from '../api.ts';
 import { namesOf, useAction, useFamily, useNow } from '../context.tsx';
+import { todoFromText } from '../todos.tsx';
 import { Face, pc, Sheet, useSheets } from '../ui.tsx';
 import { EventForm, type EventDraft } from './EventForm.tsx';
 import { PlanSheet } from './PlanSheet.tsx';
 
-const DAY_CODES = ['MO', 'TU', 'WE', 'TH', 'FR', 'SA', 'SU'];
+type Mode = 'event' | 'todo' | 'plan';
 
-export function QuickAdd({ mode: initialMode = 'event' }: { mode?: 'event' | 'plan' }) {
+export function QuickAdd({ mode: initialMode = 'event' }: { mode?: Mode }) {
   const [mode, setMode] = useState(initialMode);
+  // Shared, so text typed as an event can become a to-do without retyping.
+  const [text, setText] = useState('');
   return (
     <Sheet title="What’s happening?">
       <div className="seg" role="tablist">
-        <button role="tab" aria-selected={mode === 'event'} onClick={() => setMode('event')}>Single event</button>
+        <button role="tab" aria-selected={mode === 'event'} onClick={() => setMode('event')}>Event</button>
+        <button role="tab" aria-selected={mode === 'todo'} onClick={() => setMode('todo')}>To-do or packing</button>
         <button role="tab" aria-selected={mode === 'plan'} onClick={() => setMode('plan')}>Plan with tasks</button>
       </div>
-      {mode === 'event' ? <EventQuick /> : <PlanQuick />}
+      {mode === 'event' && <EventQuick text={text} setText={setText} toTodo={() => setMode('todo')} />}
+      {mode === 'todo' && <TodoQuick text={text} setText={setText} />}
+      {mode === 'plan' && <PlanQuick />}
     </Sheet>
   );
 }
 
-function EventQuick() {
+function Examples({ list, onPick }: { list: string[]; onPick: (x: string) => void }) {
+  return <div className="row">{list.map((x) => <button key={x} className="mini-btn" onClick={() => onPick(x)}>{x}</button>)}</div>;
+}
+
+function EventQuick({ text, setText, toTodo }: { text: string; setText: (t: string) => void; toTodo: () => void }) {
   const f = useFamily();
   const act = useAction();
   const sheets = useSheets();
   const { today } = useNow();
-  const [text, setText] = useState('');
-  const [whoOverride, setWhoOverride] = useState<number[] | null>(null);
+  // Choices made on the card win over what was typed, until the text changes.
+  const [whoPick, setWhoPick] = useState<number[] | null>(null);
+  const [iconPick, setIconPick] = useState<string | null>(null);
+  const [driverId, setDriverId] = useState<number | null>(null);
   const parsed = useMemo(() => parseQuickAdd(text, f.members, today), [text, f.members, today]);
-  const who = whoOverride ?? parsed?.memberIds ?? [];
-  const firstName = f.members.find((m) => m.role === 'kid')?.name ?? f.members[0]?.name ?? 'Emma';
-  const examples = [`Swim Tuesday 4pm ${firstName} weekly at Aquatic Centre`, 'Dentist tomorrow 10am', 'Pizza night Friday 6pm family'];
+  const who = whoPick ?? parsed?.memberIds ?? [];
+  const icon = iconPick ?? parsed?.icon ?? '📅';
+  const adults = f.members.filter((m) => m.role === 'adult');
+  const hasKid = who.some((id) => f.byId(id)?.role === 'kid');
+  const kid = f.members.find((m) => m.role === 'kid')?.name ?? 'Emma';
+  const examples = [`Swim every Tue and Thu 4-5pm ${kid} at Aquatic Centre`, 'Dentist Oct 12 10am Mom', 'Pizza night Friday 6pm family'];
+
+  const onText = (t: string) => {
+    setText(t);
+    setWhoPick(null);
+    setIconPick(null);
+  };
 
   const draft = (): EventDraft | null => {
     if (!parsed) return null;
     const date = parsed.date ?? today;
-    const start = withMinutes(date, parsed.startMin ?? 16 * 60);
+    const start = parsed.allDay ? `${date}T00:00` : withMinutes(date, parsed.startMin ?? 16 * 60);
+    const length = parsed.startMin !== null && parsed.endMin !== null ? parsed.endMin - parsed.startMin : 60;
     return {
-      title: parsed.title, icon: parsed.icon, category: parsed.category, start, end: addMinutes(start, 60),
-      memberIds: who, location: parsed.location,
-      rrule: parsed.weekly ? `FREQ=WEEKLY;BYDAY=${DAY_CODES[weekdayMon(date)]}` : null,
+      title: parsed.title, icon, category: parsed.category, start, end: parsed.allDay ? `${addDays(date, 1)}T00:00` : addMinutes(start, length),
+      allDay: parsed.allDay, memberIds: who, location: parsed.location, rrule: parsed.rrule, driverId: hasKid ? driverId : null,
     };
   };
-  const ready = !!parsed && parsed.date !== null && parsed.startMin !== null && who.length > 0;
+  const timed = !!parsed && (parsed.allDay || parsed.startMin !== null);
+  const ready = !!parsed && parsed.date !== null && timed && who.length > 0;
+  const when = parsed && [
+    parsed.date === null ? null : `${dayLabel(today, parsed.date)}${addDays(today, 1) < parsed.date ? `, ${fmtShortDate(parsed.date)}` : ''}`,
+    parsed.allDay ? 'all day'
+      : parsed.startMin === null ? null
+        : `${fmtTime(parsed.startMin)}${parsed.endMin !== null ? ` – ${fmtTime(parsed.endMin)}` : ''}`,
+  ].filter(Boolean).join(' · ');
 
   const add = async () => {
     const d = draft();
     if (!ready || !d || !parsed) return;
     const ok = await act(
       () => api('/events', { method: 'POST', body: d }),
-      `Added ${parsed.title} · ${dayLabel(today, parsed.date!)} ${fmtTime(parsed.startMin!)} · ${namesOf(f, who)}${parsed.weekly ? ' · weekly' : ''}`,
+      `Added ${parsed.title} · ${when} · ${namesOf(f, who)}${parsed.rrule ? ` · ${describeRRule(parsed.rrule)}` : ''}`,
     );
     if (ok) sheets.close();
   };
@@ -65,35 +93,55 @@ function EventQuick() {
         value={text}
         autoFocus
         autoComplete="off"
-        placeholder="e.g. Soccer Thursday 5pm Emma weekly"
-        onChange={(e) => { setText(e.target.value); setWhoOverride(null); }}
+        placeholder="e.g. Soccer Thursday 5-6pm Emma weekly"
+        onChange={(e) => onText(e.target.value)}
         onKeyDown={(e) => e.key === 'Enter' && add()}
       />
-      {!text && (
-        <div className="row">
-          {examples.map((x) => <button key={x} className="mini-btn" onClick={() => setText(x)}>{x}</button>)}
-        </div>
-      )}
+      {!text && <Examples list={examples} onPick={onText} />}
       {parsed && (
         <>
           <dl className="details">
-            <dt>What</dt><dd>{parsed.icon} <b>{parsed.title}</b></dd>
+            <dt>What</dt><dd>{icon} <b>{parsed.title}</b></dd>
             <dt>When</dt>
             <dd>
-              {parsed.date === null ? <span className="pill warn">Add a day</span> : `${dayLabel(today, parsed.date)}${addDays(today, 1) < parsed.date ? ` ${fmtShortDate(parsed.date)}` : ''}`}{' '}
-              {parsed.startMin === null ? <span className="pill warn">Add a time</span> : `at ${fmtTime(parsed.startMin)}`}
-              {parsed.weekly && ' · repeats weekly'}
+              {when}{' '}
+              {parsed.date === null && <span className="pill warn">Add a day</span>}{' '}
+              {!timed && <span className="pill warn">Add a time, or “all day”</span>}
             </dd>
+            {parsed.rrule && <><dt>Repeats</dt><dd>🔁 {describeRRule(parsed.rrule)}</dd></>}
             {parsed.location && <><dt>Where</dt><dd>📍 {parsed.location}</dd></>}
           </dl>
+          {!timed && (
+            <button className="mini-btn" style={{ alignSelf: 'flex-start' }} onClick={toTodo}>No set time? Save it as a to-do instead →</button>
+          )}
           <div className="stack" style={{ gap: 8 }}>
             <div className="label">Who’s going?</div>
             <div className="toggles">
               {f.members.map((m) => (
                 <button key={m.id} className="tog" style={pc(m.color)} aria-pressed={who.includes(m.id)}
-                  onClick={() => setWhoOverride(who.includes(m.id) ? who.filter((x) => x !== m.id) : [...who, m.id])}>
+                  onClick={() => setWhoPick(who.includes(m.id) ? who.filter((x) => x !== m.id) : [...who, m.id])}>
                   <Face m={m} />{m.name}
                 </button>
+              ))}
+            </div>
+          </div>
+          {hasKid && adults.length > 0 && (
+            <div className="stack" style={{ gap: 8 }}>
+              <div className="label">Who’s driving?</div>
+              <div className="toggles">
+                {adults.map((m) => (
+                  <button key={m.id} className="tog" style={pc(m.color)} aria-pressed={driverId === m.id} onClick={() => setDriverId(driverId === m.id ? null : m.id)}>
+                    <Face m={m} />{m.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+          <div className="stack" style={{ gap: 8 }}>
+            <div className="label">Picture</div>
+            <div className="emoji-grid">
+              {[icon, ...EVENT_ICONS.filter((x) => x !== icon)].slice(0, 12).map((e) => (
+                <button key={e} aria-pressed={icon === e} onClick={() => setIconPick(e)}>{e}</button>
               ))}
             </div>
           </div>
@@ -102,6 +150,84 @@ function EventQuick() {
       <div className="row-end">
         <button className="icon-btn" onClick={() => sheets.replace(<EventForm draft={draft() ?? { title: text }} />)}>More options…</button>
         <button className="primary" disabled={!ready} onClick={add}>Add to calendar</button>
+      </div>
+    </>
+  );
+}
+
+/** A to-do ("Call the plumber Friday") or something to pack ("Pack gym shoes Thursday Emma"). */
+function TodoQuick({ text, setText }: { text: string; setText: (t: string) => void }) {
+  const f = useFamily();
+  const act = useAction();
+  const sheets = useSheets();
+  const { today } = useNow();
+  const [kindPick, setKindPick] = useState<TodoKind | null>(null);
+  const [whoPick, setWhoPick] = useState<number | null | undefined>(undefined);
+  const [duePick, setDuePick] = useState<string | null | undefined>(undefined);
+  const base = useMemo(() => todoFromText(text, f.members, today, null), [text, f.members, today]);
+  const kind = kindPick ?? base?.kind ?? 'todo';
+  const who = whoPick !== undefined ? whoPick : (base?.assigneeId ?? null);
+  const due = duePick !== undefined ? duePick : (base?.due ?? (kind === 'prep' ? addDays(today, 1) : null));
+  const kid = f.members.find((m) => m.role === 'kid')?.name ?? 'Emma';
+  const ready = !!base && (kind === 'todo' || !!due);
+
+  const onText = (t: string) => {
+    setText(t);
+    setKindPick(null);
+    setWhoPick(undefined);
+    setDuePick(undefined);
+  };
+  const add = async () => {
+    if (!ready || !base) return;
+    const body = { kind, text: base.text, assigneeId: who, due };
+    const whose = who ? `${f.byId(who)?.name}’s` : 'the family';
+    const ok = await act(() => api('/todos', { method: 'POST', body }), `Added “${base.text}” to ${whose} ${kind === 'prep' ? 'packing list' : 'to-dos'}`);
+    if (ok) sheets.close();
+  };
+
+  return (
+    <>
+      <input
+        id="qa-todo"
+        className="big-input"
+        value={text}
+        autoFocus
+        autoComplete="off"
+        placeholder="e.g. Call the plumber Friday"
+        onChange={(e) => onText(e.target.value)}
+        onKeyDown={(e) => e.key === 'Enter' && add()}
+      />
+      {!text && <Examples list={['Call the plumber Friday Dad', `Pack gym shoes Thursday ${kid}`, 'Sign the permission slip tomorrow Mom']} onPick={onText} />}
+      {base && (
+        <>
+          <div className="toggles">
+            <button className="tog plain" aria-pressed={kind === 'todo'} onClick={() => setKindPick('todo')}>✅ To-do</button>
+            <button className="tog plain" aria-pressed={kind === 'prep'} onClick={() => setKindPick('prep')}>🎒 Pack or get ready</button>
+          </div>
+          <dl className="details">
+            <dt>What</dt><dd><b>{base.text}</b></dd>
+            <dt>{kind === 'prep' ? 'Ready by' : 'Due'}</dt>
+            <dd className="row" style={{ gap: 8 }}>
+              <input type="date" className="inline-select" style={{ width: 'auto' }} value={due ?? ''} min={today} aria-label="Day"
+                onChange={(e) => setDuePick(e.target.value || null)} />
+              {due ? dayLabel(today, due) : 'No day (someday)'}
+            </dd>
+          </dl>
+          <div className="stack" style={{ gap: 8 }}>
+            <div className="label">Whose is it?</div>
+            <div className="toggles">
+              {f.members.map((m) => (
+                <button key={m.id} className="tog" style={pc(m.color)} aria-pressed={who === m.id} onClick={() => setWhoPick(who === m.id ? null : m.id)}>
+                  <Face m={m} />{m.name}
+                </button>
+              ))}
+              <button className="tog plain" aria-pressed={who === null} onClick={() => setWhoPick(null)}>Anyone</button>
+            </div>
+          </div>
+        </>
+      )}
+      <div className="row-end">
+        <button className="primary" disabled={!ready} onClick={add}>{kind === 'prep' ? 'Add to the packing list' : 'Add to-do'}</button>
       </div>
     </>
   );

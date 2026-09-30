@@ -3,10 +3,11 @@ import { addDays, dayLabel, fmtShortDate, fmtTime, type ChoreForDay } from '@sha
 import { api } from '../api.ts';
 import { namesOf, useAction, useFamily, useNow } from '../context.tsx';
 import { mainRange, money, occDate, personItems, type PersonItem, relDay } from '../lib.ts';
-import { useBills, useChores, useOccurrences, usePlans } from '../queries.ts';
+import { useBills, useChores, useOccurrences, usePlans, usePrep, useTodos } from '../queries.ts';
 import { EventSheet } from '../sheets/EventSheet.tsx';
 import { TaskRow, useToggleTask } from '../sheets/PlanSheet.tsx';
-import { Avatar, burstFrom, chime, pc, useSheets, useToast } from '../ui.tsx';
+import { AddTodo, PrepList, PrepTiles, TodoRow, useToggleTodo } from '../todos.tsx';
+import { Avatar, burstFrom, celebrate, chime, pc, useSheets, useToast } from '../ui.tsx';
 
 export function useToggleChore() {
   const f = useFamily();
@@ -22,7 +23,8 @@ export function useToggleChore() {
     if (ok && done) {
       const left = all.filter((x) => x.assigneeId === c.assigneeId && x.scheduled && !x.done && x.id !== c.id).length;
       const name = f.byId(c.assigneeId)?.name ?? '';
-      toast(left ? `Nice one, ${name}! ${left} to go.` : `All jobs done, ${name}! ⭐`);
+      if (left) toast(`Nice one, ${name}! ${left} to go.`);
+      else celebrate(`All jobs done, ${name}!`);
     }
   };
 }
@@ -47,7 +49,10 @@ export function Person() {
   const { data: plans = [] } = usePlans();
   const { data: chores = [] } = useChores(today);
   const { data: bills = [] } = useBills();
+  const { data: todos = [] } = useTodos();
+  const { data: prep = [] } = usePrep(today, addDays(today, 2), nowMin);
   const toggleTask = useToggleTask();
+  const toggleTodo = useToggleTodo();
   const m = f.byId(Number(id));
   if (!m) return <Navigate to="/" replace />;
 
@@ -56,6 +61,9 @@ export function Person() {
   const label = (i: PersonItem) => (i.drive ? `Drive ${namesOf(f, i.occ.memberIds)} to ${i.occ.title.toLowerCase()}` : i.occ.title);
   const isKid = m.role === 'kid';
   const myChores = chores.filter((c) => c.assigneeId === m.id && c.scheduled);
+  const myPrep = prep.filter((p) => p.memberIds.includes(m.id));
+  const myTodos = todos.filter((t) => t.kind === 'todo' && t.assigneeId === m.id);
+  const anyones = isKid ? [] : todos.filter((t) => t.kind === 'todo' && t.assigneeId === null);
   const tasks = plans
     .flatMap((p) => p.tasks.filter((t) => t.assigneeId === m.id).map((t) => ({ t, p })))
     .sort((a, b) => Number(!!a.t.doneAt) - Number(!!b.t.doneAt) || (a.t.due < b.t.due ? -1 : 1));
@@ -116,10 +124,37 @@ export function Person() {
               <div className="tiles">{myChores.map((c) => <ChoreTile key={c.id} c={c} all={chores} />)}</div>
             </section>
           )}
+          {myPrep.length > 0 && (
+            <section className="panel">
+              <div className="panel-head"><h2>Get ready</h2><span className="note">{myPrep.filter((p) => !p.done).length} to pack</span></div>
+              {isKid ? <PrepTiles items={myPrep} /> : <PrepList items={myPrep} showWho={false} />}
+            </section>
+          )}
+          {!isKid && (
+            <section className="panel">
+              <div className="panel-head">
+                <h2>To-dos</h2>
+                <span className="note">{myTodos.filter((t) => !t.doneAt).length} open{f.session.kind !== 'hub' ? ' · swipe right when done, left for tomorrow' : ''}</span>
+              </div>
+              {myTodos.length ? <div className="tasks">{myTodos.map((t) => <TodoRow key={t.id} todo={t} />)}</div> : <p className="note">Nothing on the list.</p>}
+              {anyones.length > 0 && (
+                <>
+                  <div className="label">Anyone can do these</div>
+                  <div className="tasks">{anyones.map((t) => <TodoRow key={t.id} todo={t} />)}</div>
+                </>
+              )}
+              {f.canEdit && <AddTodo assigneeId={m.id} />}
+            </section>
+          )}
           <section className="panel">
-            <div className="panel-head"><h2>{isKid ? 'Helping with plans' : 'My tasks'}</h2><span className="note">{tasks.filter((x) => !x.t.doneAt).length} to do</span></div>
-            {!tasks.length ? <p className="note">No tasks assigned.</p> : isKid ? (
+            <div className="panel-head"><h2>{isKid ? 'My tasks' : 'Plan tasks'}</h2><span className="note">{tasks.filter((x) => !x.t.doneAt).length + (isKid ? myTodos.filter((t) => !t.doneAt).length : 0)} to do</span></div>
+            {!tasks.length && !(isKid && myTodos.length) ? <p className="note">No tasks assigned.</p> : isKid ? (
               <div className="tiles">
+                {myTodos.map((t) => (
+                  <button key={`todo-${t.id}`} className={`tile ${t.doneAt ? 'is-done' : ''}`} aria-pressed={!!t.doneAt} onClick={(e) => toggleTodo(t, e.currentTarget)}>
+                    <span className="e">{t.icon}</span>{t.text}{t.due && <span className="note">{dayLabel(today, t.due)}</span>}
+                  </button>
+                ))}
                 {tasks.map(({ t, p }) => (
                   <button key={t.id} className={`tile ${t.doneAt ? 'is-done' : ''}`} aria-pressed={!!t.doneAt} onClick={(e) => toggleTask(t, p, e.currentTarget)}>
                     <span className="e">{t.icon}</span>{t.text}<span className="note">{p.icon} {dayLabel(today, t.due)}</span>

@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
-import type { Bill, Bootstrap, Calendar, ChoreForDay, LiveTopic, Occurrence, Plan, Ymd } from '@shared';
+import type { Bill, Bootstrap, Calendar, ChoreForDay, LiveTopic, Occurrence, Plan, PrepItem, Todo, Ymd } from '@shared';
 import { api } from './api.ts';
 
 export const useBootstrap = () => useQuery({ queryKey: ['bootstrap'], queryFn: () => api<Bootstrap>('/bootstrap') });
@@ -16,6 +16,13 @@ export const useOccurrences = (from: Ymd, to: Ymd, enabled = true) =>
 export const usePlans = () => useQuery({ queryKey: ['plans'], queryFn: () => api<Plan[]>('/plans') });
 export const useChores = (date: Ymd) => useQuery({ queryKey: ['chores', date], queryFn: () => api<ChoreForDay[]>(`/chores?date=${date}`) });
 export const useBills = () => useQuery({ queryKey: ['bills'], queryFn: () => api<Bill[]>('/bills') });
+export const useTodos = () => useQuery({ queryKey: ['todos'], queryFn: () => api<Todo[]>('/todos') });
+/** What to get ready from today on; today's bring notes drop off once their event has started. */
+export function usePrep(today: Ymd, to: Ymd, nowMin: number) {
+  const q = useQuery({ queryKey: ['prep', today, to], queryFn: () => api<PrepItem[]>(`/prep?from=${today}&to=${to}`), placeholderData: (prev) => prev });
+  const items = (q.data ?? []).filter((p) => p.date !== today || p.startMin === null || p.startMin > nowMin);
+  return { ...q, data: items };
+}
 export const useCalendars = () => useQuery({ queryKey: ['calendars'], queryFn: () => api<Calendar[]>('/calendars') });
 
 /** The subscribed calendar an event comes from; undefined for the family's own events. */
@@ -25,13 +32,14 @@ export function useFeed(calendarId: number | null | undefined): Calendar | undef
 }
 
 const TOPIC_KEYS: Record<LiveTopic, string[][]> = {
-  events: [['occurrences'], ['plans']],
+  events: [['occurrences'], ['plans'], ['prep']],
   plans: [['plans'], ['occurrences']],
   chores: [['chores']],
   bills: [['bills']],
-  members: [['bootstrap'], ['occurrences'], ['plans'], ['chores'], ['calendars']],
+  members: [['bootstrap'], ['occurrences'], ['plans'], ['chores'], ['calendars'], ['todos'], ['prep']],
   settings: [['bootstrap']],
   calendars: [['calendars']],
+  todos: [['todos'], ['prep']],
 };
 
 /**

@@ -1,6 +1,7 @@
 import {
-  addDays, expandEvent,
-  type Bill, type Calendar, type Category, type Chore, type EventRecord, type Member, type Occurrence, type OccurrencePatch, type Plan, type PlanTask, type Ymd,
+  addDays, datePart, expandEvent, minutesOf,
+  type Bill, type Calendar, type Category, type Chore, type EventRecord, type Member, type Occurrence, type OccurrencePatch, type Plan,
+  type PlanTask, type PrepItem, type Todo, type TodoKind, type Ymd,
 } from '../../shared/src/index.ts';
 import { all, get, type Db } from './db.ts';
 import { notFound } from './http.ts';
@@ -249,4 +250,59 @@ export function getCalendar(db: Db, id: number, showUrl = true): Calendar {
 export function feedOf(db: Db, ev: EventRecord): { id: number; name: string } | null {
   if (ev.calendarId === null) return null;
   return get<{ id: number; name: string }>(db, "SELECT id, name FROM calendars WHERE id = ? AND kind = 'ics'", ev.calendarId) ?? null;
+}
+
+/* ---------- to-dos and prep ---------- */
+
+interface TodoRow {
+  id: number;
+  kind: TodoKind;
+  text: string;
+  icon: string;
+  assignee_id: number | null;
+  due: string | null;
+  done_at: string | null;
+}
+
+const toTodo = (r: TodoRow): Todo => ({
+  id: r.id, kind: r.kind, text: r.text, icon: r.icon, assigneeId: r.assignee_id, due: r.due, doneAt: r.done_at,
+});
+
+export function getTodo(db: Db, id: number): Todo {
+  const row = get<TodoRow>(db, 'SELECT * FROM todos WHERE id = ?', id);
+  if (!row) throw notFound('To-do');
+  return toTodo(row);
+}
+
+/** Everything still open, plus what was finished since `doneSince` so it can show ticked. */
+export function listTodos(db: Db, doneSince: string): Todo[] {
+  return all<TodoRow>(
+    db,
+    'SELECT * FROM todos WHERE done_at IS NULL OR done_at >= ? ORDER BY due IS NULL, due, id',
+    doneSince,
+  ).map(toTodo);
+}
+
+/** What to get ready on each day in [from, to): events' bring notes and prep items. */
+export function prepBetween(db: Db, from: Ymd, to: Ymd): PrepItem[] {
+  const packed = new Set(
+    all<{ event_id: number; date: string }>(db, 'SELECT event_id, date FROM packed WHERE date >= ? AND date < ?', from, to)
+      .map((r) => `${r.event_id}:${r.date}`),
+  );
+  // An event runs on its first day; a bring note belongs to that day even if the event is longer.
+  const fromEvents = occurrencesBetween(db, from, to)
+    .filter((o) => o.bring && datePart(o.start) >= from)
+    .map((o): PrepItem => {
+      const date = datePart(o.start);
+      return {
+        key: `event:${o.id}:${date}`, date, text: o.bring!, icon: o.icon, memberIds: o.memberIds,
+        done: packed.has(`${o.id}:${date}`), eventId: o.id, eventTitle: o.title, startMin: o.allDay ? null : minutesOf(o.start), todoId: null,
+      };
+    });
+  const fromTodos = all<TodoRow>(db, "SELECT * FROM todos WHERE kind = 'prep' AND due >= ? AND due < ? ORDER BY id", from, to)
+    .map((r): PrepItem => ({
+      key: `todo:${r.id}`, date: r.due!, text: r.text, icon: r.icon, memberIds: r.assignee_id ? [r.assignee_id] : [],
+      done: !!r.done_at, eventId: null, eventTitle: null, startMin: null, todoId: r.id,
+    }));
+  return [...fromEvents, ...fromTodos].sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
 }

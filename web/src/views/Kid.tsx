@@ -1,9 +1,10 @@
 import { Link, Navigate, useParams } from 'react-router-dom';
-import { dayDiff, fmtTime, minutesOf } from '@shared';
+import { addDays, dayDiff, dayLabel, fmtTime, minutesOf } from '@shared';
 import { useFamily, useNow } from '../context.tsx';
 import { endAbs, mainRange, occDate, sleepsWord, startAbs } from '../lib.ts';
-import { useChores, useOccurrences, usePlans } from '../queries.ts';
+import { useChores, useOccurrences, usePlans, usePrep, useTodos } from '../queries.ts';
 import { useToggleTask } from '../sheets/PlanSheet.tsx';
+import { PrepTiles, useToggleTodo } from '../todos.tsx';
 import { Avatar, ClockFace, Face, pc } from '../ui.tsx';
 import { ChoreTile } from './Person.tsx';
 
@@ -16,7 +17,10 @@ export function Kid() {
   const { data: occs = [] } = useOccurrences(range.from, range.to);
   const { data: chores = [] } = useChores(today);
   const { data: plans = [] } = usePlans();
+  const { data: prep = [] } = usePrep(today, addDays(today, 2), nowMin);
+  const { data: todos = [] } = useTodos();
   const toggleTask = useToggleTask();
+  const toggleTodo = useToggleTodo();
   const kids = f.members.filter((m) => m.role === 'kid');
   const fallback = f.me?.role === 'kid' ? f.me : kids[0];
   if (!id) return fallback ? <Navigate to={`/kid/${fallback.id}`} replace /> : <p className="empty">Add a kid in Settings to use kid mode.</p>;
@@ -31,6 +35,8 @@ export function Kid() {
   const later = up.slice(1);
   const late = nowMin > 19.5 * 60;
   const myChores = chores.filter((c) => c.assigneeId === k.id && c.scheduled);
+  const myPrep = prep.filter((p) => p.memberIds.includes(k.id));
+  const myTodos = todos.filter((t) => t.kind === 'todo' && t.assigneeId === k.id);
   const seen = new Set<number>();
   const sleeps = occs
     .filter((o) => o.fun && o.memberIds.includes(k.id) && occDate(o) > today)
@@ -86,6 +92,21 @@ export function Kid() {
         <div className="col">
           {myChores.length > 0 && (
             <section className="panel"><h2>My jobs</h2><div className="tiles">{myChores.map((c) => <ChoreTile key={c.id} c={c} all={chores} />)}</div></section>
+          )}
+          {myPrep.length > 0 && (
+            <section className="panel"><h2>🎒 Get ready</h2><PrepTiles items={myPrep} /></section>
+          )}
+          {myTodos.length > 0 && (
+            <section className="panel">
+              <h2>Things to do</h2>
+              <div className="tiles">
+                {myTodos.map((t) => (
+                  <button key={t.id} className={`tile ${t.doneAt ? 'is-done' : ''}`} aria-pressed={!!t.doneAt} onClick={(e) => toggleTodo(t, e.currentTarget)}>
+                    <span className="e">{t.icon}</span>{t.text}{t.due && <span className="note">{dayLabel(today, t.due)}</span>}
+                  </button>
+                ))}
+              </div>
+            </section>
           )}
           {plans.map((p) => {
             const ts = p.tasks.filter((t) => t.assigneeId === k.id);

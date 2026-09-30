@@ -94,10 +94,14 @@ export function requireEditor(req: FastifyRequest): Auth {
   return a;
 }
 
-/** Anyone can tick off jobs on the hub; on their own device a kid can only tick off their own. */
-export function requireCanComplete(req: FastifyRequest, assigneeId: number | null) {
+/**
+ * Anyone can tick off jobs on the hub; on their own device a kid can only tick off their own
+ * (for something several people share, like packing for an event, any of them can).
+ */
+export function requireCanComplete(req: FastifyRequest, assignee: number | null | number[]) {
   const a = requireAuth(req);
-  if (a.kind === 'member' && a.member?.role === 'kid' && a.member.id !== assigneeId && !canEdit(a)) {
+  const mine = Array.isArray(assignee) ? assignee.includes(a.member?.id ?? 0) : a.member?.id === assignee;
+  if (a.kind === 'member' && a.member?.role === 'kid' && !mine && !canEdit(a)) {
     throw new HttpError(403, 'not_yours', 'That job belongs to someone else');
   }
 }

@@ -135,7 +135,7 @@ export function memberRoutes(app: FastifyInstance, { db, changed }: Ctx) {
     const row = getMemberRow(db, idParam(req.params));
     if (row.role === 'adult' && adultsWithPin(row.id) === 0) throw badRequest('At least one parent with a PIN is needed');
     run(db, 'DELETE FROM members WHERE id = ?', row.id);
-    changed('members', 'events', 'plans', 'chores');
+    changed('members', 'events', 'plans', 'chores', 'todos');
     return reply.status(204).send();
   });
 

@@ -5,11 +5,13 @@ import {
 import { api } from '../api.ts';
 import { namesOf, useAction, useFamily, useNow } from '../context.tsx';
 import { dueLabel, endAbs, leaveBy, mainRange, money, occDate, sleepsWord, startAbs, relDay } from '../lib.ts';
-import { useBills, useCalendars, useChores, useOccurrences, usePlans } from '../queries.ts';
+import { useBills, useCalendars, useChores, useOccurrences, usePlans, usePrep, useTodos } from '../queries.ts';
 import { EventSheet } from '../sheets/EventSheet.tsx';
 import { PlanSheet } from '../sheets/PlanSheet.tsx';
 import { QuickAdd } from '../sheets/QuickAdd.tsx';
+import { PrepList } from '../todos.tsx';
 import { Avatar, Face, pc, useSheets } from '../ui.tsx';
+import { ChoreTile } from './Person.tsx';
 
 const WINDOW_MIN = 6 * 60;
 
@@ -19,6 +21,7 @@ interface Alert {
   title: string;
   text: string;
   action?: { label: string; run: () => void };
+  link?: string;
 }
 
 export function Today() {
@@ -32,6 +35,8 @@ export function Today() {
   const { data: chores = [] } = useChores(today);
   const { data: bills = [] } = useBills();
   const { data: calendars = [] } = useCalendars();
+  const { data: todos = [] } = useTodos();
+  const { data: prep = [] } = usePrep(today, addDays(today, 2), nowMin);
   const flags = computeFlags(occs, f.members);
   // Person color first; an unassigned event from a subscribed calendar takes the calendar's color.
   const colorOf = (o: Occurrence) => f.byId(o.memberIds[0])?.color ?? calendars.find((c) => c.id === o.calendarId)?.color;
@@ -65,12 +70,18 @@ export function Today() {
       action: { label: 'Assign', run: () => openOcc(rides[0]) },
     });
   }
-  const dueSoon = plans.flatMap((p) => p.tasks.filter((t) => !t.doneAt && dayDiff(today, t.due) <= 2).map((t) => ({ t, p })));
+  const dueSoon = [
+    ...plans.flatMap((p) => p.tasks.filter((t) => !t.doneAt && dayDiff(today, t.due) <= 2).map((t) => ({ ...t, plan: p as Plan | null }))),
+    ...todos.filter((t) => t.kind === 'todo' && !t.doneAt && t.due && dayDiff(today, t.due) <= 2).map((t) => ({ ...t, due: t.due!, plan: null })),
+  ].sort((a, b) => (a.due < b.due ? -1 : 1));
   if (dueSoon.length) {
+    const firstPlan = dueSoon.find((t) => t.plan)?.plan;
+    const firstPerson = dueSoon.find((t) => !t.plan && t.assigneeId)?.assigneeId;
     alerts.push({
-      cls: dueSoon.some(({ t }) => t.due < today) ? 'bad' : '', icon: '✅', title: `${dueSoon.length} task${dueSoon.length > 1 ? 's' : ''} due soon`,
-      text: dueSoon.map(({ t }) => `${f.byId(t.assigneeId)?.name ?? 'Anyone'}: ${t.text.toLowerCase()} (${dueLabel(today, t.due).toLowerCase()})`).join(' · '),
-      action: { label: 'Open', run: () => openPlan(dueSoon[0].p) },
+      cls: dueSoon.some((t) => t.due < today) ? 'bad' : '', icon: '✅', title: `${dueSoon.length} task${dueSoon.length > 1 ? 's' : ''} due soon`,
+      text: dueSoon.map((t) => `${f.byId(t.assigneeId)?.name ?? 'Anyone'}: ${t.text.toLowerCase()} (${dueLabel(today, t.due).toLowerCase()})`).join(' · '),
+      action: firstPlan ? { label: 'Open', run: () => openPlan(firstPlan) } : undefined,
+      link: !firstPlan && firstPerson ? `/person/${firstPerson}` : undefined,
     });
   }
   for (const b of bills) {
@@ -81,15 +92,21 @@ export function Today() {
       action: f.canEdit || f.session.kind === 'hub' ? { label: 'Mark paid', run: () => act(() => api(`/bills/${b.id}/pay`, { method: 'POST' }), `${b.name} marked paid`) } : undefined,
     });
   }
-  const pack = occs.filter((o) => o.bring && occDate(o) === addDays(today, 1));
+  const pack = prep.filter((p) => !p.done && p.date === addDays(today, 1));
   if (pack.length) {
-    alerts.push({ cls: '', icon: '🎒', title: 'Pack for tomorrow', text: pack.map((o) => `${o.bring} (${namesOf(f, o.memberIds)})`).join(' · ') });
+    alerts.push({
+      cls: '', icon: '🎒', title: 'Pack for tomorrow',
+      text: pack.map((p) => `${p.text}${p.memberIds.length ? ` (${namesOf(f, p.memberIds)})` : ''}`).join(' · '),
+    });
   }
 
   /* ---- people, plans, countdowns ---- */
   const openCount = (id: number) =>
     chores.filter((c) => c.assigneeId === id && c.scheduled && !c.done).length +
-    plans.reduce((n, p) => n + p.tasks.filter((t) => t.assigneeId === id && !t.doneAt && dayDiff(today, t.due) <= 2).length, 0);
+    plans.reduce((n, p) => n + p.tasks.filter((t) => t.assigneeId === id && !t.doneAt && dayDiff(today, t.due) <= 2).length, 0) +
+    todos.filter((t) => t.kind === 'todo' && t.assigneeId === id && !t.doneAt && t.due && dayDiff(today, t.due) <= 2).length +
+    prep.filter((p) => p.memberIds.includes(id) && !p.done).length;
+  const kidsWithJobs = f.members.filter((m) => m.role === 'kid' && chores.some((c) => c.assigneeId === m.id && c.scheduled));
   const activePlans = plans.filter((p) => p.start.slice(0, 10) >= today);
   const seen = new Set<number>();
   const countdowns = occs
@@ -122,6 +139,7 @@ export function Today() {
               <span className="ic">{a.icon}</span>
               <p><b>{a.title}</b>{a.text}</p>
               {a.action && <button className="act" onClick={a.action.run}>{a.action.label}</button>}
+              {a.link && <Link className="act" to={a.link} style={{ textDecoration: 'none' }}>Open</Link>}
             </div>
           ))}
         </div>
@@ -185,6 +203,33 @@ export function Today() {
         </section>
 
         <div className="side">
+          {kidsWithJobs.length > 0 && (
+            <section className="panel" aria-label="Chore chart">
+              <div className="panel-head"><h2>Today’s jobs</h2><span className="label">Tap when it’s done</span></div>
+              {kidsWithJobs.map((k) => {
+                const mine = chores.filter((c) => c.assigneeId === k.id && c.scheduled);
+                const done = mine.filter((c) => c.done).length;
+                return (
+                  <div key={k.id} className="chart-row" style={pc(k.color)}>
+                    <div className="who">
+                      <Avatar m={k} />{k.name}
+                      <span className="stars">{done === mine.length ? '⭐ All done!' : `${done} of ${mine.length}`}</span>
+                    </div>
+                    <div className="tiles">{mine.map((c) => <ChoreTile key={c.id} c={c} all={chores} />)}</div>
+                  </div>
+                );
+              })}
+            </section>
+          )}
+          {prep.length > 0 && (
+            <section className="panel">
+              <div className="panel-head">
+                <h2>Get ready</h2>
+                <button className="mini-btn" onClick={() => sheets.open(<QuickAdd mode="todo" />)}>+ Add</button>
+              </div>
+              <PrepList items={prep} />
+            </section>
+          )}
           <section className="panel">
             <div className="panel-head">
               <h2>Plans</h2>

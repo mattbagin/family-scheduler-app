@@ -170,6 +170,24 @@ export function burstFrom(el: Element | null) {
   burst(r.left + r.width / 2, r.top + r.height / 2);
 }
 
+/** The big one, for finishing every job: a star, a message, confetti everywhere and a fanfare. */
+export function celebrate(message: string) {
+  chime([523, 659, 784, 1047]);
+  if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    [0.2, 0.5, 0.8].forEach((x, i) => setTimeout(() => burst(innerWidth * x, innerHeight * 0.45), i * 180));
+  }
+  const el = document.createElement('div');
+  el.className = 'celebrate';
+  el.setAttribute('role', 'status');
+  const star = document.createElement('span');
+  star.textContent = '⭐';
+  const text = document.createElement('b');
+  text.textContent = message;
+  el.append(star, text);
+  document.body.append(el);
+  setTimeout(() => el.remove(), 2400);
+}
+
 let audio: AudioContext | null = null;
 export function chime(notes = [660, 880]) {
   try {

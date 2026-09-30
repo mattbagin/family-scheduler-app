@@ -32,7 +32,7 @@ server/src/   app.ts (Fastify wiring), db.ts + migrations/NNN_*.sql, repo.ts (ro
               http.ts (validators v.*, parseBody/parsePatch, HttpError), auth.ts, live.ts (websocket broadcast),
               routes/*.ts, ics/ (feed parser, zones, sync + poller), seed.ts (sample family)
 web/src/      App.tsx (shell/routes), api.ts, queries.ts (queries + live sync), context.tsx (useFamily/useAction/useNow),
-              ui.tsx (Sheet, Face, ConfirmButton, confetti), views/*, sheets/*
+              ui.tsx (Sheet, Face, ConfirmButton, confetti, celebrate), todos.tsx (to-do/prep rows, swipe, toggles), views/*, sheets/*
 ```
 
 ## Conventions that aren't obvious from one file
@@ -44,6 +44,7 @@ web/src/      App.tsx (shell/routes), api.ts, queries.ts (queries + live sync), 
 - **Every mutating route calls `changed(...topics)`** so the websocket tells other screens what to refetch. A new topic needs adding to `LiveTopic` (shared/types.ts) and `TOPIC_KEYS` (web/queries.ts).
 - **Auth levels:** `requireAuth` (anyone signed in), `requireEditor` (a parent, or the hub/kid device unlocked with a parent PIN for 10 minutes), `requireCanComplete` (kids may tick off only their own jobs).
 - **Validation:** request bodies go through `parseBody` / `parsePatch` with `v.*` checkers. Errors read `field: problem`, for example `title: must be non-empty text`.
+- **Four kinds of "task", four tables:** `chores` (repeat by weekday, ticked per date in `chore_completions`), `bills`, `plan_tasks` (inside a plan) and `todos` (`kind` 'todo' or 'prep'). An event's `bring` note ticked as packed lives in `packed` (per event and date). `GET /api/prep` merges bring notes and prep todos into one list.
 - **Subscribed (ICS) events:** sync writes only the feed's fields (title, start/end, all-day, rrule, exdates, location, notes). The family's fields (members, driver, needsDriver, travelMin, bring, kidTitle, icon, category, fun) sit on the same row and survive re-syncs, because rows are matched by `(calendar_id, ext_uid)`. The API returns 409 `read_only` for edits to feed fields, deleting a feed event, or moving an occurrence of one.
 - **UI copy** is plain, warm and short, written for parents and read aloud to kids. It uses curly quotes and apostrophes (’ “ ”), and error messages say what to do next.
 - **Tests:** API tests use `buildApp({ db: openDb(':memory:') })` + `app.inject`. The helpers are in `server/test/helpers.ts`. Feed tests run a local `node:http` server; fixtures are in `server/test/fixtures/` (`us-holidays.ics` is a real Google public feed). Background polling is off in tests (`pollFeeds` defaults to false).

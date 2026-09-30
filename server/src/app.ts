@@ -15,6 +15,7 @@ import { choreRoutes } from './routes/chores.ts';
 import { eventRoutes } from './routes/events.ts';
 import { memberRoutes } from './routes/members.ts';
 import { planRoutes } from './routes/plans.ts';
+import { todoRoutes } from './routes/todos.ts';
 
 export interface AppOptions {
   db: Db;
@@ -60,6 +61,7 @@ export async function buildApp({ db, webDist, logger = false, pollFeeds = false 
   planRoutes(app, ctx);
   choreRoutes(app, ctx);
   calendarRoutes(app, ctx);
+  todoRoutes(app, ctx);
 
   if (pollFeeds) {
     const stop = startPoller(db, ctx.changed);
