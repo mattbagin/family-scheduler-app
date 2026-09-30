@@ -21,6 +21,7 @@ For development, `npm run dev` runs the API on :8080 and Vite on http://localhos
 | `PORT` | `8080` |
 | `HOST` | `0.0.0.0` (reachable from other devices on the network) |
 | `HOMEBASE_DB` | `server/data/homebase.db` |
+| `HOMEBASE_VAPID_SUBJECT` | `mailto:homebase@example.com` (a contact for the push services; use a real email of yours) |
 
 ## How sign-in works
 
@@ -36,6 +37,32 @@ Every change is pushed live to every open screen.
 - **To-dos** ("Call the plumber Friday Dad") live on each person's page. On a phone, swipe right to finish one or left to push it to tomorrow; the buttons do the same.
 - **Packing:** an event's "what to bring" note and prep items ("Pack gym shoes Thursday Emma") make a Get ready checklist for today and tomorrow. Today's items drop off once their event starts.
 - **Quick add (+)** understands plain words: days ("Oct 12", "10/12", "the 15th", "in 2 weeks"), times and ranges ("5-6:30pm", "at noon for 45 min"), repeats ("every Tue and Thu", "every other Saturday", "weekdays") and "all day". An event with no time can be saved as a to-do instead.
+
+## Nudges
+
+Homebase nudges the parents so things don't slip:
+
+- **Time to leave:** the start time minus the drive time minus 10 minutes, sent to whoever is driving. If nobody taps **Got it**, it repeats after 10 minutes and then goes to the other parent.
+- **Reminders** set on an event ("15 min before", "the day before").
+- **Morning briefing** (7:00 AM): what's on today and what to bring.
+- **Evening packing** (7:30 PM): what's on tomorrow and what to pack tonight.
+- **Bills:** 3 days before, the day before and on the day, then daily until marked paid (not for autopay).
+
+Nudges show as banners with a soft chime on the family hub, even over the ambient screen, and go to parents' phones as notifications. Each parent sets their own quiet hours (9:30 PM to 6:30 AM by default) and which kinds they want in **Settings → Nudges**. Nudges held back by quiet hours go out when those hours end, if they still matter.
+
+## Phones and HTTPS (Tailscale)
+
+Phones need Homebase's secure `https://` address to install it and get notifications. [Tailscale](https://tailscale.com) provides one without opening any ports on your router:
+
+1. Install Tailscale on the home computer and sign in. Install the Tailscale app on each parent's phone with the same account.
+2. In the Tailscale admin console, under **DNS**, turn on **MagicDNS** and **HTTPS Certificates**.
+3. On the home computer, run `tailscale serve --bg 8080`. Homebase is now at `https://<computer-name>.<your-tailnet>.ts.net`, and this setting survives restarts.
+4. On each phone, open that address and sign in:
+   - **Android (Chrome):** menu → **Install app**.
+   - **iPhone (iOS 16.4 or newer):** Share → **Add to Home Screen**, then open Homebase from the home screen. iPhones only allow notifications for installed apps.
+5. In Homebase, go to **Settings → Nudges → Turn on notifications**, then **Send a test**.
+
+Optional: with Tailscale in front, set `HOST=127.0.0.1` so Homebase is reachable only through Tailscale and not from other devices on the home Wi-Fi.
 
 ## Calendar subscriptions
 
@@ -66,5 +93,5 @@ npm run typecheck
 1. ~~Foundation: members and PINs, events with repeats, plans with tasks, chores, bills, live sync~~
 2. ~~Calendar subscriptions (school, team, Google/Outlook ICS links)~~
 3. ~~Richer tasks and kid-mode polish~~
-4. Nudges: push notifications (leave-by, pack for tomorrow, bills), HTTPS over Tailscale, installable app
+4. ~~Nudges: push notifications (leave-by, pack for tomorrow, bills), HTTPS over Tailscale, installable app~~
 5. Ambient photo slideshow, weather, backups, running as a Windows service

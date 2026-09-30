@@ -1,4 +1,4 @@
-import type { LiveTopic } from '../../shared/src/index.ts';
+import type { LiveTopic, Nudge } from '../../shared/src/index.ts';
 
 interface Socket {
   readyState: number;
@@ -19,8 +19,17 @@ export class LiveHub {
   }
 
   broadcast(topics: LiveTopic[]) {
-    const msg = JSON.stringify({ type: 'changed', topics });
-    for (const s of this.sockets) if (s.readyState === OPEN) s.send(msg);
+    this.send({ type: 'changed', topics });
+  }
+
+  /** A nudge just fired: the hub chimes and shows a banner. */
+  announce(nudges: Nudge[]) {
+    this.send({ type: 'nudge', nudges: nudges.map((n) => ({ id: n.id, title: n.title })) });
+  }
+
+  private send(msg: object) {
+    const text = JSON.stringify(msg);
+    for (const s of this.sockets) if (s.readyState === OPEN) s.send(text);
   }
 
   get size() {

@@ -76,7 +76,7 @@ export function upcomingOf(events: IcsEvent[], from: Ymd, to: Ymd, limit: number
       const rec: EventRecord = {
         id: 0, calendarId: null, title: e.title, kidTitle: null, icon: '', category: 'other', start: e.start, end: e.end,
         allDay: e.allDay, rrule: e.rrule, location: e.location, notes: null, bring: null, travelMin: 0, driverId: null,
-        needsDriver: false, fun: false, memberIds: [], planId: null,
+        needsDriver: false, fun: false, memberIds: [], planId: null, reminders: [],
       };
       const skips = new Map<Ymd, OccurrencePatch>(e.exdates.map((d) => [d, { cancelled: true }]));
       return expandEvent(rec, skips, from, to).map((o) => ({ title: o.title, start: o.start, allDay: o.allDay, repeats: !!o.rrule }));

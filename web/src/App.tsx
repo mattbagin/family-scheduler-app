@@ -4,6 +4,7 @@ import { Link, Navigate, NavLink, Route, Routes, useLocation } from 'react-route
 import type { Bootstrap } from '@shared';
 import { api, errorText, onSignedOut, onUnlockNeeded } from './api.ts';
 import { FamilyProvider, useAction, useFamily } from './context.tsx';
+import { NudgeBanners } from './nudges.tsx';
 import { useBootstrap, useLiveSync } from './queries.ts';
 import { UnlockSheet } from './sheets/PinPad.tsx';
 import { QuickAdd } from './sheets/QuickAdd.tsx';
@@ -98,6 +99,7 @@ function Shell() {
   return (
     <div className="app">
       {!connected && <div className="offline" role="status">Reconnecting to the home server…</div>}
+      <NudgeBanners />
       <header className="top">
         <Link to="/" className="brand"><b>Homebase</b><span>{f.familyName}</span></Link>
         <nav className="tabs" aria-label="Views">

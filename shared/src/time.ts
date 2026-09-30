@@ -121,3 +121,10 @@ export function dayLabel(today: Ymd, d: Ymd): string {
   if (diff > 1 && diff < 7) return WEEKDAYS[weekdayMon(d)];
   return `${WEEKDAYS[weekdayMon(d)].slice(0, 3)}, ${fmtShortDate(d)}`;
 }
+
+/** The instant a wall-clock time happens here (the family's time zone is the device's own). */
+export function parseLocal(dt: LocalDateTime): Date {
+  const [y, m, d] = parts(datePart(dt));
+  const min = minutesOf(dt);
+  return new Date(y, m - 1, d, Math.floor(min / 60), min % 60);
+}

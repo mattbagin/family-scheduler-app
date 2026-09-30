@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import {
   addDays, addMinutes, CATEGORIES, dayLabel, describeRRule, EVENT_ICONS, fmtTime, guessEventStyle, minutesOf, parseRRule, presetToRRule,
-  REPEAT_PRESETS, rruleToPreset, weekdayMon, type Category, type EventRecord, type RepeatPreset,
+  REMINDER_CHOICES, REPEAT_PRESETS, rruleToPreset, weekdayMon, type Category, type EventRecord, type RepeatPreset,
 } from '@shared';
 import { api } from '../api.ts';
 import { useAction, useFamily, useNow } from '../context.tsx';
@@ -46,6 +46,7 @@ export function EventForm({ event, draft = {} }: { event?: EventRecord; draft?: 
   const [notes, setNotes] = useState(init.notes ?? '');
   const [kidTitle, setKidTitle] = useState(init.kidTitle ?? '');
   const [fun, setFun] = useState(init.fun ?? false);
+  const [reminders, setReminders] = useState<number[]>(init.reminders ?? []);
   const [busy, setBusy] = useState(false);
 
   const adults = f.members.filter((m) => m.role === 'adult');
@@ -72,7 +73,7 @@ export function EventForm({ event, draft = {} }: { event?: EventRecord; draft?: 
     if (!allDay && end <= start) end = endTime === startTime ? addMinutes(start, 60) : `${addDays(date, 1)}T${endTime}`;
     const family = {
       icon, category, memberIds, driverId, needsDriver: needsDriver && !driverId, travelMin: Math.max(0, Number.parseInt(travelMin, 10) || 0),
-      bring: bring.trim() || null, kidTitle: kidTitle.trim() || null, fun,
+      bring: bring.trim() || null, kidTitle: kidTitle.trim() || null, fun, reminders,
     };
     const body = feed ? family : {
       ...family, title: title.trim(), start, end, allDay, rrule, location: location.trim() || null, notes: notes.trim() || null,
@@ -166,6 +167,16 @@ export function EventForm({ event, draft = {} }: { event?: EventRecord; draft?: 
           </div>
         </div>
 
+        <div className="field">Remind parents
+          <div className="toggles">
+            {REMINDER_CHOICES.map((c) => (
+              <button type="button" key={c.min} className="tog plain" aria-pressed={reminders.includes(c.min)}
+                onClick={() => setReminders(reminders.includes(c.min) ? reminders.filter((x) => x !== c.min) : [...reminders, c.min].sort((a, b) => a - b))}>
+                ⏰ {c.label}
+              </button>
+            ))}
+          </div>
+        </div>
         <label className="field">What to bring<input id="ef-bring" value={bring} onChange={(e) => setBring(e.target.value)} placeholder="Cleats and a water bottle" /></label>
         {hasKids && <label className="field">Short name for kid mode<input id="ef-kid" value={kidTitle} onChange={(e) => setKidTitle(e.target.value)} maxLength={40} placeholder="Soccer" /></label>}
         {!feed && <label className="field">Notes<textarea id="ef-notes" value={notes} onChange={(e) => setNotes(e.target.value)} /></label>}

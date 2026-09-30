@@ -6,7 +6,7 @@ import type { EventRecord, OccurrencePatch } from '../src/types.ts';
 const event = (over: Partial<EventRecord> = {}): EventRecord => ({
   id: 1, calendarId: null, title: 'Soccer', kidTitle: null, icon: '⚽', category: 'sports',
   start: '2026-09-01T16:30', end: '2026-09-01T17:30', allDay: false, rrule: null, location: null, notes: null,
-  bring: null, travelMin: 0, driverId: null, needsDriver: false, fun: false, memberIds: [3], planId: null, ...over,
+  bring: null, travelMin: 0, driverId: null, needsDriver: false, fun: false, memberIds: [3], planId: null, reminders: [], ...over,
 });
 
 describe('parseRRule / formatRRule', () => {

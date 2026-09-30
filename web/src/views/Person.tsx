@@ -6,6 +6,7 @@ import { mainRange, money, occDate, personItems, type PersonItem, relDay } from 
 import { useBills, useChores, useOccurrences, usePlans, usePrep, useTodos } from '../queries.ts';
 import { EventSheet } from '../sheets/EventSheet.tsx';
 import { TaskRow, useToggleTask } from '../sheets/PlanSheet.tsx';
+import { NudgeFeed } from '../nudges.tsx';
 import { AddTodo, PrepList, PrepTiles, TodoRow, useToggleTodo } from '../todos.tsx';
 import { Avatar, burstFrom, celebrate, chime, pc, useSheets, useToast } from '../ui.tsx';
 
@@ -165,6 +166,12 @@ export function Person() {
               <div className="tasks">{tasks.map(({ t, p }) => <TaskRow key={t.id} task={t} plan={p} showPlan />)}</div>
             )}
           </section>
+          {!isKid && (
+            <section className="panel">
+              <div className="panel-head"><h2>Recent nudges</h2><span className="note">Last 7 days</span></div>
+              <NudgeFeed memberId={m.id} />
+            </section>
+          )}
           {!isKid && bills.length > 0 && (
             <section className="panel">
               <div className="panel-head"><h2>Household bills</h2></div>

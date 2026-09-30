@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import {
-  addDays, addMinutes, dayLabel, describeRRule, EVENT_ICONS, fmtShortDate, fmtTime, parseQuickAdd, withMinutes, type Plan, type TodoKind,
+  addDays, addMinutes, dayLabel, describeRRule, EVENT_ICONS, fmtShortDate, fmtTime, parseQuickAdd, REMINDER_CHOICES, withMinutes,
+  type Plan, type TodoKind,
 } from '@shared';
 import { api } from '../api.ts';
 import { namesOf, useAction, useFamily, useNow } from '../context.tsx';
@@ -42,6 +43,7 @@ function EventQuick({ text, setText, toTodo }: { text: string; setText: (t: stri
   const [whoPick, setWhoPick] = useState<number[] | null>(null);
   const [iconPick, setIconPick] = useState<string | null>(null);
   const [driverId, setDriverId] = useState<number | null>(null);
+  const [reminders, setReminders] = useState<number[]>([]);
   const parsed = useMemo(() => parseQuickAdd(text, f.members, today), [text, f.members, today]);
   const who = whoPick ?? parsed?.memberIds ?? [];
   const icon = iconPick ?? parsed?.icon ?? '📅';
@@ -64,6 +66,7 @@ function EventQuick({ text, setText, toTodo }: { text: string; setText: (t: stri
     return {
       title: parsed.title, icon, category: parsed.category, start, end: parsed.allDay ? `${addDays(date, 1)}T00:00` : addMinutes(start, length),
       allDay: parsed.allDay, memberIds: who, location: parsed.location, rrule: parsed.rrule, driverId: hasKid ? driverId : null,
+      reminders,
     };
   };
   const timed = !!parsed && (parsed.allDay || parsed.startMin !== null);
@@ -137,6 +140,17 @@ function EventQuick({ text, setText, toTodo }: { text: string; setText: (t: stri
               </div>
             </div>
           )}
+          <div className="stack" style={{ gap: 8 }}>
+            <div className="label">Remind parents</div>
+            <div className="toggles">
+              {REMINDER_CHOICES.map((c) => (
+                <button key={c.min} className="tog plain" aria-pressed={reminders.includes(c.min)}
+                  onClick={() => setReminders(reminders.includes(c.min) ? reminders.filter((x) => x !== c.min) : [...reminders, c.min])}>
+                  ⏰ {c.label}
+                </button>
+              ))}
+            </div>
+          </div>
           <div className="stack" style={{ gap: 8 }}>
             <div className="label">Picture</div>
             <div className="emoji-grid">

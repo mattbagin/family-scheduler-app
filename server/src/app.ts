@@ -9,11 +9,13 @@ import type { Ctx } from './context.ts';
 import type { Db } from './db.ts';
 import { HttpError } from './http.ts';
 import { startPoller } from './ics/sync.ts';
+import { createNudger, type Nudger } from './nudges/nudger.ts';
 import { LiveHub } from './live.ts';
 import { calendarRoutes } from './routes/calendars.ts';
 import { choreRoutes } from './routes/chores.ts';
 import { eventRoutes } from './routes/events.ts';
 import { memberRoutes } from './routes/members.ts';
+import { nudgeRoutes } from './routes/nudges.ts';
 import { planRoutes } from './routes/plans.ts';
 import { todoRoutes } from './routes/todos.ts';
 
@@ -24,9 +26,17 @@ export interface AppOptions {
   logger?: boolean;
   /** Refresh subscribed calendars in the background (off in tests). */
   pollFeeds?: boolean;
+  /** Check for due nudges every 30 seconds (off in tests, which call app.nudger.tick). */
+  runNudges?: boolean;
 }
 
-export async function buildApp({ db, webDist, logger = false, pollFeeds = false }: AppOptions) {
+declare module 'fastify' {
+  interface FastifyInstance {
+    nudger: Nudger;
+  }
+}
+
+export async function buildApp({ db, webDist, logger = false, pollFeeds = false, runNudges = false }: AppOptions) {
   const app = Fastify({ logger: logger ? { level: 'info' } : false, bodyLimit: 256 * 1024 });
   await app.register(cookie);
   await app.register(websocket);
@@ -62,6 +72,19 @@ export async function buildApp({ db, webDist, logger = false, pollFeeds = false 
   choreRoutes(app, ctx);
   calendarRoutes(app, ctx);
   todoRoutes(app, ctx);
+  const nudger = createNudger(db, { changed: ctx.changed, announce: (n) => live.announce(n) });
+  app.decorate('nudger', nudger);
+  nudgeRoutes(app, ctx, nudger);
+
+  if (runNudges) {
+    const tick = () => nudger.tick().catch((err: unknown) => app.log.error(err, 'nudge check failed'));
+    const timer = setInterval(tick, 30_000);
+    const first = setTimeout(tick, 3_000);
+    app.addHook('onClose', async () => {
+      clearInterval(timer);
+      clearTimeout(first);
+    });
+  }
 
   if (pollFeeds) {
     const stop = startPoller(db, ctx.changed);

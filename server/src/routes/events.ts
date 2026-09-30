@@ -34,6 +34,12 @@ const eventSchema = {
   needsDriver: v.bool,
   fun: v.bool,
   memberIds: v.ids,
+  reminders: ((x, f) => {
+    if (!Array.isArray(x) || x.length > 4 || !x.every((n) => Number.isInteger(n) && n >= 0 && n <= 7 * 1440)) {
+      throw badRequest(`${f}: must list up to 4 reminders, in minutes before the start (0 to 10080)`);
+    }
+    return [...new Set(x as number[])].sort((a, b) => a - b);
+  }) as (x: unknown, f: string) => number[],
 };
 
 export type EventInput = Omit<EventRecord, 'id' | 'calendarId' | 'planId'>;
@@ -42,7 +48,7 @@ export function eventDefaults(p: Partial<EventInput> & Pick<EventInput, 'title' 
   const guess = guessEventStyle(p.title);
   return {
     kidTitle: null, icon: guess.icon, category: guess.category, allDay: false, rrule: null, location: null, notes: null,
-    bring: null, travelMin: 0, driverId: null, needsDriver: false, fun: false, memberIds: [], ...p,
+    bring: null, travelMin: 0, driverId: null, needsDriver: false, fun: false, memberIds: [], reminders: [], ...p,
   };
 }
 
@@ -57,9 +63,11 @@ function checkEvent(db: Db, e: EventInput) {
   }
 }
 
-function writeMembers(db: Db, eventId: number, memberIds: number[]) {
+function writeMembers(db: Db, eventId: number, memberIds: number[], reminders: number[]) {
   run(db, 'DELETE FROM event_members WHERE event_id = ?', eventId);
   for (const m of memberIds) run(db, 'INSERT INTO event_members (event_id, member_id) VALUES (?, ?)', eventId, m);
+  run(db, 'DELETE FROM event_reminders WHERE event_id = ?', eventId);
+  for (const r of reminders) run(db, 'INSERT INTO event_reminders (event_id, offset_min) VALUES (?, ?)', eventId, r);
 }
 
 export function insertEvent(db: Db, e: EventInput, calendarId: number | null = null): number {
@@ -72,7 +80,7 @@ export function insertEvent(db: Db, e: EventInput, calendarId: number | null = n
       calendarId, e.title, e.kidTitle, e.icon, e.category, e.start, e.end, e.allDay ? 1 : 0, e.rrule, e.location, e.notes,
       e.bring, e.travelMin, e.driverId, e.needsDriver ? 1 : 0, e.fun ? 1 : 0,
     );
-    writeMembers(db, id, e.memberIds);
+    writeMembers(db, id, e.memberIds, e.reminders);
     return id;
   });
 }
@@ -87,13 +95,13 @@ function updateEvent(db: Db, id: number, e: EventInput) {
       e.title, e.kidTitle, e.icon, e.category, e.start, e.end, e.allDay ? 1 : 0, e.rrule, e.location, e.notes, e.bring,
       e.travelMin, e.driverId, e.needsDriver ? 1 : 0, e.fun ? 1 : 0, id,
     );
-    writeMembers(db, id, e.memberIds);
+    writeMembers(db, id, e.memberIds, e.reminders);
     run(db, 'UPDATE plans SET title = ? WHERE event_id = ?', e.title, id);
   });
 }
 
 /** On a subscribed event these are the family's to set; everything else comes from the feed. */
-const FAMILY_FIELDS = new Set(['kidTitle', 'icon', 'category', 'travelMin', 'driverId', 'needsDriver', 'fun', 'memberIds', 'bring']);
+const FAMILY_FIELDS = new Set(['kidTitle', 'icon', 'category', 'travelMin', 'driverId', 'needsDriver', 'fun', 'memberIds', 'bring', 'reminders']);
 
 const fromFeed = (field: string, calendar: string) =>
   new HttpError(409, 'read_only', `${field}: this comes from the “${calendar}” calendar, so change it there`);

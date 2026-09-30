@@ -43,6 +43,8 @@ export interface EventRecord {
   fun: boolean;
   memberIds: number[];
   planId: number | null;
+  /** Nudge this many minutes before each start (0 = as it starts). */
+  reminders: number[];
 }
 
 export interface OccurrencePatch {
@@ -155,6 +157,43 @@ export interface PrepItem {
   todoId: number | null;
 }
 
+export type NudgeKind = 'leave_by' | 'reminder' | 'morning' | 'evening' | 'bill';
+
+/** One person's nudge choices. Times are `HH:mm`; quiet hours may wrap past midnight. */
+export interface NotifyPrefs {
+  quietStart: string;
+  quietEnd: string;
+  leaveBy: boolean;
+  reminders: boolean;
+  morning: boolean;
+  evening: boolean;
+  bills: boolean;
+}
+
+export interface NudgeSettings {
+  /** Morning briefing and evening "pack for tomorrow" digest, `HH:mm`. */
+  morningAt: string;
+  eveningAt: string;
+  /** Unanswered leave-by and reminder nudges repeat after this long, then go to the other parent; 0 = off. */
+  escalateMin: number;
+  /** Adults' choices by member id. */
+  members: Record<number, NotifyPrefs>;
+}
+
+/** A nudge that fired: shown as a banner on the hub and pushed to parents' phones. */
+export interface Nudge {
+  id: number;
+  kind: NudgeKind;
+  title: string;
+  body: string;
+  url: string;
+  audience: number[];
+  createdAt: string;
+  expiresAt: string;
+  ackedAt: string | null;
+  ackedBy: number | null;
+}
+
 /** A subscribed ICS feed (school, team, a Google/Outlook secret link). */
 export interface Calendar {
   id: number;
@@ -191,4 +230,4 @@ export interface SyncResult {
 }
 
 /** Topics pushed over the live socket so every screen refreshes what changed. */
-export type LiveTopic = 'events' | 'plans' | 'chores' | 'bills' | 'members' | 'settings' | 'calendars' | 'todos';
+export type LiveTopic = 'events' | 'plans' | 'chores' | 'bills' | 'members' | 'settings' | 'calendars' | 'todos' | 'nudges';

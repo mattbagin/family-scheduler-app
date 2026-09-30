@@ -55,11 +55,13 @@ interface EventRow {
   exdates: string | null;
   member_ids: string | null;
   plan_id: number | null;
+  reminder_mins: string | null;
 }
 
 const EVENT_SELECT = `
   SELECT e.*, p.id AS plan_id,
-    (SELECT group_concat(member_id) FROM event_members em WHERE em.event_id = e.id) AS member_ids
+    (SELECT group_concat(member_id) FROM event_members em WHERE em.event_id = e.id) AS member_ids,
+    (SELECT group_concat(offset_min) FROM event_reminders er WHERE er.event_id = e.id) AS reminder_mins
   FROM events e LEFT JOIN plans p ON p.event_id = e.id`;
 
 const toEvent = (r: EventRow): EventRecord => ({
@@ -82,6 +84,7 @@ const toEvent = (r: EventRow): EventRecord => ({
   fun: !!r.fun,
   memberIds: r.member_ids ? r.member_ids.split(',').map(Number).sort((a, b) => a - b) : [],
   planId: r.plan_id,
+  reminders: r.reminder_mins ? r.reminder_mins.split(',').map(Number).sort((a, b) => a - b) : [],
 });
 
 export function getEvent(db: Db, id: number): EventRecord {

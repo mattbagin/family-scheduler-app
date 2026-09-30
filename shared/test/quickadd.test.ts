@@ -84,7 +84,7 @@ describe('computeFlags', () => {
   const occ = (key: string, start: string, end: string, over: Partial<Occurrence> = {}): Occurrence => ({
     id: Number(key), key, originalDate: start.slice(0, 10), isException: false, calendarId: null, title: key, kidTitle: null,
     icon: '📅', category: 'family', start, end, allDay: false, rrule: null, location: null, notes: null, bring: null,
-    travelMin: 0, driverId: null, needsDriver: false, fun: false, memberIds: [], planId: null, ...over,
+    travelMin: 0, driverId: null, needsDriver: false, fun: false, memberIds: [], planId: null, reminders: [], ...over,
   });
 
   it('flags a kid in two places, a double-booked driver and a missing ride', () => {

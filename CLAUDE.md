@@ -1,6 +1,6 @@
 # Homebase (family scheduler)
 
-A self-hosted family calendar hub: shared tablet "hub", parents' phones, and a picture-first kid mode. `PLAN.md` is the design doc and milestone list; `README.md` is the user-facing guide. Check `PLAN.md` §7 for which milestone is current.
+A self-hosted family calendar hub: shared tablet "hub", parents' phones, and a picture-first kid mode. `PLAN.md` is the design doc and milestone list; `README.md` is the user-facing guide. **Start with `PLAN.md` §9**: it has what's built, what's left (milestone 5 and a few leftovers), and where the build departs from the original design.
 
 ## Commands
 
@@ -30,9 +30,11 @@ Run a single test file with `npx vitest run server/test/calendars.test.ts`. Befo
 shared/src/   types.ts (API shapes), time.ts, recurrence.ts (RRULE parse/expand), flags.ts (conflicts), quickadd.ts, icons.ts
 server/src/   app.ts (Fastify wiring), db.ts + migrations/NNN_*.sql, repo.ts (row -> API mapping, reads),
               http.ts (validators v.*, parseBody/parsePatch, HttpError), auth.ts, live.ts (websocket broadcast),
-              routes/*.ts, ics/ (feed parser, zones, sync + poller), seed.ts (sample family)
+              routes/*.ts, ics/ (feed parser, zones, sync + poller), nudges/ (plan, nudger, webpush), seed.ts (sample family)
 web/src/      App.tsx (shell/routes), api.ts, queries.ts (queries + live sync), context.tsx (useFamily/useAction/useNow),
-              ui.tsx (Sheet, Face, ConfirmButton, confetti, celebrate), todos.tsx (to-do/prep rows, swipe, toggles), views/*, sheets/*
+              ui.tsx (Sheet, Face, ConfirmButton, confetti, celebrate), todos.tsx (to-do/prep rows, swipe, toggles),
+              nudges.tsx (banners, feed), push.ts (notifications + install), views/*, sheets/*
+web/public/   sw.js (service worker: push, notification clicks), manifest and icons
 ```
 
 ## Conventions that aren't obvious from one file
@@ -45,11 +47,28 @@ web/src/      App.tsx (shell/routes), api.ts, queries.ts (queries + live sync), 
 - **Auth levels:** `requireAuth` (anyone signed in), `requireEditor` (a parent, or the hub/kid device unlocked with a parent PIN for 10 minutes), `requireCanComplete` (kids may tick off only their own jobs).
 - **Validation:** request bodies go through `parseBody` / `parsePatch` with `v.*` checkers. Errors read `field: problem`, for example `title: must be non-empty text`.
 - **Four kinds of "task", four tables:** `chores` (repeat by weekday, ticked per date in `chore_completions`), `bills`, `plan_tasks` (inside a plan) and `todos` (`kind` 'todo' or 'prep'). An event's `bring` note ticked as packed lives in `packed` (per event and date). `GET /api/prep` merges bring notes and prep todos into one list.
+- **Nudges:** `nudges/plan.ts` is a pure function (now + data → what's due); `nudger.ts` records each nudge once by `key`, pushes it per person (skipping, not dropping, during quiet hours), and escalates urgent ones that nobody acknowledges. The server ticks every 30 s (`runNudges`); tests call `app.nudger.tick(date)` instead. Web Push encryption and VAPID are hand-written in `nudges/webpush.ts` and checked against RFC 8291's example; don't swap in a library without a reason.
 - **Subscribed (ICS) events:** sync writes only the feed's fields (title, start/end, all-day, rrule, exdates, location, notes). The family's fields (members, driver, needsDriver, travelMin, bring, kidTitle, icon, category, fun) sit on the same row and survive re-syncs, because rows are matched by `(calendar_id, ext_uid)`. The API returns 409 `read_only` for edits to feed fields, deleting a feed event, or moving an occurrence of one.
 - **UI copy** is plain, warm and short, written for parents and read aloud to kids. It uses curly quotes and apostrophes (’ “ ”), and error messages say what to do next.
-- **Tests:** API tests use `buildApp({ db: openDb(':memory:') })` + `app.inject`. The helpers are in `server/test/helpers.ts`. Feed tests run a local `node:http` server; fixtures are in `server/test/fixtures/` (`us-holidays.ics` is a real Google public feed). Background polling is off in tests (`pollFeeds` defaults to false).
+- **Tests:** API tests use `buildApp({ db: openDb(':memory:') })` + `app.inject`. The helpers are in `server/test/helpers.ts`. Feed tests run a local `node:http` server; fixtures are in `server/test/fixtures/` (`us-holidays.ics` is a real Google public feed). Nudge tests run a fake push service that decrypts messages like a phone would. Background work is off in tests (`pollFeeds`, `runNudges` default to false).
+
+## Checking the real app in a browser
+
+Unit tests don't prove the UI works, so each milestone was also driven with Playwright (Python, through the `webapp-testing` skill). The scripts are throwaway and not in the repo. What works on this machine:
+
+1. `npm run build`, then start the server on a throwaway database in the background: `PORT=8090 HOMEBASE_DB=<scratch>/e2e.db node --disable-warning=ExperimentalWarning server/src/index.ts`. Use a new file name for each run, because the sample family can only be set up once per database.
+2. In the script, go to `http://localhost:8090`, click "Try it with a sample family" (both parents' PIN is `1234`), and drive the UI. Log in a hub with `context.request.post('/api/login', data={memberId, pin, asHub: True})`.
+3. Stop the server afterwards (PowerShell: `Get-NetTCPConnection -LocalPort 8090 -State Listen | % { Stop-Process -Id $_.OwningProcess }`).
+
+Gotchas: the skill's `with_server.py` runs commands through `cmd`, so `VAR=value` prefixes fail; start the server yourself instead. Headless Chromium always reports notifications as blocked. Set `PYTHONIOENCODING=utf-8` when printing emoji on Windows. Nudges fire on the server's 30-second tick, so allow about 45 s for a banner.
 
 ## Environment notes
 
 - Developed on Windows 11. Paths in the repo use forward slashes. The SQLite file defaults to `server/data/homebase.db` (git-ignored).
 - The "SQLite is an experimental feature" warning from Node is expected and harmless.
+- In the Bash tool, long heredocs containing mixed quotes and backticks sometimes fail to parse. Write multi-line edit scripts to a file in the scratchpad and run them from there.
+
+## Git
+
+- The remote is `origin` (https://github.com/mattbagin/family-scheduler-app). The owner works directly on `main` and pushes there; each milestone is one commit titled `Milestone N: …`.
+- Commit or push only when asked. `.claude/settings.local.json` is personal and git-ignored; line endings are LF (`.gitattributes`).

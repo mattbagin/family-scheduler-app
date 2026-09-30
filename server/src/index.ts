@@ -11,7 +11,7 @@ const host = process.env.HOST ?? '0.0.0.0';
 
 mkdirSync(dirname(dbFile), { recursive: true });
 const db = openDb(dbFile);
-const app = await buildApp({ db, webDist: resolve(here, '../../web/dist'), logger: true, pollFeeds: true });
+const app = await buildApp({ db, webDist: resolve(here, '../../web/dist'), logger: true, pollFeeds: true, runNudges: true });
 
 await app.listen({ port, host });
 app.log.info(`Homebase is running on http://localhost:${port} (database: ${dbFile})`);

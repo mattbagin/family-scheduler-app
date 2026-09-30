@@ -1,15 +1,16 @@
-import { useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useEffect, useState } from 'react';
 import {
   addDays, dayLabel, fmtTime, guessTaskIcon, MEMBER_AVATARS, MEMBER_COLORS, minutesOf,
-  type Calendar, type CalendarPreview, type Chore, type Member, type Role, type SyncResult,
+  type Calendar, type CalendarPreview, type Chore, type Member, type NotifyPrefs, type NudgeSettings, type Role, type SyncResult,
 } from '@shared';
 import { api } from '../api.ts';
 import { useAction, useFamily, useNow } from '../context.tsx';
 import { ago, money, relDay } from '../lib.ts';
+import { canInstall, install, installHint, onInstallChange, pushState, turnOffPush, turnOnPush, type PushState } from '../push.ts';
 import { useBills, useCalendars, useChores } from '../queries.ts';
 import { UnlockSheet } from '../sheets/PinPad.tsx';
-import { Avatar, ConfirmButton, Face, pc, useSheets } from '../ui.tsx';
+import { Avatar, ConfirmButton, Face, pc, useSheets, useToast } from '../ui.tsx';
 
 const DAY_SHORT = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const daysText = (days: number[]) =>
@@ -38,6 +39,7 @@ export function Settings() {
         </div>
         <div className="col">
           <CalendarsSection />
+          <NudgesSection />
           <BillsSection />
           <DeviceSection />
         </div>
@@ -332,6 +334,153 @@ function CalendarEditor({ cal, onDone }: { cal?: Calendar; onDone: () => void })
   );
 }
 
+type SettingsWithDevices = NudgeSettings & { devices: Record<number, number> };
+
+const NUDGE_KINDS: [keyof NotifyPrefs, string][] = [
+  ['leaveBy', '🚗 Time to leave'], ['reminders', '⏰ Event reminders'], ['morning', '☀️ Morning briefing'],
+  ['evening', '🎒 Evening packing'], ['bills', '💵 Bills'],
+];
+
+function NudgesSection() {
+  const f = useFamily();
+  const act = useAction();
+  const { data: s } = useQuery({ queryKey: ['nudges', 'settings'], queryFn: () => api<SettingsWithDevices>('/nudge-settings') });
+  const save = (body: object) => act(() => api('/nudge-settings', { method: 'PATCH', body }), 'Saved');
+  const adults = f.members.filter((m) => m.role === 'adult');
+  return (
+    <section className="panel">
+      <h2>Nudges</h2>
+      <p className="note" style={{ margin: 0 }}>
+        Homebase nudges parents when it’s time to leave, what to pack tonight, bills coming due, and reminders set on events.
+        The hub shows them as banners with a soft chime.
+      </p>
+      <ThisDeviceNotifications />
+      {s && (
+        <>
+          <div className="form-grid">
+            <label className="field">Morning briefing
+              <input id="nd-morning" type="time" value={s.morningAt} onChange={(e) => e.target.value && save({ morningAt: e.target.value })} />
+            </label>
+            <label className="field">Evening packing reminder
+              <input id="nd-evening" type="time" value={s.eveningAt} onChange={(e) => e.target.value && save({ eveningAt: e.target.value })} />
+            </label>
+          </div>
+          <label className="field">If nobody taps “Got it” on a time-to-leave nudge
+            <select id="nd-escalate" value={s.escalateMin} onChange={(e) => save({ escalateMin: Number(e.target.value) })}>
+              <option value={0}>Leave it at one nudge</option>
+              {[5, 10, 15].map((n) => <option key={n} value={n}>Repeat after {n} min, then tell the other parent</option>)}
+            </select>
+          </label>
+          <div>
+            {adults.map((m) => {
+              const p = s.members[m.id];
+              if (!p) return null;
+              const devices = s.devices[m.id] ?? 0;
+              return (
+                <div key={m.id} className="setting-row" style={{ ...pc(m.color), alignItems: 'flex-start' }}>
+                  <Avatar m={m} />
+                  <div className="stack" style={{ gap: 8, flex: 1, minWidth: 0 }}>
+                    <div>
+                      <b>{m.name}</b>
+                      <div className="note">
+                        {devices ? `Nudges go to ${devices} device${devices === 1 ? '' : 's'}` : `No phone set up yet: sign in as ${m.name} on it and turn notifications on`}
+                      </div>
+                    </div>
+                    <div className="toggles">
+                      {NUDGE_KINDS.map(([k, label]) => (
+                        <button key={k} className="tog plain" aria-pressed={!!p[k]} onClick={() => save({ members: { [m.id]: { [k]: !p[k] } } })}>{label}</button>
+                      ))}
+                    </div>
+                    <div className="row" style={{ gap: 8 }}>
+                      <span className="note">Quiet from</span>
+                      <input type="time" className="inline-select" style={{ width: 'auto' }} value={p.quietStart} aria-label={`${m.name}’s quiet hours start`}
+                        onChange={(e) => e.target.value && save({ members: { [m.id]: { quietStart: e.target.value } } })} />
+                      <span className="note">to</span>
+                      <input type="time" className="inline-select" style={{ width: 'auto' }} value={p.quietEnd} aria-label={`${m.name}’s quiet hours end`}
+                        onChange={(e) => e.target.value && save({ members: { [m.id]: { quietEnd: e.target.value } } })} />
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </>
+      )}
+    </section>
+  );
+}
+
+const PUSH_TEXT: Record<Exclude<PushState, 'off' | 'on'>, string> = {
+  insecure: 'Notifications need Homebase’s secure https:// address. See “Phones and HTTPS” in the README.',
+  'install-first': 'On iPhone and iPad, first add Homebase to your Home Screen (Share → Add to Home Screen), then open it from there.',
+  unsupported: 'This browser can’t show notifications.',
+  denied: 'Notifications are blocked for Homebase in this browser. Allow them in the site settings, then come back here.',
+};
+
+function ThisDeviceNotifications() {
+  const f = useFamily();
+  const toast = useToast();
+  const [state, setState] = useState<PushState | null>(null);
+  const [busy, setBusy] = useState(false);
+  useEffect(() => {
+    pushState().then(setState, () => setState('unsupported'));
+  }, []);
+  if (f.session.kind === 'hub') {
+    return <div className="feed-preview note">This is the family hub: nudges show here as banners. Notifications go to parents’ own phones.</div>;
+  }
+  if (f.me?.role !== 'adult' || !state) return null;
+
+  const run = async (fn: () => Promise<unknown>, ok: string) => {
+    setBusy(true);
+    try {
+      await fn();
+      toast(ok);
+    } catch (e) {
+      toast(e instanceof Error ? e.message : 'That didn’t work');
+    }
+    setBusy(false);
+    setState(await pushState().catch(() => 'unsupported' as const));
+  };
+  const test = () => run(async () => {
+    const r = await api<{ devices: number; delivered: number }>('/push/test', { method: 'POST' });
+    if (!r.delivered) throw new Error('The test didn’t reach any device. Try turning notifications off and on again.');
+  }, 'Test sent. It should pop up in a moment.');
+
+  return (
+    <div className="feed-preview">
+      <b>On this device</b>
+      {state === 'on' ? (
+        <>
+          <span className="note">✓ {f.me.name}’s nudges come to this device.</span>
+          <div className="row">
+            <button className="mini-btn" disabled={busy} onClick={test}>Send a test</button>
+            <button className="mini-btn" disabled={busy} onClick={() => run(turnOffPush, 'Notifications turned off here')}>Turn off</button>
+          </div>
+        </>
+      ) : state === 'off' ? (
+        <>
+          <span className="note">Get {f.me.name}’s nudges here, even when Homebase is closed.</span>
+          <button className="primary" style={{ alignSelf: 'flex-start' }} disabled={busy} onClick={() => run(turnOnPush, 'Notifications are on')}>Turn on notifications</button>
+        </>
+      ) : <span className="note">{PUSH_TEXT[state]}</span>}
+    </div>
+  );
+}
+
+function InstallButton() {
+  const act = useAction();
+  const [available, setAvailable] = useState(canInstall());
+  useEffect(() => {
+    const off = onInstallChange(() => setAvailable(canInstall()));
+    return () => { off(); };
+  }, []);
+  const hint = installHint();
+  if (available) {
+    return <button className="icon-btn" onClick={() => act(install, (ok) => (ok ? 'Homebase is installed' : 'Maybe later'))}>📲 Install Homebase on this device</button>;
+  }
+  return hint ? <p className="note" style={{ margin: 0 }}>📲 {hint}</p> : null;
+}
+
 function BillsSection() {
   const act = useAction();
   const { today } = useNow();
@@ -388,6 +537,7 @@ function DeviceSection() {
     <section className="panel">
       <h2>This device</h2>
       <p style={{ margin: 0 }}>Signed in as <b>{who}</b>.</p>
+      <InstallButton />
       <div className="row">
         {f.session.elevatedUntil && (
           <button className="icon-btn" onClick={() => act(() => api('/lock', { method: 'POST' }), 'Locked')}>🔒 Lock editing now</button>

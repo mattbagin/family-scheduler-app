@@ -40,6 +40,7 @@ const TOPIC_KEYS: Record<LiveTopic, string[][]> = {
   settings: [['bootstrap']],
   calendars: [['calendars']],
   todos: [['todos'], ['prep']],
+  nudges: [['nudges']],
 };
 
 /**
@@ -64,6 +65,8 @@ export function useLiveSync(enabled: boolean): boolean {
       };
       ws.onmessage = (e) => {
         const msg = JSON.parse(e.data as string) as { type: string; topics?: LiveTopic[] };
+        // A nudge just fired somewhere: the banner component decides whether to chime.
+        if (msg.type === 'nudge') dispatchEvent(new CustomEvent('hb-nudge', { detail: msg }));
         if (msg.type !== 'changed') return;
         for (const t of msg.topics ?? []) for (const key of TOPIC_KEYS[t] ?? []) qc.invalidateQueries({ queryKey: key });
       };

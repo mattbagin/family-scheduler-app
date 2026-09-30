@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import {
-  addDays, computeFlags, dayLabel, describeRRule, fmtShortDate, fmtTime, minutesOf, type EventRecord, type Occurrence, type Plan,
+  addDays, computeFlags, dayLabel, describeRRule, fmtShortDate, fmtTime, minutesOf, reminderLabel, type EventRecord, type Occurrence, type Plan,
 } from '@shared';
 import { api } from '../api.ts';
 import { namesOf, useAction, useFamily, useNow } from '../context.tsx';
@@ -73,6 +73,7 @@ export function EventSheet({ occ: initial }: { occ: Occurrence }) {
         {occ.travelMin > 0 && <><dt>Drive</dt><dd>{occ.travelMin} min · leave by {fmtTime(leaveBy(occ))}</dd></>}
         {occ.bring && <><dt>Bring</dt><dd>🎒 {occ.bring}</dd></>}
         {recurring && <><dt>Repeats</dt><dd>{describeRRule(occ.rrule)}{occ.isException ? ' (changed this time)' : ''}</dd></>}
+        {occ.reminders.length > 0 && <><dt>Nudges</dt><dd>⏰ {occ.reminders.map(reminderLabel).join(', ')}</dd></>}
         {occ.notes && <><dt>Notes</dt><dd style={{ whiteSpace: 'pre-wrap' }}>{occ.notes}</dd></>}
       </dl>
 
