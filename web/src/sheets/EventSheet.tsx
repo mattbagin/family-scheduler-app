@@ -95,7 +95,7 @@ export function EventSheet({ occ: initial }: { occ: Occurrence }) {
 
       <button className="proj" onClick={openPlan}>
         <div className="proj-top">
-          <span className="e">📋</span>
+          <span className="e" aria-hidden="true">📋</span>
           <div>
             <b>{plan ? 'Open the plan' : 'Break into tasks'}</b>
             <div className="note">

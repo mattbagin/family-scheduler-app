@@ -37,7 +37,7 @@ export function TaskRow({ task, plan, showPlan }: { task: PlanTask; plan: Plan; 
       <button className="check" aria-pressed={!!task.doneAt} aria-label={`Mark “${task.text}” ${task.doneAt ? 'not done' : 'done'}`} onClick={(e) => toggle(task, plan, e.currentTarget)}>
         {task.doneAt ? '✓' : ''}
       </button>
-      <span className="e">{task.icon}</span>
+      <span className="e" aria-hidden="true">{task.icon}</span>
       <div className="task-main">
         <b>{task.text}</b>
         <div className={`note ${late ? 'late' : ''}`}>{showPlan ? `${plan.icon} ${plan.title} · ` : ''}{dueLabel(today, task.due)}</div>

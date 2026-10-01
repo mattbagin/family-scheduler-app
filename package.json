@@ -16,7 +16,8 @@
     "build": "npm run build -w web",
     "start": "npm start -w server",
     "test": "vitest run",
-    "typecheck": "tsc -p shared && tsc -p server && tsc -p web"
+    "typecheck": "tsc -p shared && tsc -p server && tsc -p web",
+    "service": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/service.ps1"
   },
   "devDependencies": {
     "@types/node": "^26.6.3",

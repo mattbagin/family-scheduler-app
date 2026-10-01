@@ -1,11 +1,12 @@
 import { Link } from 'react-router-dom';
 import {
-  addDays, computeFlags, dayDiff, dayLabel, fmtDur, fmtShortDate, fmtTime, minutesOf, type Occurrence, type Plan,
+  addDays, computeFlags, dayDiff, dayLabel, fmtDur, fmtShortDate, fmtTime, minutesOf, weatherLook, type Occurrence, type Plan,
 } from '@shared';
 import { api } from '../api.ts';
 import { namesOf, useAction, useFamily, useNow } from '../context.tsx';
+import { WeatherNow } from '../hub.tsx';
 import { dueLabel, endAbs, leaveBy, mainRange, money, occDate, sleepsWord, startAbs, relDay } from '../lib.ts';
-import { useBills, useCalendars, useChores, useOccurrences, usePlans, usePrep, useTodos } from '../queries.ts';
+import { useBills, useCalendars, useChores, useOccurrences, usePlans, usePrep, useTodos, useWeather } from '../queries.ts';
 import { EventSheet } from '../sheets/EventSheet.tsx';
 import { PlanSheet } from '../sheets/PlanSheet.tsx';
 import { QuickAdd } from '../sheets/QuickAdd.tsx';
@@ -37,6 +38,7 @@ export function Today() {
   const { data: calendars = [] } = useCalendars();
   const { data: todos = [] } = useTodos();
   const { data: prep = [] } = usePrep(today, addDays(today, 2), nowMin);
+  const { data: weather } = useWeather();
   const flags = computeFlags(occs, f.members);
   // Person color first; an unassigned event from a subscribed calendar takes the calendar's color.
   const colorOf = (o: Occurrence) => f.byId(o.memberIds[0])?.color ?? calendars.find((c) => c.id === o.calendarId)?.color;
@@ -92,6 +94,15 @@ export function Today() {
       action: f.canEdit || f.session.kind === 'hub' ? { label: 'Mark paid', run: () => act(() => api(`/bills/${b.id}/pay`, { method: 'POST' }), `${b.name} marked paid`) } : undefined,
     });
   }
+  // Rain worth mentioning: today until the afternoon's over, then tomorrow (with the packing).
+  const wxDay = weather?.days.find((d) => d.date === (nowMin < 17 * 60 ? today : addDays(today, 1)));
+  if (wxDay && wxDay.rainChance >= 60) {
+    const look = weatherLook(wxDay.code);
+    alerts.push({
+      cls: '', icon: '☔', title: `Umbrella ${wxDay.date === today ? 'day' : 'tomorrow'}`,
+      text: `${look.text}, ${wxDay.rainChance}% chance of rain · high ${wxDay.hi}°. Grab raincoats on the way out.`,
+    });
+  }
   const pack = prep.filter((p) => !p.done && p.date === addDays(today, 1));
   if (pack.length) {
     alerts.push({
@@ -119,9 +130,12 @@ export function Today() {
     <>
       <section className="hero">
         <div className="clock num">{h % 12 || 12}<span className="colon">:</span>{String(now.getMinutes()).padStart(2, '0')}<small>{h >= 12 ? 'PM' : 'AM'}</small></div>
-        <div>
-          <div className="dateline">{now.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}</div>
-          <div className="note">{f.familyName}</div>
+        <div className="row" style={{ gap: '12px 28px' }}>
+          <div>
+            <div className="dateline">{now.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}</div>
+            <div className="note">{f.familyName}</div>
+          </div>
+          <WeatherNow />
         </div>
         <nav className="members" aria-label="Family members">
           {f.members.map((m) => (
@@ -136,7 +150,7 @@ export function Today() {
         <div className="heads" aria-label="Heads up">
           {alerts.map((a) => (
             <div key={a.title} className={`alert ${a.cls}`}>
-              <span className="ic">{a.icon}</span>
+              <span className="ic" aria-hidden="true">{a.icon}</span>
               <p><b>{a.title}</b>{a.text}</p>
               {a.action && <button className="act" onClick={a.action.run}>{a.action.label}</button>}
               {a.link && <Link className="act" to={a.link} style={{ textDecoration: 'none' }}>Open</Link>}
@@ -176,7 +190,7 @@ export function Today() {
                     </div>
                     <div className="tl-dot" aria-hidden="true" />
                     <div className="tl-card">
-                      <span className="e">{o.icon}</span>
+                      <span className="e" aria-hidden="true">{o.icon}</span>
                       <div className="tl-main">
                         <b>{o.title}</b>
                         <div className="note">
@@ -247,7 +261,7 @@ export function Today() {
                   const n = dayDiff(today, occDate(o));
                   return (
                     <button key={o.key} className="count" onClick={() => openOcc(o)}>
-                      <span className="e">{o.icon}</span>
+                      <span className="e" aria-hidden="true">{o.icon}</span>
                       <div><b>{o.title}</b><div className="note">{dayLabel(today, occDate(o))}{n >= 7 ? '' : `, ${fmtShortDate(occDate(o))}`}</div></div>
                       <div className="n num">{n}<small>{sleepsWord(n)}</small></div>
                     </button>
@@ -271,7 +285,7 @@ export function PlanCard({ plan, onOpen }: { plan: Plan; onOpen: () => void }) {
   return (
     <button className="proj" onClick={onOpen}>
       <div className="proj-top">
-        <span className="e">{plan.icon}</span>
+        <span className="e" aria-hidden="true">{plan.icon}</span>
         <div>
           <b>{plan.title}</b>
           <div className="note">{dayLabel(today, day)}{dayDiff(today, day) >= 7 ? '' : `, ${fmtShortDate(day)}`} · {done} of {plan.tasks.length} done</div>

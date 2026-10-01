@@ -4,13 +4,15 @@ import { Link, Navigate, NavLink, Route, Routes, useLocation } from 'react-route
 import type { Bootstrap } from '@shared';
 import { api, errorText, onSignedOut, onUnlockNeeded } from './api.ts';
 import { FamilyProvider, useAction, useFamily } from './context.tsx';
+import { useNight } from './hub.tsx';
 import { NudgeBanners } from './nudges.tsx';
 import { useBootstrap, useLiveSync } from './queries.ts';
 import { UnlockSheet } from './sheets/PinPad.tsx';
 import { QuickAdd } from './sheets/QuickAdd.tsx';
-import { Avatar, SheetProvider, useSheets } from './ui.tsx';
+import { Avatar, setHushed, setMuted, SheetProvider, useMuted, useSheets } from './ui.tsx';
 import { Ambient } from './views/Ambient.tsx';
 import { Kid } from './views/Kid.tsx';
+import { Month } from './views/Month.tsx';
 import { Person } from './views/Person.tsx';
 import { Settings } from './views/Settings.tsx';
 import { Login, Setup } from './views/SignIn.tsx';
@@ -60,6 +62,12 @@ function Shell() {
   const location = useLocation();
   const connected = useLiveSync(true);
   const [ambient, setAmbient] = useState(false);
+  const muted = useMuted();
+  const night = useNight();
+  const isHub = f.session.kind === 'hub';
+
+  // The hub stays quiet during night mode.
+  useEffect(() => setHushed(isHub && night), [isHub, night]);
 
   // Server says a parent must unlock: show the PIN sheet on top of whatever is open.
   useEffect(() => {
@@ -98,6 +106,7 @@ function Shell() {
 
   return (
     <div className="app">
+      <a className="skip" href="#main">Skip to the main content</a>
       {!connected && <div className="offline" role="status">Reconnecting to the home server…</div>}
       <NudgeBanners />
       <header className="top">
@@ -105,10 +114,16 @@ function Shell() {
         <nav className="tabs" aria-label="Views">
           <NavLink to="/" end>Today</NavLink>
           <NavLink to="/week">Week</NavLink>
+          <NavLink to="/month">Month</NavLink>
           <NavLink to="/kid">Kid mode</NavLink>
-          <button onClick={() => setAmbient(true)}>Ambient</button>
+          <button className="amb-tab" onClick={() => setAmbient(true)}>Ambient</button>
         </nav>
         <div className="top-right">
+          {isHub && (
+            <button className="icon-btn" onClick={() => setMuted(!muted)} aria-pressed={muted} title={muted ? 'Sounds are off. Tap to turn them on.' : 'Turn sounds off on this screen'}>
+              {muted ? '🔕' : '🔔'}<span className="sr-only">{muted ? 'Sounds off' : 'Sounds on'}</span>
+            </button>
+          )}
           {showLock && (unlocked ? (
             <button className="icon-btn lock-on" onClick={() => act(() => api('/lock', { method: 'POST' }), 'Locked')} title="Lock editing">🔓 Unlocked</button>
           ) : (
@@ -119,10 +134,11 @@ function Shell() {
         </div>
       </header>
 
-      <main className="stack">
+      <main className="stack" id="main" tabIndex={-1}>
         <Routes>
           <Route path="/" element={<Today />} />
           <Route path="/week" element={<Week />} />
+          <Route path="/month" element={<Month />} />
           <Route path="/person/:id" element={<Person />} />
           <Route path="/kid" element={<Kid />} />
           <Route path="/kid/:id" element={<Kid />} />

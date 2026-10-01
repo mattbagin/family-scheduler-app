@@ -1,5 +1,5 @@
 import {
-  createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode,
+  createContext, useCallback, useContext, useEffect, useId, useMemo, useRef, useState, useSyncExternalStore, type CSSProperties, type ReactNode,
 } from 'react';
 import type { Member } from '@shared';
 
@@ -57,15 +57,32 @@ export function useSheets(): Sheets {
   return s;
 }
 
-/** A stack, so an unlock prompt can sit on top of a half-filled form without losing it. */
+/**
+ * A stack, so an unlock prompt can sit on top of a half-filled form without losing it. Each
+ * sheet remembers what had focus when it opened, and focus goes back there when it closes.
+ */
 export function SheetProvider({ children }: { children: ReactNode }) {
-  const [stack, setStack] = useState<{ id: number; node: ReactNode }[]>([]);
+  const [stack, setStack] = useState<{ id: number; node: ReactNode; opener: HTMLElement | null }[]>([]);
   const nextId = useRef(1);
-  const api = useMemo<Sheets>(() => ({
-    open: (node) => setStack((s) => [...s, { id: nextId.current++, node }]),
-    close: () => setStack((s) => s.slice(0, -1)),
-    replace: (node) => setStack((s) => [...s.slice(0, -1), { id: nextId.current++, node }]),
-  }), []);
+  const stackRef = useRef(stack);
+  stackRef.current = stack;
+  const refocus = useRef<HTMLElement | null>(null);
+  const api = useMemo<Sheets>(() => {
+    const active = () => (document.activeElement instanceof HTMLElement ? document.activeElement : null);
+    return {
+      open: (node) => setStack((s) => [...s, { id: nextId.current++, node, opener: active() }]),
+      close: () => {
+        refocus.current = stackRef.current.at(-1)?.opener ?? null;
+        setStack((s) => s.slice(0, -1));
+      },
+      replace: (node) => setStack((s) => [...s.slice(0, -1), { id: nextId.current++, node, opener: s.at(-1)?.opener ?? active() }]),
+    };
+  }, []);
+  useEffect(() => {
+    const el = refocus.current;
+    refocus.current = null;
+    if (el?.isConnected) el.focus();
+  }, [stack]);
   useEffect(() => {
     if (!stack.length) return;
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && api.close();
@@ -82,19 +99,42 @@ export function SheetProvider({ children }: { children: ReactNode }) {
   );
 }
 
+const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
 export function Sheet({ title, icon, sub, wide, onClose, children }: {
   title: ReactNode; icon?: ReactNode; sub?: ReactNode; wide?: boolean; onClose?: () => void; children: ReactNode;
 }) {
   const sheets = useSheets();
   const close = onClose ?? sheets.close;
+  const ref = useRef<HTMLDivElement>(null);
+  const titleId = useId();
+  // Move focus into the sheet (unless a field already took it with autoFocus).
+  useEffect(() => {
+    if (ref.current && !ref.current.contains(document.activeElement)) ref.current.focus();
+  }, []);
+  // Keep Tab inside the sheet while it's open.
+  const trap = (e: React.KeyboardEvent) => {
+    if (e.key !== 'Tab' || !ref.current) return;
+    const items = [...ref.current.querySelectorAll<HTMLElement>(FOCUSABLE)].filter((x) => x.offsetParent !== null);
+    if (!items.length) return;
+    const first = items[0];
+    const last = items[items.length - 1];
+    if (e.shiftKey && (document.activeElement === first || document.activeElement === ref.current)) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault();
+      first.focus();
+    }
+  };
   return (
     <div className="scrim" onMouseDown={(e) => e.target === e.currentTarget && close()}>
-      <div className={`sheet ${wide ? 'wide' : ''}`} role="dialog" aria-modal="true" aria-label={typeof title === 'string' ? title : undefined}>
+      <div ref={ref} className={`sheet ${wide ? 'wide' : ''}`} role="dialog" aria-modal="true" aria-labelledby={titleId} tabIndex={-1} onKeyDown={trap}>
         <div className="sheet-top">
           <div className="row" style={{ gap: 14, flexWrap: 'nowrap' }}>
-            {icon && <span className="big">{icon}</span>}
+            {icon && <span className="big" aria-hidden="true">{icon}</span>}
             <div>
-              <h2>{title}</h2>
+              <h2 id={titleId}>{title}</h2>
               {sub && <div className="note">{sub}</div>}
             </div>
           </div>
@@ -188,8 +228,42 @@ export function celebrate(message: string) {
   setTimeout(() => el.remove(), 2400);
 }
 
+/* ---------- sound ---------- */
+
+const MUTE_KEY = 'hb-muted';
+let muted = (() => {
+  try {
+    return localStorage.getItem(MUTE_KEY) === '1';
+  } catch {
+    return false;
+  }
+})();
+/** Night mode on the hub: no chimes while the house sleeps. */
+let hushed = false;
+
+/** Mutes this device's chimes (remembered in this browser only). */
+export function setMuted(m: boolean) {
+  muted = m;
+  try {
+    if (m) localStorage.setItem(MUTE_KEY, '1');
+    else localStorage.removeItem(MUTE_KEY);
+  } catch {
+    /* private mode: it lasts until the page reloads */
+  }
+  dispatchEvent(new Event('hb-mute'));
+}
+export const setHushed = (h: boolean) => { hushed = h; };
+
+export function useMuted(): boolean {
+  return useSyncExternalStore(
+    (cb) => { addEventListener('hb-mute', cb); return () => removeEventListener('hb-mute', cb); },
+    () => muted,
+  );
+}
+
 let audio: AudioContext | null = null;
 export function chime(notes = [660, 880]) {
+  if (muted || hushed) return;
   try {
     audio ??= new AudioContext();
     notes.forEach((f, i) => {

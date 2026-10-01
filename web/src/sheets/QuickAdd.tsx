@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import {
-  addDays, addMinutes, dayLabel, describeRRule, EVENT_ICONS, fmtShortDate, fmtTime, parseQuickAdd, REMINDER_CHOICES, withMinutes,
-  type Plan, type TodoKind,
+  addDays, addMinutes, CATEGORIES, dayLabel, describeRRule, EVENT_ICONS, fmtShortDate, fmtTime, parseQuickAdd, REMINDER_CHOICES, withMinutes,
+  type Category, type Plan, type TodoKind,
 } from '@shared';
 import { api } from '../api.ts';
 import { namesOf, useAction, useFamily, useNow } from '../context.tsx';
@@ -42,11 +42,13 @@ function EventQuick({ text, setText, toTodo }: { text: string; setText: (t: stri
   // Choices made on the card win over what was typed, until the text changes.
   const [whoPick, setWhoPick] = useState<number[] | null>(null);
   const [iconPick, setIconPick] = useState<string | null>(null);
+  const [catPick, setCatPick] = useState<Category | null>(null);
   const [driverId, setDriverId] = useState<number | null>(null);
   const [reminders, setReminders] = useState<number[]>([]);
   const parsed = useMemo(() => parseQuickAdd(text, f.members, today), [text, f.members, today]);
   const who = whoPick ?? parsed?.memberIds ?? [];
   const icon = iconPick ?? parsed?.icon ?? '📅';
+  const category = catPick ?? parsed?.category ?? 'family';
   const adults = f.members.filter((m) => m.role === 'adult');
   const hasKid = who.some((id) => f.byId(id)?.role === 'kid');
   const kid = f.members.find((m) => m.role === 'kid')?.name ?? 'Emma';
@@ -56,6 +58,7 @@ function EventQuick({ text, setText, toTodo }: { text: string; setText: (t: stri
     setText(t);
     setWhoPick(null);
     setIconPick(null);
+    setCatPick(null);
   };
 
   const draft = (): EventDraft | null => {
@@ -64,7 +67,7 @@ function EventQuick({ text, setText, toTodo }: { text: string; setText: (t: stri
     const start = parsed.allDay ? `${date}T00:00` : withMinutes(date, parsed.startMin ?? 16 * 60);
     const length = parsed.startMin !== null && parsed.endMin !== null ? parsed.endMin - parsed.startMin : 60;
     return {
-      title: parsed.title, icon, category: parsed.category, start, end: parsed.allDay ? `${addDays(date, 1)}T00:00` : addMinutes(start, length),
+      title: parsed.title, icon, category, start, end: parsed.allDay ? `${addDays(date, 1)}T00:00` : addMinutes(start, length),
       allDay: parsed.allDay, memberIds: who, location: parsed.location, rrule: parsed.rrule, driverId: hasKid ? driverId : null,
       reminders,
     };
@@ -152,8 +155,16 @@ function EventQuick({ text, setText, toTodo }: { text: string; setText: (t: stri
             </div>
           </div>
           <div className="stack" style={{ gap: 8 }}>
+            <div className="label" id="qa-cat">Kind of event</div>
+            <div className="toggles" role="group" aria-labelledby="qa-cat">
+              {CATEGORIES.map((c) => (
+                <button key={c.id} className="tog plain" aria-pressed={category === c.id} onClick={() => setCatPick(c.id)}>{c.icon} {c.label}</button>
+              ))}
+            </div>
+          </div>
+          <div className="stack" style={{ gap: 8 }}>
             <div className="label">Picture</div>
-            <div className="emoji-grid">
+            <div className="emoji-grid" role="group" aria-label="Picture">
               {[icon, ...EVENT_ICONS.filter((x) => x !== icon)].slice(0, 12).map((e) => (
                 <button key={e} aria-pressed={icon === e} onClick={() => setIconPick(e)}>{e}</button>
               ))}

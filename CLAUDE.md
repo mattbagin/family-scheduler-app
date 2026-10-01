@@ -1,6 +1,6 @@
 # Homebase (family scheduler)
 
-A self-hosted family calendar hub: shared tablet "hub", parents' phones, and a picture-first kid mode. `PLAN.md` is the design doc and milestone list; `README.md` is the user-facing guide. **Start with `PLAN.md` §9**: it has what's built, what's left (milestone 5 and a few leftovers), and where the build departs from the original design.
+A self-hosted family calendar hub: shared tablet "hub", parents' phones, and a picture-first kid mode. `PLAN.md` is the design doc and milestone list; `README.md` is the user-facing guide. **Start with `PLAN.md` §9**: it has what's built (all milestones), what needs a person rather than code, and where the build departs from the original design.
 
 ## Commands
 
@@ -27,14 +27,16 @@ Run a single test file with `npx vitest run server/test/calendars.test.ts`. Befo
 ## Layout
 
 ```
-shared/src/   types.ts (API shapes), time.ts, recurrence.ts (RRULE parse/expand), flags.ts (conflicts), quickadd.ts, icons.ts
+shared/src/   types.ts (API shapes), time.ts, recurrence.ts (RRULE parse/expand), flags.ts (conflicts), quickadd.ts, icons.ts, weather.ts (WMO codes)
 server/src/   app.ts (Fastify wiring), db.ts + migrations/NNN_*.sql, repo.ts (row -> API mapping, reads),
               http.ts (validators v.*, parseBody/parsePatch, HttpError), auth.ts, live.ts (websocket broadcast),
-              routes/*.ts, ics/ (feed parser, zones, sync + poller), nudges/ (plan, nudger, webpush), seed.ts (sample family)
+              routes/*.ts, ics/ (feed parser, zones, sync + poller), nudges/ (plan, nudger, webpush), seed.ts (sample family),
+              hub.ts (hub settings, photo folder, Open-Meteo weather), backup.ts (nightly VACUUM INTO)
 web/src/      App.tsx (shell/routes), api.ts, queries.ts (queries + live sync), context.tsx (useFamily/useAction/useNow),
               ui.tsx (Sheet, Face, ConfirmButton, confetti, celebrate), todos.tsx (to-do/prep rows, swipe, toggles),
-              nudges.tsx (banners, feed), push.ts (notifications + install), views/*, sheets/*
+              nudges.tsx (banners, feed), push.ts (notifications + install), hub.tsx (useNight, WeatherNow), views/*, sheets/*
 web/public/   sw.js (service worker: push, notification clicks), manifest and icons
+scripts/      service.ps1 + run.ps1: Windows background service through Task Scheduler (ASCII only: Windows PowerShell 5.1 reads them)
 ```
 
 ## Conventions that aren't obvious from one file
@@ -50,7 +52,9 @@ web/public/   sw.js (service worker: push, notification clicks), manifest and ic
 - **Nudges:** `nudges/plan.ts` is a pure function (now + data → what's due); `nudger.ts` records each nudge once by `key`, pushes it per person (skipping, not dropping, during quiet hours), and escalates urgent ones that nobody acknowledges. The server ticks every 30 s (`runNudges`); tests call `app.nudger.tick(date)` instead. Web Push encryption and VAPID are hand-written in `nudges/webpush.ts` and checked against RFC 8291's example; don't swap in a library without a reason.
 - **Subscribed (ICS) events:** sync writes only the feed's fields (title, start/end, all-day, rrule, exdates, location, notes). The family's fields (members, driver, needsDriver, travelMin, bring, kidTitle, icon, category, fun) sit on the same row and survive re-syncs, because rows are matched by `(calendar_id, ext_uid)`. The API returns 409 `read_only` for edits to feed fields, deleting a feed event, or moving an occurrence of one.
 - **UI copy** is plain, warm and short, written for parents and read aloud to kids. It uses curly quotes and apostrophes (’ “ ”), and error messages say what to do next.
-- **Tests:** API tests use `buildApp({ db: openDb(':memory:') })` + `app.inject`. The helpers are in `server/test/helpers.ts`. Feed tests run a local `node:http` server; fixtures are in `server/test/fixtures/` (`us-holidays.ics` is a real Google public feed). Nudge tests run a fake push service that decrypts messages like a phone would. Background work is off in tests (`pollFeeds`, `runNudges` default to false).
+- **Hub:** photo folder, night mode and weather place live in one `settings` row (`hub`, JSON) behind `/api/hub-settings` (topic `hub`). Weather is fetched and cached server-side (`createWeather`), so every screen shares one request; tests pass `weatherApi` to point at a fake. Photos are served only from inside the chosen folder (`photoFile` checks the resolved path). `chime()` is silent when the device is muted (`setMuted`, browser storage) or the hub is in night mode (`setHushed`).
+- **Sheets** manage focus: `Sheet` moves focus in and traps Tab, and `SheetProvider` returns focus to whatever opened it. Decorative emoji next to text get `aria-hidden`.
+- **Tests:** API tests use `buildApp({ db: openDb(':memory:') })` + `app.inject`. The helpers are in `server/test/helpers.ts`. Feed tests run a local `node:http` server; fixtures are in `server/test/fixtures/` (`us-holidays.ics` is a real Google public feed). Nudge tests run a fake push service that decrypts messages like a phone would. Background work is off in tests (`pollFeeds`, `runNudges` default to false; `backup` is omitted).
 
 ## Checking the real app in a browser
 

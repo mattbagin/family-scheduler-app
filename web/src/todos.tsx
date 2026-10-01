@@ -86,7 +86,7 @@ export function TodoRow({ todo, showWho }: { todo: Todo; showWho?: boolean }) {
           onClick={(e) => toggle(todo, e.currentTarget)}>
           {todo.doneAt ? '✓' : ''}
         </button>
-        <span className="e">{todo.icon}</span>
+        <span className="e" aria-hidden="true">{todo.icon}</span>
         <div className="task-main">
           <b>{todo.text}</b>
           <div className={`note ${late ? 'late' : ''}`}>
@@ -119,7 +119,7 @@ export function PrepList({ items, showWho = true }: { items: PrepItem[]; showWho
               <button className="check" aria-pressed={p.done} aria-label={`Mark “${p.text}” ${p.done ? 'not ready' : 'ready'}`} onClick={(e) => toggle(p, e.currentTarget)}>
                 {p.done ? '✓' : ''}
               </button>
-              <span className="e">{p.icon}</span>
+              <span className="e" aria-hidden="true">{p.icon}</span>
               <div className="task-main">
                 <b>{p.text}</b>
                 <div className="note">{p.eventTitle ? `For ${p.eventTitle}` : 'Get ready'}{showWho && p.memberIds.length ? ` · ${namesOf(f, p.memberIds)}` : ''}</div>
@@ -141,7 +141,7 @@ export function PrepTiles({ items }: { items: PrepItem[] }) {
     <div className="tiles">
       {items.map((p) => (
         <button key={p.key} className={`tile ${p.done ? 'is-done' : ''}`} aria-pressed={p.done} onClick={(e) => toggle(p, e.currentTarget)}>
-          <span className="e">{p.icon}</span>{p.text}
+          <span className="e" aria-hidden="true">{p.icon}</span>{p.text}
           <span className="note">{p.date === today ? 'Today' : dayLabel(today, p.date)}</span>
         </button>
       ))}

@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
-import type { Bill, Bootstrap, Calendar, ChoreForDay, LiveTopic, Occurrence, Plan, PrepItem, Todo, Ymd } from '@shared';
+import type { Bill, Bootstrap, Calendar, ChoreForDay, HubSettings, LiveTopic, Occurrence, Plan, PrepItem, Todo, Weather, Ymd } from '@shared';
 import { api } from './api.ts';
 
 export const useBootstrap = () => useQuery({ queryKey: ['bootstrap'], queryFn: () => api<Bootstrap>('/bootstrap') });
@@ -31,6 +31,20 @@ export function useFeed(calendarId: number | null | undefined): Calendar | undef
   return calendarId == null ? undefined : data?.find((c) => c.id === calendarId && c.kind === 'ics');
 }
 
+export type HubInfo = HubSettings & { photoCount: number | null };
+export const useHub = () => useQuery({ queryKey: ['hub'], queryFn: () => api<HubInfo>('/hub-settings'), staleTime: 60_000 });
+/** The forecast for the home location (null until one is set). Quietly empty when it can't be reached. */
+export const useWeather = () =>
+  useQuery({
+    queryKey: ['weather'],
+    queryFn: () => api<{ weather: Weather | null }>('/weather').then((r) => r.weather),
+    refetchInterval: 20 * 60_000,
+    staleTime: 10 * 60_000,
+    retry: false,
+  });
+export const usePhotos = (enabled: boolean) =>
+  useQuery({ queryKey: ['photos'], queryFn: () => api<string[]>('/photos'), enabled, staleTime: 5 * 60_000 });
+
 const TOPIC_KEYS: Record<LiveTopic, string[][]> = {
   events: [['occurrences'], ['plans'], ['prep']],
   plans: [['plans'], ['occurrences']],
@@ -41,6 +55,7 @@ const TOPIC_KEYS: Record<LiveTopic, string[][]> = {
   calendars: [['calendars']],
   todos: [['todos'], ['prep']],
   nudges: [['nudges']],
+  hub: [['hub'], ['weather'], ['photos']],
 };
 
 /**

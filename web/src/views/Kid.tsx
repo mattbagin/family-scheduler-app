@@ -58,18 +58,18 @@ export function Kid() {
             <span className="tagbig">RIGHT NOW</span>
             {cur ? (
               <>
-                <div className="row"><span className="big">{cur.icon}</span><div className="word">{cur.kidTitle ?? cur.title}</div></div>
+                <div className="row"><span className="big" aria-hidden="true">{cur.icon}</span><div className="word">{cur.kidTitle ?? cur.title}</div></div>
                 <div className="face-clock"><ClockFace min={minutesOf(cur.end)} color={color} /><span>Finishes when the clock looks like this</span></div>
               </>
             ) : (
-              <div className="row"><span className="big">{late ? '😴' : '🎈'}</span><div className="word">{late ? 'Sleepy time' : 'Free time!'}</div></div>
+              <div className="row"><span className="big" aria-hidden="true">{late ? '😴' : '🎈'}</span><div className="word">{late ? 'Sleepy time' : 'Free time!'}</div></div>
             )}
           </section>
           {next && (
             <section className="now-card next">
               <span className="tagbig">NEXT</span>
               <div className="row">
-                <span className="big">{next.icon}</span>
+                <span className="big" aria-hidden="true">{next.icon}</span>
                 <div>
                   <div className="word">{next.kidTitle ?? next.title}</div>
                   {next.driverId && <div className="face-clock"><Face m={f.byId(next.driverId)} size={36} />{f.byId(next.driverId)?.name} takes you</div>}
@@ -83,7 +83,7 @@ export function Kid() {
               <div className="label" style={{ marginBottom: 8 }}>Later today</div>
               <div className="pics">
                 {later.map((o) => (
-                  <div key={o.key} className="pic"><span className="tag">{fmtTime(minutesOf(o.start)).replace(':00', '')}</span><span className="e">{o.icon}</span>{o.kidTitle ?? o.title}</div>
+                  <div key={o.key} className="pic"><span className="tag">{fmtTime(minutesOf(o.start)).replace(':00', '')}</span><span className="e" aria-hidden="true">{o.icon}</span>{o.kidTitle ?? o.title}</div>
                 ))}
               </div>
             </div>
@@ -102,7 +102,7 @@ export function Kid() {
               <div className="tiles">
                 {myTodos.map((t) => (
                   <button key={t.id} className={`tile ${t.doneAt ? 'is-done' : ''}`} aria-pressed={!!t.doneAt} onClick={(e) => toggleTodo(t, e.currentTarget)}>
-                    <span className="e">{t.icon}</span>{t.text}{t.due && <span className="note">{dayLabel(today, t.due)}</span>}
+                    <span className="e" aria-hidden="true">{t.icon}</span>{t.text}{t.due && <span className="note">{dayLabel(today, t.due)}</span>}
                   </button>
                 ))}
               </div>
@@ -119,7 +119,7 @@ export function Kid() {
                     const n = dayDiff(today, t.due);
                     return (
                       <button key={t.id} className={`tile ${t.doneAt ? 'is-done' : ''}`} aria-pressed={!!t.doneAt} onClick={(e) => toggleTask(t, p, e.currentTarget)}>
-                        <span className="e">{t.icon}</span>{t.text}
+                        <span className="e" aria-hidden="true">{t.icon}</span>{t.text}
                         <span className="moons" aria-label={n > 0 ? `${n} ${sleepsWord(n)}` : 'Today'}>{n > 0 ? '🌙'.repeat(Math.min(n, 10)) : 'Today!'}</span>
                       </button>
                     );
@@ -132,7 +132,7 @@ export function Kid() {
             const n = dayDiff(today, occDate(o));
             return (
               <div key={o.key} className="sleep">
-                <span className="e">{o.icon}</span>
+                <span className="e" aria-hidden="true">{o.icon}</span>
                 <div>
                   <b>{o.kidTitle ?? o.title}</b>
                   <span className="moons" aria-hidden="true">{'🌙'.repeat(Math.min(n, 14))}</span>

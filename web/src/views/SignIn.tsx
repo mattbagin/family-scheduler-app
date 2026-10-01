@@ -121,7 +121,7 @@ export function Setup() {
                     </label>
                   )}
                 </div>
-                <div className="emoji-grid">{MEMBER_AVATARS.slice(0, 12).map((a) => <button type="button" key={a} aria-pressed={m.avatar === a} onClick={() => update(i, { avatar: a })}>{a}</button>)}</div>
+                <div className="emoji-grid" role="group" aria-label="Picture">{MEMBER_AVATARS.slice(0, 12).map((a) => <button type="button" key={a} aria-pressed={m.avatar === a} onClick={() => update(i, { avatar: a })}>{a}</button>)}</div>
                 <div className="swatches">{MEMBER_COLORS.map((c) => <button type="button" key={c} className="swatch" style={{ background: c }} aria-pressed={m.color === c} aria-label={`Color ${c}`} onClick={() => update(i, { color: c })} />)}</div>
                 {members.length > 1 && <button type="button" className="link-btn" style={{ alignSelf: 'flex-start' }} onClick={() => setMembers(members.filter((_, j) => j !== i))}>Remove</button>}
               </div>

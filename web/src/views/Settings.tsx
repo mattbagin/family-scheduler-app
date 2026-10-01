@@ -2,15 +2,16 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import {
   addDays, dayLabel, fmtTime, guessTaskIcon, MEMBER_AVATARS, MEMBER_COLORS, minutesOf,
-  type Calendar, type CalendarPreview, type Chore, type Member, type NotifyPrefs, type NudgeSettings, type Role, type SyncResult,
+  type BackupInfo, type Calendar, type CalendarPreview, type Chore, type Member, type NotifyPrefs, type NudgeSettings, type Place, type Role,
+  type SyncResult,
 } from '@shared';
 import { api } from '../api.ts';
 import { useAction, useFamily, useNow } from '../context.tsx';
 import { ago, money, relDay } from '../lib.ts';
 import { canInstall, install, installHint, onInstallChange, pushState, turnOffPush, turnOnPush, type PushState } from '../push.ts';
-import { useBills, useCalendars, useChores } from '../queries.ts';
+import { useBills, useCalendars, useChores, useHub, type HubInfo } from '../queries.ts';
 import { UnlockSheet } from '../sheets/PinPad.tsx';
-import { Avatar, ConfirmButton, Face, pc, useSheets, useToast } from '../ui.tsx';
+import { Avatar, ConfirmButton, Face, pc, setMuted, useMuted, useSheets, useToast } from '../ui.tsx';
 
 const DAY_SHORT = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const daysText = (days: number[]) =>
@@ -40,7 +41,9 @@ export function Settings() {
         <div className="col">
           <CalendarsSection />
           <NudgesSection />
+          <HubSection />
           <BillsSection />
+          <BackupSection />
           <DeviceSection />
         </div>
       </div>
@@ -110,7 +113,7 @@ function MemberEditor({ member, onDone }: { member?: Member; onDone: () => void 
             <input id="me-pin" inputMode="numeric" pattern="\d{4,8}" value={pin} maxLength={8} required={needsPin} onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))} />
           </label>
         </div>
-        <div className="emoji-grid">{MEMBER_AVATARS.map((a) => <button type="button" key={a} aria-pressed={avatar === a} onClick={() => setAvatar(a)}>{a}</button>)}</div>
+        <div className="emoji-grid" role="group" aria-label="Picture">{MEMBER_AVATARS.map((a) => <button type="button" key={a} aria-pressed={avatar === a} onClick={() => setAvatar(a)}>{a}</button>)}</div>
         <div className="swatches">{MEMBER_COLORS.map((c) => <button type="button" key={c} className="swatch" style={{ background: c }} aria-pressed={color === c} aria-label={`Color ${c}`} onClick={() => setColor(c)} />)}</div>
         <div className="row">
           <button className="primary">{member ? 'Save' : 'Add'}</button>
@@ -504,7 +507,7 @@ function BillsSection() {
       <div>
         {bills.map((b) => (
           <div key={b.id} className="bill">
-            <span className="e">{b.icon}</span>
+            <span className="e" aria-hidden="true">{b.icon}</span>
             <div><b>{b.name}</b><div className="note">{b.paidAt ? 'Paid' : `Due ${relDay(today, b.due)}`}{b.monthly ? ' · monthly' : ''}{b.autopay ? ' · autopay' : ''}</div></div>
             <span className="amt num">{money(b.amountCents)}</span>
             <button className="x-btn" aria-label={`Remove ${b.name}`} onClick={() => act(() => api(`/bills/${b.id}`, { method: 'DELETE' }), `Removed ${b.name}`)}>✕</button>
@@ -528,15 +531,143 @@ function BillsSection() {
   );
 }
 
+function HubSection() {
+  const act = useAction();
+  const { data: hub } = useHub();
+  const [dir, setDir] = useState<string | null>(null);
+  const [q, setQ] = useState('');
+  const [places, setPlaces] = useState<Place[] | null>(null);
+  const [searching, setSearching] = useState(false);
+  if (!hub) return null;
+  const save = (body: Partial<HubInfo>, ok = 'Saved') => act(() => api<HubInfo>('/hub-settings', { method: 'PATCH', body }), ok);
+  const folder = dir ?? hub.photoDir ?? '';
+
+  const saveFolder = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (await save({ photoDir: folder.trim() || null }, folder.trim() ? 'Photo folder saved' : 'Photo folder cleared')) setDir(null);
+  };
+  const find = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSearching(true);
+    const r = await act(() => api<Place[]>(`/places?q=${encodeURIComponent(q.trim())}`));
+    setSearching(false);
+    if (r) setPlaces(r);
+  };
+  const pick = async (p: Place) => {
+    if (await save({ place: p }, `Weather is now for ${p.name}`)) {
+      setPlaces(null);
+      setQ('');
+    }
+  };
+
+  return (
+    <section className="panel">
+      <h2>Family hub</h2>
+      <p className="note" style={{ margin: 0 }}>
+        After two minutes without a touch, the shared screen shows a slideshow with the clock, the weather and everyone’s next thing.
+      </p>
+
+      <form className="form" onSubmit={saveFolder}>
+        <div className="row" style={{ alignItems: 'end' }}>
+          <label className="field" style={{ flex: 1 }}>Photo folder on the home computer
+            <input id="hub-photos" value={folder} onChange={(e) => setDir(e.target.value)} placeholder="C:\Users\you\Pictures\Family" spellCheck={false} />
+          </label>
+          <button className="icon-btn" disabled={dir === null || folder.trim() === (hub.photoDir ?? '')}>Save</button>
+        </div>
+        <span className="note">
+          {!hub.photoDir ? 'No folder yet, so the slideshow shows color scenes. Paste the full path of a folder of family photos.'
+            : hub.photoCount === null ? '⚠ That folder can’t be read right now. Check that it still exists.'
+              : `${hub.photoCount} photo${hub.photoCount === 1 ? '' : 's'}, including folders inside it. New ones show up within a few minutes.`}
+        </span>
+        {hub.photoDir && <button type="button" className="mini-btn" style={{ alignSelf: 'flex-start' }} onClick={() => save({ photoDir: null }, 'Back to color scenes')}>Use color scenes instead</button>}
+      </form>
+
+      <div className="stack" style={{ gap: 8 }}>
+        <label className="checkline">
+          <input type="checkbox" checked={hub.night} onChange={(e) => save({ night: e.target.checked }, e.target.checked ? 'Night mode on' : 'Night mode off')} />
+          Night mode: a dim clock instead of photos, and no chimes
+        </label>
+        {hub.night && (
+          <div className="row" style={{ gap: 8 }}>
+            <span className="note">From</span>
+            <input type="time" className="inline-select" style={{ width: 'auto' }} value={hub.nightStart} aria-label="Night mode starts"
+              onChange={(e) => e.target.value && save({ nightStart: e.target.value })} />
+            <span className="note">to</span>
+            <input type="time" className="inline-select" style={{ width: 'auto' }} value={hub.nightEnd} aria-label="Night mode ends"
+              onChange={(e) => e.target.value && save({ nightEnd: e.target.value })} />
+          </div>
+        )}
+      </div>
+
+      <div className="stack" style={{ gap: 8 }}>
+        <div className="row">
+          <b>Weather</b>
+          <span className="note">{hub.place ? `${hub.place.name}${hub.place.detail ? `, ${hub.place.detail}` : ''}` : 'Not set up yet'}</span>
+          <span className="spacer" />
+          <div className="toggles" role="group" aria-label="Temperature units">
+            <button className="tog plain" aria-pressed={hub.tempUnit === 'c'} onClick={() => save({ tempUnit: 'c' })}>°C</button>
+            <button className="tog plain" aria-pressed={hub.tempUnit === 'f'} onClick={() => save({ tempUnit: 'f' })}>°F</button>
+          </div>
+        </div>
+        <form className="row" onSubmit={find}>
+          <input id="hub-place" style={{ flex: 1 }} aria-label="Town or city for the weather" value={q} onChange={(e) => { setQ(e.target.value); setPlaces(null); }}
+            placeholder={hub.place ? 'Change the town or city' : 'Your town or city'} autoComplete="off" />
+          <button className="icon-btn" disabled={!q.trim() || searching}>{searching ? 'Looking…' : 'Find'}</button>
+        </form>
+        {places && (places.length ? (
+          <div className="toggles">
+            {places.map((p) => (
+              <button key={`${p.lat},${p.lon}`} className="tog plain" onClick={() => pick(p)}>
+                📍 {p.name}{p.detail && <span className="note">{p.detail}</span>}
+              </button>
+            ))}
+          </div>
+        ) : <span className="note">No places by that name. Try the nearest bigger town.</span>)}
+        {hub.place && <button className="mini-btn" style={{ alignSelf: 'flex-start' }} onClick={() => save({ place: null }, 'Weather turned off')}>Turn weather off</button>}
+      </div>
+    </section>
+  );
+}
+
+function BackupSection() {
+  const act = useAction();
+  const { data: info, refetch } = useQuery({ queryKey: ['backups'], queryFn: () => api<BackupInfo | null>('/backups') });
+  const [busy, setBusy] = useState(false);
+  if (!info) return null;
+  const latest = info.files[0];
+  const backUp = async () => {
+    setBusy(true);
+    await act(() => api<BackupInfo>('/backups', { method: 'POST' }), 'Backed up');
+    setBusy(false);
+    refetch();
+  };
+  return (
+    <section className="panel">
+      <h2>Backups</h2>
+      <p className="note" style={{ margin: 0 }}>
+        Each night the home computer copies everything to a backup file and keeps the last {info.keep}.{' '}
+        {latest ? `Latest: ${ago(latest.at)} (${Math.max(1, Math.round(latest.size / 1024))} KB).` : 'None yet.'}
+      </p>
+      <p className="note" style={{ margin: 0, overflowWrap: 'anywhere' }}>Folder: {info.dir}</p>
+      <div className="row"><button className="icon-btn" disabled={busy} onClick={backUp}>{busy ? 'Backing up…' : 'Back up now'}</button></div>
+    </section>
+  );
+}
+
 function DeviceSection() {
   const f = useFamily();
   const qc = useQueryClient();
   const act = useAction();
+  const muted = useMuted();
   const who = f.session.kind === 'hub' ? 'the family hub' : f.me?.name ?? 'someone';
   return (
     <section className="panel">
       <h2>This device</h2>
       <p style={{ margin: 0 }}>Signed in as <b>{who}</b>.</p>
+      <label className="checkline">
+        <input type="checkbox" checked={!muted} onChange={(e) => setMuted(!e.target.checked)} />
+        Sounds on this device (chimes for jobs, celebrations and nudges)
+      </label>
       <InstallButton />
       <div className="row">
         {f.session.elevatedUntil && (

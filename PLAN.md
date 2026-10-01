@@ -85,14 +85,14 @@ Each member has a name, a **color**, an avatar (photo or emoji), a role, and not
 - *Later:* two-way Google Calendar sync over OAuth. Not needed for v1.
 
 ## 7. Milestones
-Status as of 2026-09-30: milestones 0 to 4 are done (✅), with the exceptions noted. §9 has the details.
+Status as of 2026-09-30: all milestones (0 to 5) are done (✅), with the exceptions noted. §9 has the details.
 
 0. ✅ **Clickable UI mockup** (an HTML artifact) of the hub Today board, kid mode, and the week grid, filled with sample family data. Review and iterate on the look before writing the real app, since the UI matters most. *(Kept in `mockup/homebase-hub.html`.)*
-1. ✅ **Foundation:** workspaces scaffold, Fastify + SQLite + migrations, members/auth, local event CRUD, Today board, and week/month views with live WebSocket sync. *(Exception: the **month view was not built**; see §9.)*
+1. ✅ **Foundation:** workspaces scaffold, Fastify + SQLite + migrations, members/auth, local event CRUD, Today board, and week/month views with live WebSocket sync. *(The month view came later, in milestone 5.)*
 2. ✅ **Subscriptions:** ICS poller, recurrence expansion, overrides, and the subscription settings UI.
 3. ✅ **Tasks:** chores, bills, prep items, kid mode, the chore chart with celebrations, and quick add with natural language.
 4. ✅ **Nudges:** VAPID/Web Push, the nudge scheduler, the hub banner and chime, Tailscale HTTPS setup, and PWA install. *(Tailscale is documented in the README, but not yet set up on the home PC; real-phone push is untested. See §9.)*
-5. ⏳ **Ambient & polish:** photo slideshow, night dimming, weather, conflict/driver detection, sounds, accessibility pass, and pm2 service + backups. *(Partly there already; see §9.)*
+5. ✅ **Ambient & polish:** photo slideshow, night dimming, weather, conflict/driver detection, sounds, accessibility pass, and pm2 service + backups. *(The service uses Task Scheduler instead of pm2; see §9.)*
 
 ## 8. Verification
 - **Unit tests (Vitest):** recurrence expansion (DST, exdates, overrides), ICS parsing using a real public feed saved as a fixture (e.g. a public holidays calendar), nudge timing math, and natural-language parsing.
@@ -111,9 +111,10 @@ This section is the current state of the build. Sections 1 to 8 are the original
 | 1 | `d7dd70e` | Members and PIN sign-in, hub device with a 10-minute parent unlock, events with repeats and per-occurrence changes (move, skip, other driver), plans with tasks, chores, bills, live sync; Today, Week, person pages, kid mode, ambient screen, Settings; sample family |
 | 2 | `d7dd70e` | ICS subscriptions: dependency-free parser (time zones including Outlook's Windows names, EXDATE, RECURRENCE-ID, CANCELLED), extended RRULE (numbered weekdays, BYMONTHDAY, BYMONTH, BYSETPOS), ETag/Last-Modified polling every 30 min, family fields that survive re-syncs, Settings panel with a preview |
 | 3 | `9adc291` | To-dos and prep items (`todos` table), "packed" ticks on events' bring notes, chore chart on Today, Get ready lists, swipeable to-do rows, kid-mode packing tiles, all-done celebration, much richer quick-add parser (dates, ranges, lengths, repeats) |
-| 4 | (this commit) | Nudges: leave-by with repeat and escalation to the other parent, per-event reminders, morning briefing, evening packing digest, bill alerts; per-parent quiet hours and switches; hub banners with a chime (also over ambient); hand-written Web Push (RFC 8291/8292); service worker, manifest, icons, install button; Tailscale guide in the README |
+| 4 | `ba14bfd` | Nudges: leave-by with repeat and escalation to the other parent, per-event reminders, morning briefing, evening packing digest, bill alerts; per-parent quiet hours and switches; hub banners with a chime (also over ambient); hand-written Web Push (RFC 8291/8292); service worker, manifest, icons, install button; Tailscale guide in the README |
+| 5 | (this commit) | Ambient photo slideshow from a folder on the home computer (recursive, shuffled, preloaded, blurred fill for portrait photos); night mode with its own hours (dim warm clock, no photos, no chimes); weather from Open-Meteo on Today, ambient and a rainy-day heads-up; month view with a day agenda; category picker in quick add; per-device mute and a hub 🔔 switch; accessibility pass (sheet focus trap and return, skip link, labelled groups, hidden decorative emoji, AA contrast fixes, reduced motion); nightly database backups with **Back up now**; Windows background service script |
 
-Tests: 71 Vitest tests (shared logic, API, ICS, nudge timing, Web Push against the RFC example, end-to-end nudges through a fake push service). Each milestone was also checked in a real browser with Playwright (see `CLAUDE.md`).
+Tests: 76 Vitest tests (shared logic, API, ICS, nudge timing, Web Push against the RFC example, end-to-end nudges through a fake push service, hub settings, photos, weather through a fake Open-Meteo, backups). Each milestone was also checked in a real browser with Playwright (see `CLAUDE.md`).
 
 ### Where the build departs from sections 1 to 8
 
@@ -124,27 +125,20 @@ Tests: 71 Vitest tests (shared logic, API, ICS, nudge timing, Web Push against t
   - There's no `event_overrides` table: sync only writes the feed's own columns, so family details live on the same event row.
   - `calendar_members` replaces `calendars.default_member_id` (a calendar can be for several people).
   - Reminders are `event_reminders` (minutes before start), and nudges are logged in `nudges` + `nudge_sends`.
-- **Hub ambient screen** uses gradient scenes as placeholders for photos.
+- **Hub ambient screen** falls back to gradient scenes when no photo folder is set. Photos are served as they are (no resizing), so very large files load slowly on an old tablet.
+- **Running as a service (§1):** Windows Task Scheduler (`scripts/service.ps1`, runs as SYSTEM at startup, restarts itself) instead of pm2 or NSSM, since it needs nothing extra installed. Backups are built into the server (`VACUUM INTO`, nightly after 3 AM, keeps 14) rather than a separate job.
+- **Hub settings** (photo folder, night mode, weather place and units) are one JSON value in `settings` under the key `hub`. The mute switch is per device (browser storage), not a server setting.
 
 ### Not done yet
 
-**Milestone 5 (Ambient & polish):**
-- [ ] **Photo slideshow** from a folder (a setting for the folder; the server lists and serves the images). The ambient screen has placeholder gradients (`web/src/views/Ambient.tsx`).
-- [ ] **Night dimming:** a fixed 9 PM to 6:30 AM dim exists; make it follow a setting (or quiet hours) and dim more deeply.
-- [ ] **Weather** on Today and ambient, from Open-Meteo (no API key); needs a home location setting.
-- [x] **Conflict/driver detection:** done in `shared/src/flags.ts` (a kid in two places, a double-booked driver, a ride with no driver). Could be extended, for example to leave-by times that clash.
-- [ ] **Sounds:** a chime exists for jobs, celebrations and nudges; decide whether more are wanted, and add a mute switch for the hub.
-- [ ] **Accessibility pass:** keyboard paths through the sheets, focus handling, contrast in dark mode, screen-reader labels on tiles.
-- [ ] **Run as a Windows service** (pm2 or NSSM) and **nightly backups** of the SQLite file.
-
-**Left over from earlier milestones:**
-- [ ] **Month view** (§4, screen 4): a colored dot per person on each day; tap a day for its agenda. Planned in milestone 1, never built.
-- [ ] **Quick add** has no category picker (it guesses the category from the words; the full form has one).
+All planned milestones are built. Ideas for later: leave-by times that clash as a conflict flag, resized photo thumbnails for slow tablets, a time-zone setting, two-way Google Calendar sync (§6).
 
 **Needs a person, not code:**
 - [ ] Install Tailscale on the home PC and phones and run `tailscale serve --bg 8080` (README, "Phones and HTTPS").
 - [ ] On a phone, install the app, turn on notifications, **Send a test**, then wait for a real leave-by nudge. Web Push has only been tested against a fake push service. Set `HOMEBASE_VAPID_SUBJECT` to a real email first; Apple's push service is untested.
-- [ ] Leave the hub on overnight to check ambient mode and dimming.
+- [ ] Install the background service from an administrator PowerShell (`npm run service -- install`); it has been parse-checked but not installed on the home PC. Then reboot and check that Homebase comes back on its own.
+- [ ] Point Settings → Family hub at a real photo folder and leave the hub on overnight to check the slideshow, night mode and dimming.
+- [ ] Check that a nightly backup appears in `server/data/backups` and try a restore once.
 - [ ] Subscribe to a real school or team calendar and edit an event upstream to see it sync.
 
 **Known limitations:**

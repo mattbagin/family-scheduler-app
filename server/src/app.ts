@@ -5,15 +5,18 @@ import websocket from '@fastify/websocket';
 import Fastify, { type FastifyError } from 'fastify';
 import type { LiveTopic } from '../../shared/src/index.ts';
 import { loadAuth, SESSION_COOKIE } from './auth.ts';
+import { startBackups, type BackupOptions } from './backup.ts';
 import type { Ctx } from './context.ts';
 import type { Db } from './db.ts';
 import { HttpError } from './http.ts';
+import { OPEN_METEO, type WeatherApi } from './hub.ts';
 import { startPoller } from './ics/sync.ts';
 import { createNudger, type Nudger } from './nudges/nudger.ts';
 import { LiveHub } from './live.ts';
 import { calendarRoutes } from './routes/calendars.ts';
 import { choreRoutes } from './routes/chores.ts';
 import { eventRoutes } from './routes/events.ts';
+import { hubRoutes } from './routes/hub.ts';
 import { memberRoutes } from './routes/members.ts';
 import { nudgeRoutes } from './routes/nudges.ts';
 import { planRoutes } from './routes/plans.ts';
@@ -28,6 +31,10 @@ export interface AppOptions {
   pollFeeds?: boolean;
   /** Check for due nudges every 30 seconds (off in tests, which call app.nudger.tick). */
   runNudges?: boolean;
+  /** Where weather and place search come from (tests point this at a local server). */
+  weatherApi?: WeatherApi;
+  /** Database backups; omitted means none (tests), `nightly` adds the nightly timer. */
+  backup?: BackupOptions;
 }
 
 declare module 'fastify' {
@@ -36,7 +43,7 @@ declare module 'fastify' {
   }
 }
 
-export async function buildApp({ db, webDist, logger = false, pollFeeds = false, runNudges = false }: AppOptions) {
+export async function buildApp({ db, webDist, logger = false, pollFeeds = false, runNudges = false, weatherApi = OPEN_METEO, backup }: AppOptions) {
   const app = Fastify({ logger: logger ? { level: 'info' } : false, bodyLimit: 256 * 1024 });
   await app.register(cookie);
   await app.register(websocket);
@@ -72,6 +79,7 @@ export async function buildApp({ db, webDist, logger = false, pollFeeds = false,
   choreRoutes(app, ctx);
   calendarRoutes(app, ctx);
   todoRoutes(app, ctx);
+  hubRoutes(app, ctx, { weatherApi, backup });
   const nudger = createNudger(db, { changed: ctx.changed, announce: (n) => live.announce(n) });
   app.decorate('nudger', nudger);
   nudgeRoutes(app, ctx, nudger);
@@ -88,6 +96,11 @@ export async function buildApp({ db, webDist, logger = false, pollFeeds = false,
 
   if (pollFeeds) {
     const stop = startPoller(db, ctx.changed);
+    app.addHook('onClose', async () => stop());
+  }
+
+  if (backup?.nightly) {
+    const stop = startBackups(db, backup, (msg, err) => (err ? app.log.error(err, msg) : app.log.info(msg)));
     app.addHook('onClose', async () => stop());
   }
 

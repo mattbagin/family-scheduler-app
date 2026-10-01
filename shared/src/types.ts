@@ -230,4 +230,41 @@ export interface SyncResult {
 }
 
 /** Topics pushed over the live socket so every screen refreshes what changed. */
-export type LiveTopic = 'events' | 'plans' | 'chores' | 'bills' | 'members' | 'settings' | 'calendars' | 'todos' | 'nudges';
+export type LiveTopic = 'events' | 'plans' | 'chores' | 'bills' | 'members' | 'settings' | 'calendars' | 'todos' | 'nudges' | 'hub';
+
+/** A place for the weather, picked from Open-Meteo's place search. */
+export interface Place {
+  name: string;
+  /** Region and country, e.g. "Ontario, Canada". */
+  detail: string;
+  lat: number;
+  lon: number;
+}
+
+/** How the shared hub behaves: photos, night mode and weather. */
+export interface HubSettings {
+  /** Folder on the home computer with photos for the ambient screen; null shows color scenes. */
+  photoDir: string | null;
+  /** Night mode dims the hub deeply and silences its chimes, `HH:mm`, may wrap past midnight. */
+  night: boolean;
+  nightStart: string;
+  nightEnd: string;
+  place: Place | null;
+  tempUnit: 'c' | 'f';
+}
+
+/** Today's and the next few days' forecast (WMO weather codes, see shared/weather.ts). */
+export interface Weather {
+  place: string;
+  unit: 'c' | 'f';
+  now: { temp: number; code: number; isDay: boolean };
+  days: { date: Ymd; hi: number; lo: number; code: number; rainChance: number }[];
+  fetchedAt: string;
+}
+
+/** The home computer's last backups of the database. */
+export interface BackupInfo {
+  dir: string;
+  keep: number;
+  files: { name: string; size: number; at: string }[];
+}

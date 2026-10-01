@@ -34,7 +34,7 @@ export function ChoreTile({ c, all }: { c: ChoreForDay; all: ChoreForDay[] }) {
   const toggle = useToggleChore();
   return (
     <button className={`tile ${c.done ? 'is-done' : ''}`} aria-pressed={c.done} onClick={(e) => toggle(c, all, e.currentTarget)}>
-      <span className="e">{c.icon}</span>{c.text}
+      <span className="e" aria-hidden="true">{c.icon}</span>{c.text}
     </button>
   );
 }
@@ -153,12 +153,12 @@ export function Person() {
               <div className="tiles">
                 {myTodos.map((t) => (
                   <button key={`todo-${t.id}`} className={`tile ${t.doneAt ? 'is-done' : ''}`} aria-pressed={!!t.doneAt} onClick={(e) => toggleTodo(t, e.currentTarget)}>
-                    <span className="e">{t.icon}</span>{t.text}{t.due && <span className="note">{dayLabel(today, t.due)}</span>}
+                    <span className="e" aria-hidden="true">{t.icon}</span>{t.text}{t.due && <span className="note">{dayLabel(today, t.due)}</span>}
                   </button>
                 ))}
                 {tasks.map(({ t, p }) => (
                   <button key={t.id} className={`tile ${t.doneAt ? 'is-done' : ''}`} aria-pressed={!!t.doneAt} onClick={(e) => toggleTask(t, p, e.currentTarget)}>
-                    <span className="e">{t.icon}</span>{t.text}<span className="note">{p.icon} {dayLabel(today, t.due)}</span>
+                    <span className="e" aria-hidden="true">{t.icon}</span>{t.text}<span className="note">{p.icon} {dayLabel(today, t.due)}</span>
                   </button>
                 ))}
               </div>
@@ -178,7 +178,7 @@ export function Person() {
               <div>
                 {bills.slice(0, 6).map((b) => (
                   <div key={b.id} className="bill">
-                    <span className="e">{b.icon}</span>
+                    <span className="e" aria-hidden="true">{b.icon}</span>
                     <div><b>{b.name}</b><div className="note">{b.autopay ? 'Autopay · ' : ''}{b.paidAt ? 'Paid' : `due ${relDay(today, b.due)}`}{b.monthly ? ' · monthly' : ''}</div></div>
                     <span className="amt num">{money(b.amountCents)}</span>
                     {b.paidAt ? <span className="paid">Paid ✓</span> : !b.autopay && <PayButton id={b.id} name={b.name} />}

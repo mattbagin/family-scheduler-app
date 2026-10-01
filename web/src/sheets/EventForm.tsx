@@ -192,7 +192,7 @@ export function EventForm({ event, draft = {} }: { event?: EventRecord; draft?: 
           </label>
         </div>
         <div className="field">Picture
-          <div className="emoji-grid">
+          <div className="emoji-grid" role="group" aria-label="Picture">
             {(EVENT_ICONS.includes(icon) ? EVENT_ICONS : [icon, ...EVENT_ICONS]).map((e) => (
               <button type="button" key={e} aria-pressed={icon === e} onClick={() => { setIcon(e); setIconTouched(true); }}>{e}</button>
             ))}

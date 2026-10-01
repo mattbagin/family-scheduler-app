@@ -22,6 +22,8 @@ For development, `npm run dev` runs the API on :8080 and Vite on http://localhos
 | `HOST` | `0.0.0.0` (reachable from other devices on the network) |
 | `HOMEBASE_DB` | `server/data/homebase.db` |
 | `HOMEBASE_VAPID_SUBJECT` | `mailto:homebase@example.com` (a contact for the push services; use a real email of yours) |
+| `HOMEBASE_BACKUP_DIR` | `backups` next to the database |
+| `HOMEBASE_BACKUP_KEEP` | `14` (nightly backups to keep) |
 
 ## How sign-in works
 
@@ -50,6 +52,33 @@ Homebase nudges the parents so things don't slip:
 
 Nudges show as banners with a soft chime on the family hub, even over the ambient screen, and go to parents' phones as notifications. Each parent sets their own quiet hours (9:30 PM to 6:30 AM by default) and which kinds they want in **Settings → Nudges**. Nudges held back by quiet hours go out when those hours end, if they still matter.
 
+## The family hub screen
+
+The shared tablet shows **Today**, **Week** and **Month** (a colored dot for each person busy that day; tap a day for its list). After two minutes without a touch it switches to the **ambient screen**: a slideshow with the clock, the weather and everyone’s next thing. Any tap wakes it. Set it up in **Settings → Family hub**:
+
+- **Photos:** paste the full path of a folder on the home computer, like `C:\Users\you\Pictures\Family`. Pictures in folders inside it count too (JPEG, PNG, WebP, GIF, AVIF). Photos are shuffled, and portrait ones are shown whole over a blurred copy. Without a folder, the slideshow uses color scenes.
+- **Night mode** (9 PM to 6:30 AM unless you change it): photos give way to a dim, warm clock, and the hub stops chiming.
+- **Weather:** search for your town. The forecast comes from [Open-Meteo](https://open-meteo.com) (free, no account) and shows on the Today board and the ambient screen. A rainy day adds an umbrella heads-up.
+- **Sounds:** the 🔔 button on the hub’s top bar mutes its chimes. Any device can turn its own sounds off in **Settings → This device**.
+
+## Running it all the time (Windows)
+
+To have Homebase start with the computer, before anyone signs in, and come back if it ever stops, open PowerShell **as administrator** in the Homebase folder and run:
+
+```powershell
+npm install
+npm run build
+npm run service -- install
+```
+
+This uses Windows’ built-in Task Scheduler (no extra software). `npm run service -- status` says whether it’s running, `stop` stops it, `restart` picks up changes after `git pull` and `npm run build`, and `uninstall` removes it (your data stays). The log is `server\data\homebase.log`. Settings such as `PORT` or `HOMEBASE_VAPID_SUBJECT` that are set in the PowerShell window when you install are remembered. Keep the computer from sleeping (Settings → System → Power) so the hub and nudges keep working.
+
+### Backups
+
+Every night after 3 AM (or when the computer next wakes), Homebase copies its database to `server\data\backups\homebase-<date>-<time>.db` and keeps the last 14. **Settings → Backups** shows the latest one and has a **Back up now** button. For safety against a failed disk, point `HOMEBASE_BACKUP_DIR` at a synced folder (OneDrive, Dropbox) or another drive.
+
+To restore: stop Homebase (`npm run service -- stop` from an administrator PowerShell, or close `npm start`), copy the backup over `server\data\homebase.db`, delete any `homebase.db-wal` and `homebase.db-shm` files next to it, then start it again (`npm run service -- restart`).
+
 ## Phones and HTTPS (Tailscale)
 
 Phones need Homebase's secure `https://` address to install it and get notifications. [Tailscale](https://tailscale.com) provides one without opening any ports on your router:
@@ -77,7 +106,8 @@ In **Settings → Subscribed calendars**, paste an ICS or `webcal://` link: a sc
 ```
 shared/   types and logic used by both sides: dates, repeat rules, quick-add parser, conflict checks
 server/   Fastify API + SQLite (migrations in server/src/migrations), live updates over WebSocket
-web/      React app (Vite): Today, Week, person pages, kid mode, ambient screen, settings
+web/      React app (Vite): Today, Week, Month, person pages, kid mode, ambient screen, settings
+scripts/  run Homebase as a Windows background service (Task Scheduler)
 mockup/   the original clickable design mockup
 ```
 
@@ -94,4 +124,4 @@ npm run typecheck
 2. ~~Calendar subscriptions (school, team, Google/Outlook ICS links)~~
 3. ~~Richer tasks and kid-mode polish~~
 4. ~~Nudges: push notifications (leave-by, pack for tomorrow, bills), HTTPS over Tailscale, installable app~~
-5. Ambient photo slideshow, weather, backups, running as a Windows service
+5. ~~Ambient photo slideshow, night mode, weather, month view, accessibility, backups, running as a Windows service~~
