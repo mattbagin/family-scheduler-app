@@ -570,7 +570,7 @@ function HubSection() {
       <form className="form" onSubmit={saveFolder}>
         <div className="row" style={{ alignItems: 'end' }}>
           <label className="field" style={{ flex: 1 }}>Photo folder on the home computer
-            <input id="hub-photos" value={folder} onChange={(e) => setDir(e.target.value)} placeholder="C:\Users\you\Pictures\Family" spellCheck={false} />
+            <input id="hub-photos" value={folder} onChange={(e) => setDir(e.target.value)} placeholder="Paste the folder’s full path" spellCheck={false} />
           </label>
           <button className="icon-btn" disabled={dir === null || folder.trim() === (hub.photoDir ?? '')}>Save</button>
         </div>

@@ -17,7 +17,7 @@
     "start": "npm start -w server",
     "test": "vitest run",
     "typecheck": "tsc -p shared && tsc -p server && tsc -p web",
-    "service": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/service.ps1"
+    "service": "node scripts/service.mjs"
   },
   "devDependencies": {
     "@types/node": "^26.6.3",

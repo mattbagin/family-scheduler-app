@@ -16,7 +16,8 @@ const hhmm = (x: unknown, f: string) => {
 const photoDir = (x: unknown, f: string): string | null => {
   const dir = v.optText(500)(x, f);
   if (dir !== null && !isFolder(dir)) {
-    throw badRequest(`${f}: can’t find that folder on the home computer. Paste its full path, like C:\\Users\\you\\Pictures\\Family`);
+    const example = process.platform === 'win32' ? 'C:\\Users\\you\\Pictures\\Family' : '/Users/you/Homebase Photos';
+    throw badRequest(`${f}: can’t find that folder on the home computer. Paste its full path, like ${example}`);
   }
   return dir;
 };

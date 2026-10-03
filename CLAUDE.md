@@ -36,7 +36,8 @@ web/src/      App.tsx (shell/routes), api.ts, queries.ts (queries + live sync), 
               ui.tsx (Sheet, Face, ConfirmButton, confetti, celebrate), todos.tsx (to-do/prep rows, swipe, toggles),
               nudges.tsx (banners, feed), push.ts (notifications + install), hub.tsx (useNight, WeatherNow), views/*, sheets/*
 web/public/   sw.js (service worker: push, notification clicks), manifest and icons
-scripts/      service.ps1 + run.ps1: Windows background service through Task Scheduler (ASCII only: Windows PowerShell 5.1 reads them)
+scripts/      service.mjs picks the platform's script for `npm run service`: service.ps1 + run.ps1 (Windows Task Scheduler; ASCII only,
+              Windows PowerShell 5.1 reads them) or service.sh + run.sh (macOS launchd; macOS's /bin/bash is 3.2, so no bash 4+ features)
 ```
 
 ## Conventions that aren't obvious from one file

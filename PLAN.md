@@ -126,7 +126,7 @@ Tests: 76 Vitest tests (shared logic, API, ICS, nudge timing, Web Push against t
   - `calendar_members` replaces `calendars.default_member_id` (a calendar can be for several people).
   - Reminders are `event_reminders` (minutes before start), and nudges are logged in `nudges` + `nudge_sends`.
 - **Hub ambient screen** falls back to gradient scenes when no photo folder is set. Photos are served as they are (no resizing), so very large files load slowly on an old tablet.
-- **Running as a service (§1):** Windows Task Scheduler (`scripts/service.ps1`, runs as SYSTEM at startup, restarts itself) instead of pm2 or NSSM, since it needs nothing extra installed. Backups are built into the server (`VACUUM INTO`, nightly after 3 AM, keeps 14) rather than a separate job.
+- **Running as a service (§1):** Windows Task Scheduler (`scripts/service.ps1`, runs as SYSTEM at startup, restarts itself) instead of pm2 or NSSM, since it needs nothing extra installed. On macOS the same `npm run service` commands use launchd (`scripts/service.sh`, a LaunchDaemon that runs as the installing user); `scripts/service.mjs` picks the script for the platform. Backups are built into the server (`VACUUM INTO`, nightly after 3 AM, keeps 14) rather than a separate job.
 - **Hub settings** (photo folder, night mode, weather place and units) are one JSON value in `settings` under the key `hub`. The mute switch is per device (browser storage), not a server setting.
 
 ### Not done yet
@@ -136,7 +136,7 @@ All planned milestones are built. Ideas for later: leave-by times that clash as 
 **Needs a person, not code:**
 - [ ] Install Tailscale on the home PC and phones and run `tailscale serve --bg 8080` (README, "Phones and HTTPS").
 - [ ] On a phone, install the app, turn on notifications, **Send a test**, then wait for a real leave-by nudge. Web Push has only been tested against a fake push service. Set `HOMEBASE_VAPID_SUBJECT` to a real email first; Apple's push service is untested.
-- [ ] Install the background service from an administrator PowerShell (`npm run service -- install`); it has been parse-checked but not installed on the home PC. Then reboot and check that Homebase comes back on its own.
+- [ ] Install the background service from an administrator PowerShell (`npm run service -- install`); it has been parse-checked but not installed on the home PC. Then reboot and check that Homebase comes back on its own. On a Mac, run `npm run service -- install` from Terminal; `scripts/service.sh` was only dry-run on Windows with stand-in `launchctl`, `sudo` and `plutil`, so check install, status, stop, restart, a reboot and uninstall on the real Mac.
 - [ ] Point Settings → Family hub at a real photo folder and leave the hub on overnight to check the slideshow, night mode and dimming.
 - [ ] Check that a nightly backup appears in `server/data/backups` and try a restore once.
 - [ ] Subscribe to a real school or team calendar and edit an event upstream to see it sync.

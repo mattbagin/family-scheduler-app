@@ -56,14 +56,18 @@ Nudges show as banners with a soft chime on the family hub, even over the ambien
 
 The shared tablet shows **Today**, **Week** and **Month** (a colored dot for each person busy that day; tap a day for its list). After two minutes without a touch it switches to the **ambient screen**: a slideshow with the clock, the weather and everyone’s next thing. Any tap wakes it. Set it up in **Settings → Family hub**:
 
-- **Photos:** paste the full path of a folder on the home computer, like `C:\Users\you\Pictures\Family`. Pictures in folders inside it count too (JPEG, PNG, WebP, GIF, AVIF). Photos are shuffled, and portrait ones are shown whole over a blurred copy. Without a folder, the slideshow uses color scenes.
+- **Photos:** paste the full path of a folder on the home computer, like `C:\Users\you\Pictures\Family` on Windows or `/Users/you/Homebase Photos` on a Mac. Pictures in folders inside it count too (JPEG, PNG, WebP, GIF, AVIF). Photos are shuffled, and portrait ones are shown whole over a blurred copy. Without a folder, the slideshow uses color scenes.
 - **Night mode** (9 PM to 6:30 AM unless you change it): photos give way to a dim, warm clock, and the hub stops chiming.
 - **Weather:** search for your town. The forecast comes from [Open-Meteo](https://open-meteo.com) (free, no account) and shows on the Today board and the ambient screen. A rainy day adds an umbrella heads-up.
 - **Sounds:** the 🔔 button on the hub’s top bar mutes its chimes. Any device can turn its own sounds off in **Settings → This device**.
 
-## Running it all the time (Windows)
+## Running it all the time
 
-To have Homebase start with the computer, before anyone signs in, and come back if it ever stops, open PowerShell **as administrator** in the Homebase folder and run:
+Homebase can start with the computer, before anyone signs in, and come back if it ever stops. The same commands work on Windows and macOS: `npm run service -- status` says whether it’s running, `stop` stops it, `restart` picks up changes after `git pull` and `npm run build`, and `uninstall` removes it (your data stays). Settings such as `PORT` or `HOMEBASE_VAPID_SUBJECT` that are set in the window when you install are remembered; to change them later, set them and install again.
+
+### Windows
+
+Open PowerShell **as administrator** in the Homebase folder and run:
 
 ```powershell
 npm install
@@ -71,13 +75,29 @@ npm run build
 npm run service -- install
 ```
 
-This uses Windows’ built-in Task Scheduler (no extra software). `npm run service -- status` says whether it’s running, `stop` stops it, `restart` picks up changes after `git pull` and `npm run build`, and `uninstall` removes it (your data stays). The log is `server\data\homebase.log`. Settings such as `PORT` or `HOMEBASE_VAPID_SUBJECT` that are set in the PowerShell window when you install are remembered. Keep the computer from sleeping (Settings → System → Power) so the hub and nudges keep working.
+This uses Windows’ built-in Task Scheduler (no extra software). Run the other `npm run service` commands from an administrator PowerShell too. The log is `server\data\homebase.log`. Keep the computer from sleeping (Settings → System → Power) so the hub and nudges keep working.
 
-### Backups
+### macOS
 
-Every night after 3 AM (or when the computer next wakes), Homebase copies its database to `server\data\backups\homebase-<date>-<time>.db` and keeps the last 14. **Settings → Backups** shows the latest one and has a **Back up now** button. For safety against a failed disk, point `HOMEBASE_BACKUP_DIR` at a synced folder (OneDrive, Dropbox) or another drive.
+Open Terminal in the Homebase folder and run (without `sudo`; it asks for your password when it needs it):
 
-To restore: stop Homebase (`npm run service -- stop` from an administrator PowerShell, or close `npm start`), copy the backup over `server\data\homebase.db`, delete any `homebase.db-wal` and `homebase.db-shm` files next to it, then start it again (`npm run service -- restart`).
+```sh
+npm install
+npm run build
+npm run service -- install
+```
+
+This uses macOS’s built-in launchd (no extra software). Homebase runs as the account that installed it. The log is `server/data/homebase.log`. A few Mac settings to check:
+
+- **Sleep:** in System Settings → Energy (or Battery → Options on a laptop), turn on **Prevent automatic sleeping when the display is off**, so the hub and nudges keep working.
+- **Firewall:** if macOS asks whether `node` may accept incoming connections, choose **Allow**, or the tablet and phones can’t reach it.
+- **Photos:** the background service isn’t allowed into your Pictures, Documents or Desktop folders. Keep the hub’s photos in a folder of their own, like `/Users/you/Homebase Photos`, or give `node` **Full Disk Access** in System Settings → Privacy & Security. Export pictures out of the Photos app as JPEG; iPhone HEIC photos don’t show in the slideshow.
+
+## Backups
+
+Every night after 3 AM (or when the computer next wakes), Homebase copies its database to `server/data/backups/homebase-<date>-<time>.db` and keeps the last 14. **Settings → Backups** shows the latest one and has a **Back up now** button. For safety against a failed disk, point `HOMEBASE_BACKUP_DIR` at a synced folder (OneDrive, iCloud Drive, Dropbox) or another drive.
+
+To restore: stop Homebase (`npm run service -- stop`, or close `npm start`), copy the backup over `server/data/homebase.db`, delete any `homebase.db-wal` and `homebase.db-shm` files next to it, then start it again (`npm run service -- restart`).
 
 ## Phones and HTTPS (Tailscale)
 
@@ -107,7 +127,7 @@ In **Settings → Subscribed calendars**, paste an ICS or `webcal://` link: a sc
 shared/   types and logic used by both sides: dates, repeat rules, quick-add parser, conflict checks
 server/   Fastify API + SQLite (migrations in server/src/migrations), live updates over WebSocket
 web/      React app (Vite): Today, Week, Month, person pages, kid mode, ambient screen, settings
-scripts/  run Homebase as a Windows background service (Task Scheduler)
+scripts/  run Homebase as a background service (Task Scheduler on Windows, launchd on macOS)
 mockup/   the original clickable design mockup
 ```
 
