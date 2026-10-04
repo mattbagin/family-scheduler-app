@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { addDays, dayDiff, dayLabel, fmtShortDate, fmtTime, guessTaskIcon, minutesOf, type Plan, type PlanTask } from '@shared';
 import { api } from '../api.ts';
 import { useAction, useFamily, useNow } from '../context.tsx';
-import { dueLabel } from '../lib.ts';
+import { dueLabel, relDay } from '../lib.ts';
 import { usePlans } from '../queries.ts';
 import { burstFrom, chime, ConfirmButton, Face, pc, Sheet, useSheets, useToast } from '../ui.tsx';
 
@@ -44,6 +44,17 @@ export function TaskRow({ task, plan, showPlan }: { task: PlanTask; plan: Plan; 
       </div>
       {showPlan ? (who && <Face m={who} />) : (
         <>
+          <input
+            type="date"
+            className="inline-select"
+            style={{ width: 'auto' }}
+            aria-label={`When “${task.text}” is due`}
+            value={task.due}
+            onChange={(e) => {
+              const due = e.target.value;
+              if (due) act(() => api(`/tasks/${task.id}`, { method: 'PATCH', body: { due } }), `“${task.text}” is now due ${relDay(today, due)}`);
+            }}
+          />
           <select
             id={`assign-${task.id}`}
             className="inline-select"

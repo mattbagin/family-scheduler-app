@@ -115,6 +115,9 @@ describe('plans and chores', () => {
     expect((await app.inject({ method: 'PATCH', url: `/api/tasks/${turkey.id}`, cookies: kid, payload: { done: true } })).statusCode).toBe(403);
     expect((await app.inject({ method: 'PATCH', url: `/api/tasks/${vacuum.id}`, cookies: kid, payload: { done: true } })).json().doneAt).toBeTruthy();
     expect((await app.inject({ method: 'PATCH', url: `/api/tasks/${vacuum.id}`, cookies: kid, payload: { assigneeId: alex.id } })).statusCode).toBe(403);
+    expect((await app.inject({ method: 'PATCH', url: `/api/tasks/${vacuum.id}`, cookies: kid, payload: { due: today } })).statusCode).toBe(403);
+    expect((await app.inject({ method: 'PATCH', url: `/api/tasks/${turkey.id}`, cookies: adult, payload: { due: addDays(today, 3) } })).json())
+      .toMatchObject({ due: addDays(today, 3), assigneeId: alex.id });
 
     // The plan's event shows up on the calendar with a link back to the plan.
     const occ = (await app.inject({ url: `/api/occurrences?from=${addDays(today, 10)}&to=${addDays(today, 11)}`, cookies: adult })).json<Occurrence[]>();
