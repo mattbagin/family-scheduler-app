@@ -99,6 +99,24 @@ Every night after 3 AM (or when the computer next wakes), Homebase copies its da
 
 To restore: stop Homebase (`npm run service -- stop`, or close `npm start`), copy the backup over `server/data/homebase.db`, delete any `homebase.db-wal` and `homebase.db-shm` files next to it, then start it again (`npm run service -- restart`).
 
+## Making and deploying changes
+
+Changes are made on a development computer and released to the home computer by version tag.
+
+1. On the development computer, make a branch (`git switch -c fix/short-name`), commit, push it and open a pull request into `main`. GitHub runs the checks (typecheck, tests, build); merge when they pass.
+2. Release: on `main`, tag the next version and push it, e.g. `git tag v1.0.1 && git push origin v1.0.1`.
+3. On the home computer, press **Settings → Backups → Back up now**, then:
+
+   ```sh
+   git fetch --tags
+   git checkout v1.0.1
+   npm ci
+   npm run build
+   npm run service -- restart
+   ```
+
+To roll back, check out the previous tag and repeat the same steps. If the release added a database change (a new file in `server/src/migrations/`), the older version won't understand the newer database: restore the backup you made before deploying (see Backups).
+
 ## Phones and HTTPS (Tailscale)
 
 Phones need Homebase's secure `https://` address to install it and get notifications. [Tailscale](https://tailscale.com) provides one without opening any ports on your router:
