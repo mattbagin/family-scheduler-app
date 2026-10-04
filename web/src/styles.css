@@ -377,6 +377,12 @@ body:has(.ambient) .nudges { bottom: calc(110px + env(safe-area-inset-bottom, 0p
 .field { display: flex; flex-direction: column; gap: 4px; font-size: .85rem; font-weight: 700; color: var(--muted); min-width: 0; }
 .field input, .field select, .field textarea, .inline-select { font: inherit; font-weight: 500; color: var(--ink); background: var(--surface-2); border: 2px solid var(--line); border-radius: 12px; padding: 9px 12px; width: 100%; }
 .field textarea { min-height: 70px; resize: vertical; }
+/* iOS Safari sizes date and time inputs to their text and won't shrink them, so on phones they spill into the next column. */
+.field input { min-width: 0; }
+@supports (-webkit-touch-callout: none) {
+  .field input[type=date], .field input[type=time] { -webkit-appearance: none; appearance: none; min-height: 44px; }
+  .field input::-webkit-date-and-time-value { text-align: left; }
+}
 .inline-select { width: auto; border-radius: 999px; padding: 6px 10px; font-weight: 600; border-color: var(--pc, var(--line)); background: var(--surface); }
 .checkline { display: flex; gap: 8px; align-items: center; font-weight: 600; }
 .checkline input { width: 18px; height: 18px; accent-color: var(--focus); }
