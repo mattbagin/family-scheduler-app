@@ -75,5 +75,5 @@ Gotchas: the skill's `with_server.py` runs commands through `cmd`, so `VAR=value
 
 ## Git
 
-- The remote is `origin` (https://github.com/mattbagin/family-scheduler-app). The owner works directly on `main` and pushes there; each milestone is one commit titled `Milestone N: …`.
+- The remote is `origin` (https://github.com/mattbagin/family-scheduler-app). `main` is protected: work on a branch (`fix/…`, `feat/…`, `chore/…`), push it and open a pull request; CI (`.github/workflows/ci.yml`) must pass before merging. Releases are tags `vX.Y.Z` on `main`; the home computer (a separate machine) deploys a tag as described in README, "Making and deploying changes". This machine is development only.
 - Commit or push only when asked. `.claude/settings.local.json` is personal and git-ignored; line endings are LF (`.gitattributes`).
