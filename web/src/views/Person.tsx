@@ -63,7 +63,8 @@ export function Person() {
   const isKid = m.role === 'kid';
   const myChores = chores.filter((c) => c.assigneeId === m.id && c.scheduled);
   const myPrep = prep.filter((p) => p.memberIds.includes(m.id));
-  const myTodos = todos.filter((t) => t.kind === 'todo' && t.assigneeId === m.id);
+  // A kid's tiles skip the next round of a repeating job until its day comes.
+  const myTodos = todos.filter((t) => t.kind === 'todo' && t.assigneeId === m.id && !(isKid && t.rrule && t.due && t.due > today));
   const anyones = isKid ? [] : todos.filter((t) => t.kind === 'todo' && t.assigneeId === null);
   const tasks = plans
     .flatMap((p) => p.tasks.filter((t) => t.assigneeId === m.id).map((t) => ({ t, p })))

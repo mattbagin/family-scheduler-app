@@ -114,7 +114,9 @@ This section is the current state of the build. Sections 1 to 8 are the original
 | 4 | `ba14bfd` | Nudges: leave-by with repeat and escalation to the other parent, per-event reminders, morning briefing, evening packing digest, bill alerts; per-parent quiet hours and switches; hub banners with a chime (also over ambient); hand-written Web Push (RFC 8291/8292); service worker, manifest, icons, install button; Tailscale guide in the README |
 | 5 | (this commit) | Ambient photo slideshow from a folder on the home computer (recursive, shuffled, preloaded, blurred fill for portrait photos); night mode with its own hours (dim warm clock, no photos, no chimes); weather from Open-Meteo on Today, ambient and a rainy-day heads-up; month view with a day agenda; category picker in quick add; per-device mute and a hub 🔔 switch; accessibility pass (sheet focus trap and return, skip link, labelled groups, hidden decorative emoji, AA contrast fixes, reduced motion); nightly database backups with **Back up now**; Windows background service script |
 
-Tests: 76 Vitest tests (shared logic, API, ICS, nudge timing, Web Push against the RFC example, end-to-end nudges through a fake push service, hub settings, photos, weather through a fake Open-Meteo, backups). Each milestone was also checked in a real browser with Playwright (see `CLAUDE.md`).
+Since then: repeating to-dos (`todos.rrule`; ticking one off adds the next as a new row, linked by `next_id` so unticking removes it).
+
+Tests: 77 Vitest tests (shared logic, API, ICS, nudge timing, Web Push against the RFC example, end-to-end nudges through a fake push service, hub settings, photos, weather through a fake Open-Meteo, backups). Each milestone was also checked in a real browser with Playwright (see `CLAUDE.md`).
 
 ### Where the build departs from sections 1 to 8
 

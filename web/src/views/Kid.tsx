@@ -36,7 +36,8 @@ export function Kid() {
   const late = nowMin > 19.5 * 60;
   const myChores = chores.filter((c) => c.assigneeId === k.id && c.scheduled);
   const myPrep = prep.filter((p) => p.memberIds.includes(k.id));
-  const myTodos = todos.filter((t) => t.kind === 'todo' && t.assigneeId === k.id);
+  // A kid's tiles skip the next round of a repeating job until its day comes.
+  const myTodos = todos.filter((t) => t.kind === 'todo' && t.assigneeId === k.id && !(t.rrule && t.due && t.due > today));
   const seen = new Set<number>();
   const sleeps = occs
     .filter((o) => o.fun && o.memberIds.includes(k.id) && occDate(o) > today)

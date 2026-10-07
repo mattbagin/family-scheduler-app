@@ -137,6 +137,8 @@ export interface Todo {
   /** Null means someday (to-dos only; prep always has a day). */
   due: Ymd | null;
   doneAt: string | null;
+  /** Repeat rule (to-dos with a day only). Ticking one off adds the next. */
+  rrule: string | null;
 }
 
 /** One thing to get ready for a day: an event's "bring" note or a prep item. */

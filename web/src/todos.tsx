@@ -1,5 +1,5 @@
 import { useRef, useState, type ReactNode } from 'react';
-import { addDays, dayLabel, guessTodoKind, parseQuickAdd, type PrepItem, type Todo, type Ymd } from '@shared';
+import { addDays, dayLabel, describeRRule, guessTodoKind, parseQuickAdd, type PrepItem, type Todo, type Ymd } from '@shared';
 import { api } from './api.ts';
 import { namesOf, useAction, useFamily, useNow } from './context.tsx';
 import { dueLabel } from './lib.ts';
@@ -91,6 +91,7 @@ export function TodoRow({ todo, showWho }: { todo: Todo; showWho?: boolean }) {
           <b>{todo.text}</b>
           <div className={`note ${late ? 'late' : ''}`}>
             {todo.kind === 'prep' ? `Get ready for ${todo.due ? dayLabel(today, todo.due).toLowerCase() : 'later'}` : todo.due ? dueLabel(today, todo.due) : 'Someday'}
+            {todo.rrule && ` · 🔁 ${describeRRule(todo.rrule)}`}
             {showWho && ` · ${who?.name ?? 'Anyone'}`}
           </div>
         </div>
@@ -179,5 +180,5 @@ export function todoFromText(text: string, members: Parameters<typeof parseQuick
   // "Pack gym shoes" shows as "Gym shoes" on a packing list.
   if (kind === 'prep') words = words.replace(/^(pack|bring|take)\s+(the\s+|a\s+|an\s+)?/i, '').replace(/^./, (c) => c.toUpperCase()) || words;
   const due = parsed.date ?? (kind === 'prep' ? addDays(today, 1) : null);
-  return { kind, text: words, assigneeId: parsed.memberIds[0] ?? fallbackWho, due };
+  return { kind, text: words, assigneeId: parsed.memberIds[0] ?? fallbackWho, due, rrule: parsed.rrule };
 }

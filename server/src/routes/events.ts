@@ -1,6 +1,6 @@
 import type { FastifyInstance } from 'fastify';
 import {
-  addMinutes, dayDiff, durationMin, guessEventStyle, isValidRRule, isYmd,
+  addMinutes, dayDiff, durationMin, guessEventStyle, isYmd,
   type Category, type EventRecord, type OccurrencePatch,
 } from '../../../shared/src/index.ts';
 import { requireAuth, requireEditor } from '../auth.ts';
@@ -11,12 +11,6 @@ import { feedOf, getEvent, occurrencesBetween } from '../repo.ts';
 
 const CATEGORIES: Category[] = ['school', 'sports', 'medical', 'playdate', 'family', 'work', 'bills', 'other'];
 
-const optRRule = (x: unknown, f: string): string | null => {
-  if (x === null || x === undefined || x === '') return null;
-  if (typeof x !== 'string' || !isValidRRule(x)) throw badRequest(`${f}: must be a repeat rule like FREQ=WEEKLY;BYDAY=TU`);
-  return x.replace(/^RRULE:/i, '');
-};
-
 const eventSchema = {
   title: v.text(120),
   kidTitle: v.optText(40),
@@ -25,7 +19,7 @@ const eventSchema = {
   start: v.dateTime,
   end: v.dateTime,
   allDay: v.bool,
-  rrule: optRRule,
+  rrule: v.optRRule,
   location: v.optText(200),
   notes: v.optText(2000),
   bring: v.optText(300),
