@@ -2,7 +2,7 @@ import { createDecipheriv, createECDH, createHmac, randomBytes } from 'node:cryp
 import { createServer, type Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { parseLocal, type Nudge } from '../../shared/src/index.ts';
+import { addDays, parseLocal, ymd, type Nudge } from '../../shared/src/index.ts';
 import { buildApp } from '../src/app.ts';
 import { openDb } from '../src/db.ts';
 import { setupFamily, type App } from './helpers.ts';
@@ -44,7 +44,8 @@ function newPhone(name: string): Phone {
 }
 
 let app: App;
-const DAY = '2026-10-05';
+// A week ahead: /api/nudges/active compares expiry with the real clock, so a fixed date goes stale.
+const DAY = addDays(ymd(new Date()), 7);
 const at = (hhmm: string, day = DAY) => parseLocal(`${day}T${hhmm}`);
 
 beforeEach(async () => {
@@ -137,7 +138,7 @@ describe('nudges', () => {
     // A reminder the day before, due at 6:00 AM: inside the default 9:30 PM – 6:30 AM quiet hours.
     await app.inject({
       method: 'POST', url: '/api/events', cookies: adult,
-      payload: { title: 'Flu shots', start: '2026-10-06T06:00', end: '2026-10-06T06:30', memberIds: [alex.id], reminders: [1440] },
+      payload: { title: 'Flu shots', start: `${addDays(DAY, 1)}T06:00`, end: `${addDays(DAY, 1)}T06:30`, memberIds: [alex.id], reminders: [1440] },
     });
     await app.inject({ method: 'PATCH', url: '/api/nudge-settings', cookies: adult, payload: { members: { [robin.id]: { reminders: false } } } });
 

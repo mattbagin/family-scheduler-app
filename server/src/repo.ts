@@ -265,10 +265,11 @@ interface TodoRow {
   assignee_id: number | null;
   due: string | null;
   done_at: string | null;
+  rrule: string | null;
 }
 
 const toTodo = (r: TodoRow): Todo => ({
-  id: r.id, kind: r.kind, text: r.text, icon: r.icon, assigneeId: r.assignee_id, due: r.due, doneAt: r.done_at,
+  id: r.id, kind: r.kind, text: r.text, icon: r.icon, assigneeId: r.assignee_id, due: r.due, doneAt: r.done_at, rrule: r.rrule,
 });
 
 export function getTodo(db: Db, id: number): Todo {

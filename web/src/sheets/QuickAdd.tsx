@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import {
-  addDays, addMinutes, CATEGORIES, dayLabel, describeRRule, EVENT_ICONS, fmtShortDate, fmtTime, parseQuickAdd, REMINDER_CHOICES, withMinutes,
-  type Category, type Plan, type TodoKind,
+  addDays, addMinutes, CATEGORIES, dayLabel, describeRRule, EVENT_ICONS, fmtShortDate, fmtTime, parseQuickAdd, parseRRule, presetToRRule,
+  REMINDER_CHOICES, REPEAT_PRESETS, rruleToPreset, weekdayMon, withMinutes, type Category, type Plan, type RepeatPreset, type TodoKind,
 } from '@shared';
 import { api } from '../api.ts';
 import { namesOf, useAction, useFamily, useNow } from '../context.tsx';
@@ -189,10 +189,12 @@ function TodoQuick({ text, setText }: { text: string; setText: (t: string) => vo
   const [kindPick, setKindPick] = useState<TodoKind | null>(null);
   const [whoPick, setWhoPick] = useState<number | null | undefined>(undefined);
   const [duePick, setDuePick] = useState<string | null | undefined>(undefined);
+  const [rrulePick, setRrulePick] = useState<string | null | undefined>(undefined);
   const base = useMemo(() => todoFromText(text, f.members, today, null), [text, f.members, today]);
   const kind = kindPick ?? base?.kind ?? 'todo';
   const who = whoPick !== undefined ? whoPick : (base?.assigneeId ?? null);
   const due = duePick !== undefined ? duePick : (base?.due ?? (kind === 'prep' ? addDays(today, 1) : null));
+  const rrule = rrulePick !== undefined ? rrulePick : (base?.rrule ?? null);
   const kid = f.members.find((m) => m.role === 'kid')?.name ?? 'Emma';
   const ready = !!base && (kind === 'todo' || !!due);
 
@@ -201,10 +203,16 @@ function TodoQuick({ text, setText }: { text: string; setText: (t: string) => vo
     setKindPick(null);
     setWhoPick(undefined);
     setDuePick(undefined);
+    setRrulePick(undefined);
+  };
+  const pickRepeat = (preset: RepeatPreset) => {
+    // Weekly keeps the days already chosen (“every Tue and Thu”), or repeats on the due day.
+    const days = rrule ? (parseRRule(rrule).byDay ?? []) : [];
+    setRrulePick(presetToRRule(preset, days.length ? days : [weekdayMon(due ?? today)]));
   };
   const add = async () => {
     if (!ready || !base) return;
-    const body = { kind, text: base.text, assigneeId: who, due };
+    const body = { kind, text: base.text, assigneeId: who, due, rrule };
     const whose = who ? `${f.byId(who)?.name}’s` : 'the family';
     const ok = await act(() => api('/todos', { method: 'POST', body }), `Added “${base.text}” to ${whose} ${kind === 'prep' ? 'packing list' : 'to-dos'}`);
     if (ok) sheets.close();
@@ -222,7 +230,7 @@ function TodoQuick({ text, setText }: { text: string; setText: (t: string) => vo
         onChange={(e) => onText(e.target.value)}
         onKeyDown={(e) => e.key === 'Enter' && add()}
       />
-      {!text && <Examples list={['Call the plumber Friday Dad', `Pack gym shoes Thursday ${kid}`, 'Sign the permission slip tomorrow Mom']} onPick={onText} />}
+      {!text && <Examples list={['Call the plumber Friday Dad', `Pack gym shoes Thursday ${kid}`, 'Sign the permission slip tomorrow Mom', 'Take the bins out every Monday']} onPick={onText} />}
       {base && (
         <>
           <div className="toggles">
@@ -235,7 +243,15 @@ function TodoQuick({ text, setText }: { text: string; setText: (t: string) => vo
             <dd className="row" style={{ gap: 8 }}>
               <input type="date" className="inline-select" style={{ width: 'auto' }} value={due ?? ''} min={today} aria-label="Day"
                 onChange={(e) => setDuePick(e.target.value || null)} />
-              {due ? dayLabel(today, due) : 'No day (someday)'}
+              {due ? dayLabel(today, due) : rrule ? 'Starts today' : 'No day (someday)'}
+            </dd>
+            <dt>Repeats</dt>
+            <dd className="row" style={{ gap: 8 }}>
+              <select className="inline-select" style={{ width: 'auto' }} value={rruleToPreset(rrule).preset} aria-label="Repeats"
+                onChange={(e) => pickRepeat(e.target.value as RepeatPreset)}>
+                {REPEAT_PRESETS.map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}
+              </select>
+              {rrule && <span><span aria-hidden="true">🔁</span> {describeRRule(rrule)}</span>}
             </dd>
           </dl>
           <div className="stack" style={{ gap: 8 }}>

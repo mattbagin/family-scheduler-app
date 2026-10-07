@@ -1,4 +1,4 @@
-import { isLocalDateTime, isYmd } from '../../shared/src/index.ts';
+import { isLocalDateTime, isValidRRule, isYmd } from '../../shared/src/index.ts';
 
 export class HttpError extends Error {
   status: number;
@@ -76,6 +76,11 @@ export const v = {
     if (typeof x !== 'string' || !/^#[0-9a-fA-F]{6}$/.test(x)) throw badRequest(`${f}: must be a hex color like #2F7DE1`);
     return x.toUpperCase();
   }) as Check<string>,
+  optRRule: ((x, f) => {
+    if (x === null || x === undefined || x === '') return null;
+    if (typeof x !== 'string' || !isValidRRule(x)) throw badRequest(`${f}: must be a repeat rule like FREQ=WEEKLY;BYDAY=TU`);
+    return x.replace(/^RRULE:/i, '');
+  }) as Check<string | null>,
   pin: ((x, f) => {
     if (typeof x !== 'string' || !/^\d{4,8}$/.test(x)) throw badRequest(`${f}: must be 4 to 8 digits`);
     return x;
