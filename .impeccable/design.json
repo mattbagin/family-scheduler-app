@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-10-09T01:41:46.098Z",
+  "generatedAt": "2026-10-09T14:50:56.770044Z",
   "title": "Design System: Homebase",
   "extensions": {
     "colorMeta": {
@@ -562,13 +562,30 @@
           "oklch(70% 0.078 67.2)",
           "oklch(82% 0.078 67.2)",
           "oklch(95% 0.039 67.2)"
+        ],
+        "purpose": "Ink and action color of the bedside night look (ambient night, night nudges, the Tomorrow board at night)."
+      },
+      "bedside-muted": {
+        "role": "neutral",
+        "displayName": "Bedside Muted",
+        "canonical": "#9C7A55",
+        "oklch": "oklch(59.4% 0.07 67.0)",
+        "tonalRamp": [
+          "oklch(15% 0.035 67.0)",
+          "oklch(26% 0.035 67.0)",
+          "oklch(37% 0.07 67.0)",
+          "oklch(48% 0.07 67.0)",
+          "oklch(59% 0.07 67.0)",
+          "oklch(70% 0.07 67.0)",
+          "oklch(82% 0.07 67.0)",
+          "oklch(95% 0.035 67.0)"
         ]
       }
     },
     "typographyMeta": {
       "display": {
         "displayName": "Display",
-        "purpose": "The Today clock; scales to 10rem on the ambient screen."
+        "purpose": "The Today clock and the Tomorrow board's leave-by time; scales to 10rem on the ambient screen."
       },
       "headline": {
         "displayName": "Headline",
@@ -617,6 +634,16 @@
         "name": "state-ring",
         "value": "inset 0 0 0 2px var(--pc)",
         "purpose": "Now, conflict and today rings without shifting layout."
+      },
+      {
+        "name": "frosted",
+        "value": "background: rgba(10,14,24,.45..55); backdrop-filter: blur(10px..14px)",
+        "purpose": "Weather, person pills and nudge banners over ambient photos."
+      },
+      {
+        "name": "night-outline",
+        "value": "inset 0 0 0 1.5px rgba(185,143,99,.6)",
+        "purpose": "Actions at night (active tab, +, Got it): amber outlines instead of solid fills. All other shadows are none at night."
       }
     ],
     "motion": [
@@ -673,7 +700,31 @@
         "name": "max",
         "value": "1400px"
       }
-    ]
+    ],
+    "nightTheme": {
+      "trigger": "body:has(.tb.night): the hub in night mode showing the Tomorrow board",
+      "tokens": {
+        "--bg": "#000",
+        "--surface": "#0d0a07",
+        "--surface-2": "#16110c",
+        "--ink": "var(--bedside)",
+        "--muted": "#9C7A55",
+        "--line": "rgba(185,143,99,.2)",
+        "--btn": "var(--bedside)",
+        "--btn-ink": "#000",
+        "--focus": "#C9A27A",
+        "--tint-ink": "#000",
+        "--shadow": "none",
+        "--warn": "#D6A35F",
+        "--warn-bg": "#1F160B",
+        "--bad": "#E08A6E",
+        "--bad-bg": "#22100C",
+        "--good": "#B5B87A",
+        "--good-bg": "#12160C"
+      },
+      "personColors": "forced to var(--bedside)",
+      "decorativeFilter": "grayscale(.6) brightness(.8)"
+    }
   },
   "components": [
     {
@@ -741,9 +792,23 @@
     {
       "name": "Nudge Banner",
       "kind": "custom",
-      "description": "Bottom banner for a nudge; the left stripe shows its kind.",
-      "html": "<div class=\"ds-nudge\"><span aria-hidden=\"true\" style=\"font-size:1.6rem\">🚗</span><div><b>Time to leave for soccer</b><p>Dad’s driving · starts at 5:00</p></div><button>Got it</button></div>",
-      "css": ".ds-nudge{display:flex;align-items:center;gap:12px;background:var(--surface,#fff);color:var(--ink,#18203A);border-radius:18px;padding:12px 14px;box-shadow:0 12px 36px rgba(0,0,0,.28);border-left:6px solid var(--bad,#B7263F);font:15px Figtree,system-ui,sans-serif;max-width:520px}.ds-nudge div{flex:1}.ds-nudge b{font:600 1.1rem Fredoka,Nunito,system-ui,sans-serif}.ds-nudge p{margin:2px 0 0;font-size:.9rem;color:var(--muted,#5B6583)}.ds-nudge button{border:0;background:var(--btn,#18203A);color:var(--btn-ink,#fff);border-radius:999px;padding:8px 16px;font-weight:700;cursor:pointer}.ds-nudge button:focus-visible{outline:3px solid var(--focus,#2569C9);outline-offset:2px}"
+      "description": "One-line bottom banner; a tinted icon tile shows its kind.",
+      "html": "<div class=\"ds-nudge\"><span class=\"ds-nudge-ic\" aria-hidden=\"true\">🚗</span><b>Time to leave for soccer</b><button>Got it</button></div>",
+      "css": ".ds-nudge{display:flex;align-items:center;gap:12px;background:var(--surface,#fff);color:var(--ink,#18203A);border-radius:18px;padding:8px;box-shadow:0 12px 36px rgba(0,0,0,.28);font:15px Figtree,system-ui,sans-serif;max-width:520px}.ds-nudge-ic{width:40px;height:40px;flex:none;border-radius:12px;display:grid;place-items:center;font-size:1.35rem;background:var(--bad-bg,#FDE3E8)}.ds-nudge b{flex:1;min-width:0;font:600 1.08rem Fredoka,Nunito,system-ui,sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ds-nudge button{flex:none;min-height:44px;border:0;background:var(--btn,#18203A);color:var(--btn-ink,#fff);border-radius:999px;padding:0 18px;font-weight:700;cursor:pointer}.ds-nudge button:focus-visible{outline:3px solid var(--focus,#2569C9);outline-offset:2px}"
+    },
+    {
+      "name": "Leave-by Hero",
+      "kind": "custom",
+      "description": "Tomorrow board: clock-sized leave-by time in the driver's color, driver's face leading the sentence.",
+      "html": "<section class=\"ds-hero\" style=\"--pc:#2F7DE1\"><span class=\"ds-hero-t\">7:55</span><b><span class=\"ds-hero-f\" aria-hidden=\"true\">👨</span> Dad leaves for School</b><span class=\"ds-hero-n\">Emma and Leo · starts 8:15 · 20 min drive</span></section>",
+      "css": ".ds-hero{display:flex;flex-direction:column;gap:10px;padding:22px 24px;border-radius:24px;background:color-mix(in srgb,var(--pc) 14%,#fff);box-shadow:0 1px 2px rgba(24,32,58,.06),0 6px 20px rgba(24,32,58,.07);color:#18203A;font:15px Figtree,system-ui,sans-serif;max-width:420px}.ds-hero-t{font:600 clamp(3.4rem,9vw,5.6rem)/.9 Fredoka,Nunito,system-ui,sans-serif;letter-spacing:-.02em;font-variant-numeric:tabular-nums;color:color-mix(in srgb,var(--pc) 70%,#000)}.ds-hero b{font:600 1.35rem/1.3 Fredoka,Nunito,system-ui,sans-serif}.ds-hero-f{display:inline-grid;place-items:center;width:44px;height:44px;border-radius:50%;border:3px solid var(--pc);background:color-mix(in srgb,var(--pc) 22%,#fff);vertical-align:middle;margin-right:4px}.ds-hero-n{color:#5B6583;font-size:.9rem}"
+    },
+    {
+      "name": "All Set",
+      "kind": "custom",
+      "description": "Tomorrow board when nothing needs sorting: the sticker chart's star on the good background.",
+      "html": "<p class=\"ds-allset\"><span class=\"ds-star\" aria-hidden=\"true\">★</span> All set for tomorrow</p>",
+      "css": ".ds-allset{display:flex;align-items:center;gap:12px;margin:0;padding:18px;border-radius:24px;background:var(--good-bg,#DDF4E7);color:var(--good,#17704A);font:600 1.25rem Fredoka,Nunito,system-ui,sans-serif}.ds-star{width:36px;height:36px;flex:none;border-radius:50%;display:grid;place-items:center;background:var(--good,#17704A);color:var(--good-bg,#DDF4E7);font-size:20px;animation:ds-stamp2 .35s cubic-bezier(.3,1.6,.6,1)}@keyframes ds-stamp2{from{transform:scale(0) rotate(-40deg)}}@media (prefers-reduced-motion:reduce){.ds-star{animation:none}}"
     }
   ],
   "narrative": {
@@ -769,6 +834,16 @@
         "section": "colors"
       },
       {
+        "name": "The Solo Tint Rule",
+        "body": "An event row takes its person's tint (11 to 12%) only when exactly one person goes. A shared event stays neutral Cloud and its faces say who. Who and kind are never shown with a colored side stripe. This holds for the Today timeline, the Month agenda and the Tomorrow board.",
+        "section": "colors"
+      },
+      {
+        "name": "The Bedside Rule",
+        "body": "After night mode starts, nothing on the hub glows: amber on black, no person colors, no solid fills and no shadows. Actions (the active tab, the + button, \"Got it\") become amber outlines (`inset 0 0 0 1.5px`, amber at 60%) instead of solid pills.",
+        "section": "colors"
+      },
+      {
         "name": "The Across-the-Room Rule",
         "body": "Anything meant to be glanced at (times, names, titles, counts, the clock, kid-mode words) is set in Fredoka. Anything meant to be read up close (notes, form labels, settings copy) is Figtree.",
         "section": "typography"
@@ -791,7 +866,9 @@
       "Do keep one Ink Navy primary action per sheet or panel, as a full pill.",
       "Do show \"now\" and conflicts with a 2px inset ring, not by changing size or layout.",
       "Do celebrate completion (stamp, pop, confetti) and turn all motion off under `prefers-reduced-motion`.",
-      "Do keep touch targets big: 64px number keys, 104px or larger tiles, 64px + button."
+      "Do keep touch targets big: 64px number keys, 104px or larger tiles, 64px + button.",
+      "Do tint an event row with its person's color only when one person goes; leave shared events neutral and let the faces say who.",
+      "Do switch anything left on at night to Bedside Amber on black, with amber outlines for actions."
     ],
     "donts": [
       "Don't drift toward a corporate calendar: no thin-ruled dense grids, no grey boxed cells packed with small text, no square corners.",
@@ -799,7 +876,9 @@
       "Don't introduce a brand color, gradient or category color into the shell. Saturated color is for people and status only.",
       "Don't stack shadowed cards inside shadowed panels. Nest with tone (Cloud on Paper White) instead.",
       "Don't rely on text alone on kid-facing screens. A picture, a face or a color has to carry the meaning too.",
-      "Don't use full-strength person color as small text. Mix it with Tint Ink first so it stays readable."
+      "Don't use full-strength person color as small text. Mix it with Tint Ink first so it stays readable.",
+      "Don't mark who or what kind with a colored side stripe on cards or rows. Use a tint, faces or an icon tile.",
+      "Don't let person colors, solid fills or shadows glow on the hub at night."
     ]
   }
 }

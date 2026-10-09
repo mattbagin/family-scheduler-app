@@ -63,7 +63,7 @@ describe('hub settings', () => {
   it('has sensible defaults and only parents can change them', async () => {
     const { adult } = await setupFamily(app);
     const s = (await app.inject({ url: '/api/hub-settings', cookies: adult })).json<HubSettings & { photoCount: number | null }>();
-    expect(s).toMatchObject({ photoDir: null, night: true, nightStart: '21:00', nightEnd: '06:30', place: null, tempUnit: 'c', photoCount: null });
+    expect(s).toMatchObject({ photoDir: null, night: true, nightStart: '21:00', nightEnd: '06:30', eveningStart: '19:30', place: null, tempUnit: 'c', photoCount: null });
 
     const hub = await app.inject({ method: 'POST', url: '/api/login', payload: { memberId: 1, pin: '2468', asHub: true } });
     const hubCookie = { hb_session: hub.cookies.find((c) => c.name === 'hb_session')!.value };
@@ -74,6 +74,12 @@ describe('hub settings', () => {
     expect(res.json()).toMatchObject({ nightStart: '22:15', nightEnd: '06:30', tempUnit: 'f' });
     const bad = await app.inject({ method: 'PATCH', url: '/api/hub-settings', cookies: adult, payload: { nightEnd: '25:00' } });
     expect(bad.json().message).toBe('nightEnd: must be a time like 21:00');
+
+    // The evening Tomorrow board can move or be switched off.
+    expect((await app.inject({ method: 'PATCH', url: '/api/hub-settings', cookies: adult, payload: { eveningStart: '20:00' } })).json()).toMatchObject({ eveningStart: '20:00' });
+    expect((await app.inject({ method: 'PATCH', url: '/api/hub-settings', cookies: adult, payload: { eveningStart: null } })).json()).toMatchObject({ eveningStart: null });
+    const badEvening = await app.inject({ method: 'PATCH', url: '/api/hub-settings', cookies: adult, payload: { eveningStart: 'soon' } });
+    expect(badEvening.json().message).toBe('eveningStart: must be a time like 21:00');
   });
 });
 

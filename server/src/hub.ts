@@ -4,7 +4,7 @@ import type { HubSettings, Place, Weather } from '../../shared/src/index.ts';
 import { getSetting, setSetting, type Db } from './db.ts';
 
 export const DEFAULT_HUB: HubSettings = {
-  photoDir: null, night: true, nightStart: '21:00', nightEnd: '06:30', place: null, tempUnit: 'c',
+  photoDir: null, night: true, nightStart: '21:00', nightEnd: '06:30', eveningStart: '19:30', place: null, tempUnit: 'c',
 };
 
 export function hubSettings(db: Db): HubSettings {

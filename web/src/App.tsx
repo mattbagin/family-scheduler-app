@@ -4,13 +4,14 @@ import { Link, Navigate, NavLink, Route, Routes, useLocation } from 'react-route
 import type { Bootstrap } from '@shared';
 import { api, errorText, onSignedOut, onUnlockNeeded } from './api.ts';
 import { FamilyProvider, useAction, useFamily } from './context.tsx';
-import { useNight } from './hub.tsx';
+import { useBoardDay, useNight } from './hub.tsx';
 import { NudgeBanners } from './nudges.tsx';
 import { useBootstrap, useLiveSync } from './queries.ts';
 import { UnlockSheet } from './sheets/PinPad.tsx';
 import { QuickAdd } from './sheets/QuickAdd.tsx';
 import { Avatar, setHushed, setMuted, SheetProvider, useMuted, useSheets } from './ui.tsx';
 import { Ambient } from './views/Ambient.tsx';
+import { Tomorrow } from './views/Tomorrow.tsx';
 import { Kid } from './views/Kid.tsx';
 import { Month } from './views/Month.tsx';
 import { Person } from './views/Person.tsx';
@@ -101,6 +102,9 @@ function Shell() {
   }, [f.session.kind, location.pathname]);
 
   const isKidScreen = location.pathname.startsWith('/kid');
+  // In the evening the hub's Today becomes the Tomorrow board, until night mode ends.
+  const evening = useBoardDay();
+  const boardDay = isHub ? evening : null;
   const unlocked = !!f.session.elevatedUntil;
   const showLock = !(f.session.kind === 'member' && f.me?.role === 'adult');
 
@@ -113,7 +117,7 @@ function Shell() {
       {!isKidScreen && <header className="top">
         <Link to="/" className="brand"><b>Homebase</b><span>{f.familyName}</span></Link>
         <nav className="tabs" aria-label="Views">
-          <NavLink to="/" end>Today</NavLink>
+          <NavLink to="/" end>{boardDay ? 'Tomorrow' : 'Today'}</NavLink>
           <NavLink to="/week">Week</NavLink>
           <NavLink to="/month">Month</NavLink>
           <NavLink to="/kid">Kid mode</NavLink>
@@ -137,7 +141,8 @@ function Shell() {
 
       <main className="stack" id="main" tabIndex={-1}>
         <Routes>
-          <Route path="/" element={<Today />} />
+          <Route path="/" element={boardDay ? <Tomorrow day={boardDay} /> : <Today />} />
+          <Route path="/tomorrow" element={<Tomorrow />} />
           <Route path="/week" element={<Week />} />
           <Route path="/month" element={<Month />} />
           <Route path="/person/:id" element={<Person />} />

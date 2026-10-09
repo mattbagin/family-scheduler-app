@@ -133,7 +133,7 @@ export function Today() {
         <div className="row" style={{ gap: '12px 28px' }}>
           <div>
             <div className="dateline">{now.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}</div>
-            <div className="note">{f.familyName}</div>
+            <Link to="/tomorrow" className="link-btn">Tomorrow →</Link>
           </div>
           <WeatherNow />
         </div>

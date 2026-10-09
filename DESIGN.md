@@ -37,6 +37,7 @@ colors:
   person-teal: "#0E9AA7"
   person-ochre: "#B7791F"
   bedside-amber: "#B98F63"
+  bedside-muted: "#9C7A55"
 typography:
   display:
     fontFamily: "Fredoka, Nunito, Trebuchet MS, system-ui, sans-serif"
@@ -182,7 +183,7 @@ A cool, quiet neutral board that the family's own colors and three status colors
 - **Rose, Blue, Marigold, Green, Violet, Tomato, Teal, Ochre** (`person-*`): one per family member, picked in Settings. Applied through the `--pc` variable: avatar rings, the timeline dot, event tints (7 to 20% mixed into the surface), tile fills, the "now" ring and checkboxes. Used as text, a person color is mixed with Tint Ink (black in light mode, white in dark) so it passes AA.
 
 ### Status
-- **Amber Warn / Berry Bad / Pine Good** with their pale backgrounds: heads-up alerts, pills, conflict outlines on events, nudge stripes, and the swipe-to-finish/postpone backdrop. Bad means conflict, late or delete. Warn means a missing driver, a bill coming due or offline. Good means done or unlocked.
+- **Amber Warn / Berry Bad / Pine Good** with their pale backgrounds: heads-up alerts, pills, conflict outlines on events, nudge icon tiles, and the swipe-to-finish/postpone backdrop. Bad means conflict, late or delete. Warn means a missing driver, a bill coming due or offline. Good means done or unlocked.
 
 ### Neutral
 - **Mist** (`mist-bg`): the page background behind everything.
@@ -194,10 +195,17 @@ A cool, quiet neutral board that the family's own colors and three status colors
 ### Dark mode
 Follows the system (`prefers-color-scheme`). The `night-*` tokens replace their light twins one for one. The person palette stays the same. The ambient screen ignores both themes: white type over photos, and at night pure black with **Bedside Amber** (`bedside-amber`) type at 55% opacity.
 
+### Bedside night
+When the hub's night mode is on, anything still awake on the hub goes amber on black instead of the dark theme: the ambient clock, nudge banners, the kid-mode nudge chip and the Tomorrow board. On the Tomorrow board the whole screen swaps its tokens: near-black surfaces (#0d0a07, #16110c) on pure black, **Bedside Amber** as ink and as the action color, **Bedside Muted** (`bedside-muted`) for secondary text, and amber hairlines (`rgba(185,143,99,.2)`). Person colors are all forced to Bedside Amber, decorative emoji and faces are filtered (`grayscale(.6) brightness(.8)`), and shadows are off. Status keeps its meaning through dimmed warm pairs (warn #D6A35F on #1F160B, bad #E08A6E on #22100C, good #B5B87A on #12160C).
+
 ### Named Rules
 **The People Own the Color Rule.** Saturated hues on screen belong to a person or a status. Never add a brand accent, decorative gradient or category color to the app shell. Categories show as emoji, not color.
 
 **The Mixed, Not Painted Rule.** Person colors reach surfaces only through `color-mix` with the surface (7 to 22%). Full-strength person color is kept for rings, dots, borders and the "done" star.
+
+**The Solo Tint Rule.** An event row takes its person's tint (11 to 12%) only when exactly one person goes. A shared event stays neutral Cloud and its faces say who. Who and kind are never shown with a colored side stripe. This holds for the Today timeline, the Month agenda and the Tomorrow board.
+
+**The Bedside Rule.** After night mode starts, nothing on the hub glows: amber on black, no person colors, no solid fills and no shadows. Actions (the active tab, the + button, "Got it") become amber outlines (`inset 0 0 0 1.5px`, amber at 60%) instead of solid pills.
 
 ## Typography
 
@@ -207,7 +215,7 @@ Follows the system (`prefers-color-scheme`). The `night-*` tokens replace their 
 **Character:** Fredoka's soft, round geometry is the sticker-chart voice: friendly and readable from the far side of the kitchen. Figtree is a clean, slightly warm grotesque that keeps forms, notes and settings calm.
 
 ### Hierarchy
-- **Display** (Fredoka 600, clamp 3.2 to 5.6rem, line-height 0.9, tabular numbers): the Today clock. The ambient clock scales it up to 10rem, and kid-mode "now" emoji and words sit at a similar size.
+- **Display** (Fredoka 600, clamp 3.2 to 5.6rem, line-height 0.9, tabular numbers): the Today clock and the Tomorrow board's leave-by time (which starts slightly larger, at 3.4rem). The ambient clock scales it up to 10rem, and kid-mode "now" emoji and words sit at a similar size.
 - **Headline** (Fredoka 600, clamp 1.5 to 2.2rem, 1.1): page titles (h1), with balanced wrapping.
 - **Title** (Fredoka 600, 1.05 to 1.25rem): panel headings (h2), event titles in the timeline, plan names, nudge titles, people's names.
 - **Body** (Figtree 400/500, 15px, 1.45): everything else. Secondary text drops to 0.82 to 0.92rem in Slate Muted.
@@ -225,7 +233,8 @@ A single centered column up to 1400px, with a 16px side gutter, an 18px gap betw
 - **Today:** a hero row (clock and date | weather | faces), then a 1.7 : 1 two-column split (timeline left, chores/heads-up/countdowns right).
 - **Week:** a horizontally scrolling grid: a 104px person column, then 7 day columns of at least 128px (1000px minimum). People run down the side and days across the top, so conflicts line up.
 - **Month:** a 7-column grid of 88px day buttons with a dot per busy person. It shrinks to 64px days and 9px dots on phones.
-- **Kid mode:** a 1.3 : 1 split. The big Now/Next cards are on the left; job tiles in two columns and sleep countdowns are on the right.
+- **Tomorrow board:** a 1 : 1.25 split. On the left are the day heading with tomorrow's weather, the leave-by hero, and Needs sorting (or All set). On the right are "Who's going where" and Packing. It's a single column below 900px. Below 520px a row's ride drops under its title and its faces hide.
+- **Kid mode:** its own top row (the kids' faces to switch between, then the hold-to-leave 🏠 at the far right) and no parent header. Below that is a 1.3 : 1 split. The big Now/Next cards are on the left; job tiles in two columns and sleep countdowns are on the right.
 - **Breakpoints:** at 900px every two-column split stacks and the hero stacks. At 700px the month view and nudge banners compact. At 520px the tabs tighten, the ambient tab hides and the timeline narrows.
 - Spacing comes from a small set of steps (4, 6, 8, 10, 14, 18, 22px). Gaps are 6 to 10px inside a component and 14 to 18px between components.
 
@@ -235,7 +244,9 @@ Mostly flat, with one soft lift. Panels, tabs, the week grid, the month view, ki
 
 ### Shadow Vocabulary
 - **Board lift** (`0 1px 2px rgba(24,32,58,.06), 0 6px 20px rgba(24,32,58,.07)`; dark mode uses black at .3/.25): panels, tabs, kid cards, profile buttons.
-- **Floating** (`0 10px 30px rgba(0,0,0,.25)` to `0 12px 36px rgba(0,0,0,.28)`): the + button, toasts and nudge banners.
+- **Floating** (`0 10px 30px rgba(0,0,0,.25)` to `0 12px 36px rgba(0,0,0,.28)`): the + button, toasts and nudge banners. Phones soften it for stacked nudges (`0 6px 18px rgba(0,0,0,.22)`).
+- **Frosted** (`rgba(10,14,24,.45)` with `blur(10px)` for weather and person pills; `.55` with `blur(14px)` for nudges): weather, person pills and nudge banners over ambient photos.
+- **None at night:** in the bedside night look every shadow is off. Lines and outlines in amber do the separating.
 - **Sheet** (`0 30px 80px rgba(0,0,0,.3)` over a 45% navy scrim): dialogs.
 - **State ring** (`inset 0 0 0 2px <color>`): "now" on timeline cards and chips, conflict and warning outlines on events, today in the month view. It's a border drawn as a shadow so the layout doesn't shift.
 
@@ -266,6 +277,7 @@ Friendly but tidy: one strong button per area, the rest quiet.
 - **Segmented:** a Cloud tray. The selected segment becomes a white pill with the board lift.
 
 ### Chips and pills
+- **Agenda row (Month):** a Cloud row (14px radius) with the time, a big emoji, the title and faces. It follows the Solo Tint Rule: 12% person tint when one person goes, neutral with faces when it's shared.
 - **Event chip:** a Cloud row (12px radius) with a muted time column, tinted 10% person color when that person is driving, and a 2px person ring when it's happening now. Past chips fade to 50%.
 - **Status pill:** a small pill in the warn, bad, good or muted pair.
 - **Person toggle:** a pill with a 2px border holding a face and a name. When pressed, the border becomes the person color and the fill a 16% tint.
@@ -291,7 +303,17 @@ The sticker chart itself. A tile has a big emoji (2 to 3.2rem) over a short labe
 A circle with an emoji avatar, a person-colored ring and a pale person tint inside. They come in sizes from 24px (in rows) up to 84px (sign-in). Overlapping stacks of faces show who's going. A berry count badge marks unfinished things.
 
 ### Nudge banner
-A white card with an 18px radius, pinned to the bottom center above the ambient screen. A 6px colored left stripe shows the kind: berry for leave-by, amber for bills, green for briefings, blue for anything else. It has a Fredoka title and a "Got it" pill, and pops in over 0.25s.
+A white card with an 18px radius, pinned to the bottom center above the ambient screen, kept to one line: a 40px icon tile (12px radius) whose background shows the kind (pale berry for leave-by, pale amber for bills, pale green for briefings, Cloud for anything else), a Fredoka title that truncates (tap it to expand), faces, and a "Got it" pill. It pops in over 0.25s. Over ambient photos it's frosted with white text and a white pill. At night it's black with Bedside Amber text and a 1px amber border, with no shadow and no pop, and the pill becomes an amber outline. On phones the banners sit above the + button, wrap titles to two lines and scroll if they stack up.
+
+### Kid mode top row
+Kid mode has no parent header. Its top row holds the kids' faces (big pill buttons; the current one gets a person-colored border and a 16% tint), a quiet "note for grown-ups" chip when a nudge is up (a white pill in Slate Muted with nothing to press; black and amber at night), and the 🏠 way out: a 64px circle you hold, which fills from the bottom over 1.2s before leaving. Sleeps-to-go show a Fredoka number plus 🌙 moons grouped in fives, so 9 and 10 look different at a glance.
+
+### Tomorrow board (signature)
+The evening run-sheet for a parent asking "is tomorrow sorted?".
+- **Leave-by hero:** a 24px-radius card with the board lift, tinted 14% in the driver's color. The leave-by time is clock-sized Fredoka in the driver's color mixed 70% with Tint Ink. The driver's face (44px, 3px ring) leads the sentence ("Dad leaves for School"), with who's going and the drive time below in muted text.
+- **Needs sorting:** each driver gap is an 18px Warn-background tile with the event's emoji, a Fredoka question ("Who's driving Emma to Soccer?") and parent person toggles to answer it in place. Clashes are pale-berry rows with a bad pill that open the event.
+- **All set:** the panel turns Good-background with no lift, and a 36px ★ stamp (the sticker chart's star, in Pine Good) stamps in beside the Fredoka line.
+- **Who's going where:** rows like the Month agenda (the Solo Tint Rule), with the ride at the end: 🚗, the driver's face and the leave-by time, or a warn "Needs a ride" pill.
 
 ### Ambient screen
 A full-bleed photo (or a slowly drifting gradient scene) under a dark bottom-up shade. A giant white Fredoka clock sits top-left with frosted weather beside it, and frosted pills along the bottom show each person's next thing. Night mode drops the photos and turns everything to dim Bedside Amber on black.
@@ -306,6 +328,8 @@ A full-bleed photo (or a slowly drifting gradient scene) under a dark bottom-up 
 - **Do** show "now" and conflicts with a 2px inset ring, not by changing size or layout.
 - **Do** celebrate completion (stamp, pop, confetti) and turn all motion off under `prefers-reduced-motion`.
 - **Do** keep touch targets big: 64px number keys, 104px or larger tiles, 64px + button.
+- **Do** tint an event row with its person's color only when one person goes; leave shared events neutral and let the faces say who.
+- **Do** switch anything left on at night to Bedside Amber on black, with amber outlines for actions.
 
 ### Don't:
 - **Don't** drift toward a corporate calendar: no thin-ruled dense grids, no grey boxed cells packed with small text, no square corners.
@@ -314,3 +338,5 @@ A full-bleed photo (or a slowly drifting gradient scene) under a dark bottom-up 
 - **Don't** stack shadowed cards inside shadowed panels. Nest with tone (Cloud on Paper White) instead.
 - **Don't** rely on text alone on kid-facing screens. A picture, a face or a color has to carry the meaning too.
 - **Don't** use full-strength person color as small text. Mix it with Tint Ink first so it stays readable.
+- **Don't** mark who or what kind with a colored side stripe on cards or rows. Use a tint, faces or an icon tile.
+- **Don't** let person colors, solid fills or shadows glow on the hub at night.

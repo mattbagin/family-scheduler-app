@@ -1,4 +1,5 @@
-import type { NotifyPrefs } from './types.ts';
+import { addDays } from './time.ts';
+import type { HubSettings, NotifyPrefs, Ymd } from './types.ts';
 
 export const DEFAULT_NOTIFY: NotifyPrefs = {
   quietStart: '21:30', quietEnd: '06:30', leaveBy: true, reminders: true, morning: true, evening: true, bills: true,
@@ -23,6 +24,18 @@ export function reminderLabel(min: number): string {
 export const hhmmToMin = (s: string) => Number(s.slice(0, 2)) * 60 + Number(s.slice(3, 5));
 
 /** Whether `min` (minutes after midnight) falls in quiet hours, which may wrap past midnight. */
+/**
+ * Which day the hub's Tomorrow board shows right now, or null outside the evening.
+ * From eveningStart until midnight that's tomorrow; after midnight, until the morning (nightEnd),
+ * it's the day that has just begun, so the board carries through to breakfast.
+ */
+export function eveningBoardDay(today: Ymd, nowMin: number, hub: Pick<HubSettings, 'eveningStart' | 'nightEnd'>): Ymd | null {
+  if (!hub.eveningStart) return null;
+  if (nowMin >= hhmmToMin(hub.eveningStart)) return addDays(today, 1);
+  if (nowMin < hhmmToMin(hub.nightEnd)) return today;
+  return null;
+}
+
 export function inQuietHours(p: Pick<NotifyPrefs, 'quietStart' | 'quietEnd'>, min: number): boolean {
   const start = hhmmToMin(p.quietStart);
   const end = hhmmToMin(p.quietEnd);

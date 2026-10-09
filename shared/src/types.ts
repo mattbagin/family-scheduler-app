@@ -251,6 +251,8 @@ export interface HubSettings {
   night: boolean;
   nightStart: string;
   nightEnd: string;
+  /** From this time (`HH:mm`) until nightEnd the hub's Today shows the Tomorrow board; null turns that off. */
+  eveningStart: string | null;
   place: Place | null;
   tempUnit: 'c' | 'f';
 }

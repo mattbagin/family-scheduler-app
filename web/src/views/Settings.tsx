@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import {
-  addDays, dayLabel, fmtTime, guessTaskIcon, MEMBER_AVATARS, MEMBER_COLORS, minutesOf,
+  addDays, dayLabel, fmtTime, guessTaskIcon, hhmmToMin, MEMBER_AVATARS, MEMBER_COLORS, minutesOf,
   type BackupInfo, type Calendar, type CalendarPreview, type Chore, type Member, type NotifyPrefs, type NudgeSettings, type Place, type Role,
   type SyncResult,
 } from '@shared';
@@ -595,6 +595,22 @@ function HubSection() {
             <span className="note">to</span>
             <input type="time" className="inline-select" style={{ width: 'auto' }} value={hub.nightEnd} aria-label="Night mode ends"
               onChange={(e) => e.target.value && save({ nightEnd: e.target.value })} />
+          </div>
+        )}
+      </div>
+
+      <div className="stack" style={{ gap: 8 }}>
+        <label className="checkline">
+          <input type="checkbox" checked={hub.eveningStart !== null} onChange={(e) => save({ eveningStart: e.target.checked ? '19:30' : null }, e.target.checked ? 'Tomorrow board on' : 'Tomorrow board off')} />
+          Show tomorrow in the evening
+        </label>
+        <span className="note">Who leaves first, who drives, and what’s still unsorted, in place of Today.</span>
+        {hub.eveningStart !== null && (
+          <div className="row" style={{ gap: 8 }}>
+            <span className="note">From</span>
+            <input type="time" className="inline-select" style={{ width: 'auto' }} value={hub.eveningStart} aria-label="Evening starts at"
+              onChange={(e) => e.target.value && save({ eveningStart: e.target.value })} />
+            <span className="note">until {hub.night ? 'night mode ends' : 'the morning'} ({fmtTime(hhmmToMin(hub.nightEnd))})</span>
           </div>
         )}
       </div>

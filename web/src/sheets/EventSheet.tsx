@@ -10,6 +10,18 @@ import { ConfirmButton, Face, pc, Sheet, useSheets } from '../ui.tsx';
 import { EventForm } from './EventForm.tsx';
 import { PlanSheet } from './PlanSheet.tsx';
 
+/** Set who drives to one occurrence, or (everyTime) to every time a repeating event happens. */
+export function useSetDriver() {
+  const f = useFamily();
+  const act = useAction();
+  return (occ: Occurrence, id: number | null, everyTime = false) => {
+    const label = id ? `${f.byId(id)?.name}’s driving to ${occ.title}` : 'Driver cleared';
+    return occ.rrule && !everyTime
+      ? act(() => api(`/events/${occ.id}/occurrences/${occ.originalDate}`, { method: 'PUT', body: { driverId: id } }), label)
+      : act(() => api(`/events/${occ.id}`, { method: 'PATCH', body: { driverId: id } }), label);
+  };
+}
+
 /** Details for one occurrence: who, where, rides, and the plan behind it. */
 export function EventSheet({ occ: initial }: { occ: Occurrence }) {
   const f = useFamily();
@@ -27,14 +39,8 @@ export function EventSheet({ occ: initial }: { occ: Occurrence }) {
   const recurring = !!occ.rrule;
   const feed = useFeed(occ.calendarId);
 
-  const setDriver = (id: number | null) => {
-    const label = id ? `${f.byId(id)?.name} is driving` : 'Driver cleared';
-    if (recurring && !everyTime) {
-      act(() => api(`/events/${occ.id}/occurrences/${occ.originalDate}`, { method: 'PUT', body: { driverId: id } }), label);
-    } else {
-      act(() => api(`/events/${occ.id}`, { method: 'PATCH', body: { driverId: id } }), label);
-    }
-  };
+  const setDriverFor = useSetDriver();
+  const setDriver = (id: number | null) => setDriverFor(occ, id, everyTime);
   const openPlan = async () => {
     if (plan) return sheets.replace(<PlanSheet planId={plan.id} />);
     const created = await act(() => api<Plan>('/plans', { method: 'POST', body: { eventId: occ.id } }), 'Plan started. Add the tasks.');
