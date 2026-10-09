@@ -59,12 +59,13 @@ export function Week() {
         <div className="legend">
           <span><span className="pill bad">⚠ Overlap</span> kid in two places</span>
           <span><span className="pill warn">🚗 Needs a ride</span> no driver yet</span>
-          <span>Drag to move · double-click a day to add</span>
+          <span className="hint-pointer">Drag to move · double-click a day to add</span>
+          <span className="hint-touch">Tap an event for details · + adds one</span>
         </div>
       </div>
       <div className="scroll">
         <div className="grid">
-          <div className="gh" />
+          <div className="gh corner" />
           {days.map((d) => (
             <div key={d} className={`gh ${d === today ? 'today' : ''}`}>
               {WEEKDAYS[weekdayMon(d)].slice(0, 3)}<span className="d num">{Number(d.slice(8))}</span>

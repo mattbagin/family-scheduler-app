@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {
   addDays, addMinutes, CATEGORIES, dayLabel, describeRRule, EVENT_ICONS, fmtShortDate, fmtTime, parseQuickAdd, parseRRule, presetToRRule,
   REMINDER_CHOICES, REPEAT_PRESETS, rruleToPreset, weekdayMon, withMinutes, type Category, type Plan, type RepeatPreset, type TodoKind,
@@ -11,6 +11,22 @@ import { EventForm, type EventDraft } from './EventForm.tsx';
 import { PlanSheet } from './PlanSheet.tsx';
 
 type Mode = 'event' | 'todo' | 'plan';
+
+/** A one-line box that grows to fit what's typed (phones show the whole phrase); Enter adds, like an input. */
+function GrowInput({ id, label, value, placeholder, onChange, onEnter }: { id: string; label: string; value: string; placeholder: string; onChange: (v: string) => void; onEnter: () => void }) {
+  const ref = useRef<HTMLTextAreaElement>(null);
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (el) { el.style.height = 'auto'; el.style.height = `${el.scrollHeight + 4}px`; }
+  }, [value]);
+  return (
+    <textarea
+      ref={ref} id={id} className="big-input grow" aria-label={label} rows={1} value={value} autoFocus autoComplete="off" placeholder={placeholder}
+      onChange={(e) => onChange(e.target.value.replace(/\n/g, ' '))}
+      onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); onEnter(); } }}
+    />
+  );
+}
 
 export function QuickAdd({ mode: initialMode = 'event' }: { mode?: Mode }) {
   const [mode, setMode] = useState(initialMode);
@@ -93,16 +109,7 @@ function EventQuick({ text, setText, toTodo }: { text: string; setText: (t: stri
 
   return (
     <>
-      <input
-        id="qa-input"
-        className="big-input"
-        value={text}
-        autoFocus
-        autoComplete="off"
-        placeholder="e.g. Soccer Thursday 5-6pm Emma weekly"
-        onChange={(e) => onText(e.target.value)}
-        onKeyDown={(e) => e.key === 'Enter' && add()}
-      />
+      <GrowInput id="qa-input" label="What’s happening, when, and who’s going" value={text} placeholder="e.g. Soccer Thursday 5-6pm Emma weekly" onChange={onText} onEnter={add} />
       {!text && <Examples list={examples} onPick={onText} />}
       {parsed && (
         <>
@@ -220,16 +227,7 @@ function TodoQuick({ text, setText }: { text: string; setText: (t: string) => vo
 
   return (
     <>
-      <input
-        id="qa-todo"
-        className="big-input"
-        value={text}
-        autoFocus
-        autoComplete="off"
-        placeholder="e.g. Call the plumber Friday"
-        onChange={(e) => onText(e.target.value)}
-        onKeyDown={(e) => e.key === 'Enter' && add()}
-      />
+      <GrowInput id="qa-todo" label="What needs doing" value={text} placeholder="e.g. Call the plumber Friday" onChange={onText} onEnter={add} />
       {!text && <Examples list={['Call the plumber Friday Dad', `Pack gym shoes Thursday ${kid}`, 'Sign the permission slip tomorrow Mom', 'Take the bins out every Monday']} onPick={onText} />}
       {base && (
         <>

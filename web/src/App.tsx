@@ -130,12 +130,12 @@ function Shell() {
             </button>
           )}
           {showLock && (unlocked ? (
-            <button className="icon-btn lock-on" onClick={() => act(() => api('/lock', { method: 'POST' }), 'Locked')} title="Lock editing">🔓 Unlocked</button>
+            <button className="icon-btn lock-on" onClick={() => act(() => api('/lock', { method: 'POST' }), 'Locked')} title="Lock editing"><span aria-hidden="true">🔓</span><span className="btn-word"> Unlocked</span></button>
           ) : (
-            <button className="icon-btn" onClick={() => sheets.open(<UnlockSheet onDone={() => sheets.close()} />)} title="A parent can unlock editing">🔒 Parent unlock</button>
+            <button className="icon-btn" onClick={() => sheets.open(<UnlockSheet onDone={() => sheets.close()} />)} title="A parent can unlock editing"><span aria-hidden="true">🔒</span><span className="btn-word"> Parent unlock</span></button>
           ))}
           <NavLink to="/settings" className="icon-btn" aria-label="Settings">⚙️</NavLink>
-          {f.me ? <Link to={`/person/${f.me.id}`} aria-label={`${f.me.name}’s page`}><Avatar m={f.me} /></Link> : <span className="icon-btn" title="This device is the family hub">🏡 Hub</span>}
+          {f.me ? <Link to={`/person/${f.me.id}`} aria-label={`${f.me.name}’s page`}><Avatar m={f.me} /></Link> : <span className="hub-tag" title="This device is the family hub"><span aria-hidden="true">🏡</span><span className="btn-word"> Hub</span></span>}
         </div>
       </header>}
 

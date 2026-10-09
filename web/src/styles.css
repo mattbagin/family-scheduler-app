@@ -65,7 +65,22 @@ h3 { font-size: 1.05rem; }
 .tabs { display: flex; gap: 4px; background: var(--surface); padding: 4px; border-radius: 999px; box-shadow: var(--shadow); flex-wrap: wrap; }
 .tabs a, .tabs button { border: 0; background: none; padding: 8px 16px; border-radius: 999px; font-weight: 600; color: var(--muted); text-decoration: none; }
 .tabs a.active { background: var(--btn); color: var(--btn-ink); }
-@media (max-width: 520px) { .tabs a, .tabs button { padding: 8px 11px; } .tabs .amb-tab { display: none; } }
+@media (max-width: 520px) {
+  .tabs a, .tabs button { padding: 8px 11px; }
+  .tabs .amb-tab { display: none; }
+  /* Phones: brand and the icon buttons share the first row, the tabs take the second (two rows, not three). */
+  .top { row-gap: 10px; }
+  .top-right { order: 1; margin-left: auto; }
+  .tabs { order: 2; width: 100%; justify-content: space-between; }
+  .brand span, .btn-word { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+}
+.hub-tag { display: inline-flex; align-items: center; gap: 6px; padding: 8px 12px; border-radius: 999px; background: var(--surface-2); color: var(--muted); font-weight: 600; }
+.hint-touch { display: none; }
+@media (hover: none) { .hint-pointer { display: none; } .hint-touch { display: inline; } }
+.jump { display: flex; gap: 6px; flex-wrap: wrap; }
+.jump a { text-decoration: none; color: var(--ink); }
+.panel[id] { scroll-margin-top: 16px; }
+.big-input.grow { flex: none; resize: none; overflow: hidden; line-height: 1.35; display: block; }
 .top-right { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 .lock-on { background: var(--good-bg); color: var(--good); border-color: transparent; }
 
@@ -279,6 +294,9 @@ body:has(.ambient) .nudges { bottom: calc(110px + env(safe-area-inset-bottom, 0p
 .gh { padding: 12px 10px; font-weight: 700; border-bottom: 1px solid var(--line); font-size: .9rem; }
 .gh .d { font-family: var(--display); font-size: 1.5rem; font-weight: 600; display: block; line-height: 1; }
 .gh.today, .gh.today .d { color: var(--focus); }
+/* The person column stays put while the days scroll sideways (phones see two days at a time). */
+.rowlab, .gh.corner { position: sticky; left: 0; z-index: 1; }
+.gh.corner { background: var(--surface); }
 .rowlab { border: 0; border-bottom: 1px solid var(--line); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; padding: 10px 4px; font-weight: 700; background: color-mix(in srgb, var(--pc) 12%, var(--surface)); }
 .rowlab .avatar { width: 40px; height: 40px; font-size: 22px; }
 .cell { border-bottom: 1px solid var(--line); border-left: 1px solid var(--line); padding: 8px 6px; display: flex; flex-direction: column; gap: 6px; min-height: 104px; }
