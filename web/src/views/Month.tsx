@@ -89,7 +89,7 @@ function DaySheet({ day }: { day: Ymd }) {
       {list.length ? (
         <div className="agenda">
           {list.map((o) => (
-            <button key={o.key} className="agenda-row" style={pc(f.byId(o.memberIds[0])?.color)} onClick={() => sheets.open(<EventSheet occ={o} />)}>
+            <button key={o.key} className={`agenda-row${o.memberIds.length === 1 ? ' solo' : ''}`} style={pc(f.byId(o.memberIds[0])?.color)} onClick={() => sheets.open(<EventSheet occ={o} />)}>
               <span className="num agenda-time">{o.allDay ? 'All day' : fmtTime(minutesOf(o.start))}</span>
               <span className="e" aria-hidden="true">{o.icon}</span>
               <span className="agenda-title">

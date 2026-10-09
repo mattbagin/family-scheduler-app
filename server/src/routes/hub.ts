@@ -49,7 +49,7 @@ export function hubRoutes(app: FastifyInstance, { db, changed }: Ctx, opts: { we
   app.patch('/api/hub-settings', async (req) => {
     requireEditor(req);
     const p = parsePatch({
-      photoDir, night: v.bool, nightStart: hhmm, nightEnd: hhmm, place, tempUnit: v.oneOf('c', 'f'),
+      photoDir, night: v.bool, nightStart: hhmm, nightEnd: hhmm, eveningStart: (x: unknown, f: string) => (x === null ? null : hhmm(x, f)), place, tempUnit: v.oneOf('c', 'f'),
     }, req.body);
     const next = { ...hubSettings(db), ...p };
     saveHubSettings(db, next);

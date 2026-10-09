@@ -14,6 +14,8 @@ export interface Auth {
   kind: 'member' | 'hub';
   member: Member | null;
   elevatedUntil: number | null;
+  /** The parent whose PIN unlocked this session. */
+  elevatedBy: number | null;
 }
 
 declare module 'fastify' {
@@ -62,13 +64,13 @@ export function createSession(db: Db, kind: 'member' | 'hub', memberId: number |
 }
 
 export function loadAuth(db: Db, token: string): Auth | null {
-  const s = get<{ kind: 'member' | 'hub'; member_id: number | null; elevated_until: number | null }>(
-    db, 'SELECT kind, member_id, elevated_until FROM sessions WHERE token = ?', token,
+  const s = get<{ kind: 'member' | 'hub'; member_id: number | null; elevated_until: number | null; elevated_by: number | null }>(
+    db, 'SELECT kind, member_id, elevated_until, elevated_by FROM sessions WHERE token = ?', token,
   );
   if (!s) return null;
   const row = s.member_id ? get<MemberRow>(db, 'SELECT * FROM members WHERE id = ?', s.member_id) : undefined;
   if (s.kind === 'member' && !row) return null;
-  return { token, kind: s.kind, member: row ? toMember(row) : null, elevatedUntil: s.elevated_until };
+  return { token, kind: s.kind, member: row ? toMember(row) : null, elevatedUntil: s.elevated_until, elevatedBy: s.elevated_by };
 }
 
 export function canEdit(a: Auth | null): boolean {

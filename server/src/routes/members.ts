@@ -84,13 +84,13 @@ export function memberRoutes(app: FastifyInstance, { db, changed }: Ctx) {
     const row = getMemberRow(db, v.int(1)(b.memberId, 'memberId'));
     if (row.role !== 'adult') throw badRequest('Only a parent can unlock editing');
     verifyPin(db, row, b.pin);
-    run(db, 'UPDATE sessions SET elevated_until = ? WHERE token = ?', Date.now() + UNLOCK_MS, a.token);
+    run(db, 'UPDATE sessions SET elevated_until = ?, elevated_by = ? WHERE token = ?', Date.now() + UNLOCK_MS, row.id, a.token);
     return sessionInfo(loadAuth(db, a.token)!);
   });
 
   app.post('/api/lock', async (req) => {
     const a = requireAuth(req);
-    run(db, 'UPDATE sessions SET elevated_until = NULL WHERE token = ?', a.token);
+    run(db, 'UPDATE sessions SET elevated_until = NULL, elevated_by = NULL WHERE token = ?', a.token);
     return sessionInfo(loadAuth(db, a.token)!);
   });
 

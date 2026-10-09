@@ -1,4 +1,4 @@
-import { inQuietHours, weatherLook } from '@shared';
+import { eveningBoardDay, inQuietHours, weatherLook, type Ymd } from '@shared';
 import { useNow } from './context.tsx';
 import { useHub, useWeather } from './queries.ts';
 
@@ -7,6 +7,13 @@ export function useNight(): boolean {
   const { data: hub } = useHub();
   const { nowMin } = useNow();
   return !!hub?.night && inQuietHours({ quietStart: hub.nightStart, quietEnd: hub.nightEnd }, Math.floor(nowMin));
+}
+
+/** The day the hub's Tomorrow board shows right now, or null outside the evening (see eveningBoardDay). */
+export function useBoardDay(): Ymd | null {
+  const { data: hub } = useHub();
+  const { today, nowMin } = useNow();
+  return hub ? eveningBoardDay(today, Math.floor(nowMin), hub) : null;
 }
 
 /** Now and today's high and low, for the Today board and the ambient screen. Hidden until a home location is set. */

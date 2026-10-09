@@ -5,6 +5,7 @@
   --btn: #18203A; --btn-ink: #FFFFFF; --on-bad: #FFFFFF;
   /* Person colors used as text are mixed toward this so small labels stay readable (WCAG AA). */
   --tint-ink: #000000;
+  --bedside: #B98F63;
   --shadow: 0 1px 2px rgba(24, 32, 58, .06), 0 6px 20px rgba(24, 32, 58, .07);
   --display: "Fredoka", "Nunito", "Trebuchet MS", system-ui, sans-serif;
   --body: "Figtree", "Segoe UI", system-ui, -apple-system, sans-serif;
@@ -194,19 +195,45 @@ h3 { font-size: 1.05rem; }
 
 /* ---------- swipe rows, chore chart, celebration ---------- */
 /* ---------- nudges ---------- */
-/* Along the bottom, clear of the header tabs and the + button, and above the ambient screen. */
 .nudges { position: fixed; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); left: 50%; transform: translateX(-50%); z-index: 55; width: min(620px, calc(100% - 200px)); display: flex; flex-direction: column; gap: 8px; }
-@media (max-width: 700px) { .nudges { left: 12px; right: 92px; width: auto; transform: none; } }
+/* Phones: full width just above the + button, in thumb reach, and never more than 40% of the screen. */
+@media (max-width: 700px) {
+  .nudges { left: 12px; right: 12px; width: auto; transform: none; bottom: calc(96px + env(safe-area-inset-bottom, 0px)); max-height: 40dvh; overflow-y: auto; overscroll-behavior: contain; }
+  .nudges .nudge { box-shadow: 0 6px 18px rgba(0, 0, 0, .22); }
+  /* Narrow: two lines rather than cutting off the one word that matters ("…for Pia…"). */
+  .nudges .nudge-text b { white-space: normal; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; font-size: 1rem; }
+  .nudges .nudge-main[aria-expanded="true"] .nudge-text b { display: block; }
+}
 /* Over the ambient screen, sit above its row of people. */
 body:has(.ambient) .nudges { bottom: calc(110px + env(safe-area-inset-bottom, 0px)); }
-.nudge { display: flex; align-items: center; gap: 12px; background: var(--surface); color: var(--ink); border-radius: 18px; padding: 12px 14px; box-shadow: 0 12px 36px rgba(0, 0, 0, .28); border-left: 6px solid var(--focus); animation: pop .25s ease-out; }
-.nudge.leave_by { border-left-color: var(--bad); }
-.nudge.bill { border-left-color: var(--warn); }
-.nudge.evening, .nudge.morning { border-left-color: var(--good); }
-.nudge-text { flex: 1; min-width: 0; }
-.nudge-text b { font-family: var(--display); font-size: 1.1rem; }
-.nudge-text p { margin: 2px 0 0; font-size: .9rem; color: var(--muted); white-space: pre-line; }
-.nudge .act { border: 0; background: var(--btn); color: var(--btn-ink); border-radius: 999px; padding: 8px 16px; font-weight: 700; white-space: nowrap; }
+/* One line until tapped: what it is, who it's for, and Got it. The kind shows in the icon tile. */
+.nudge { display: flex; align-items: center; gap: 10px; background: var(--surface); color: var(--ink); border-radius: 18px; padding: 8px; box-shadow: 0 12px 36px rgba(0, 0, 0, .28); animation: pop .25s ease-out; }
+.nudge-main { flex: 1; min-width: 0; min-height: 44px; display: flex; align-items: center; gap: 12px; border: 0; background: none; padding: 0; color: inherit; text-align: left; border-radius: 12px; }
+.nudge-ic { width: 40px; height: 40px; flex: none; border-radius: 12px; display: grid; place-items: center; font-size: 1.35rem; background: var(--surface-2); }
+.nudge.leave_by .nudge-ic { background: var(--bad-bg); }
+.nudge.bill .nudge-ic { background: var(--warn-bg); }
+.nudge.morning .nudge-ic, .nudge.evening .nudge-ic { background: var(--good-bg); }
+.nudge-text { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.nudge-text b { font-family: var(--display); font-weight: 600; font-size: 1.08rem; line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.nudge-main[aria-expanded="true"] .nudge-text b { white-space: normal; }
+.nudge-body { margin-top: 4px; font-size: .9rem; color: var(--muted); white-space: pre-line; }
+.nudge-body small { display: block; margin-top: 4px; font-size: .8rem; }
+.nudge .faces { flex: none; padding-right: 6px; }
+.nudge .act { flex: none; min-height: 44px; border: 0; background: var(--btn); color: var(--btn-ink); border-radius: 999px; padding: 0 18px; font-weight: 700; white-space: nowrap; }
+/* Over photos: frosted, like the ambient screen's own pills. */
+.nudges.over-photo .nudge { background: rgba(10, 14, 24, .55); backdrop-filter: blur(14px); color: #fff; box-shadow: 0 8px 30px rgba(0, 0, 0, .3); }
+.nudges.over-photo .nudge .nudge-ic { background: rgba(255, 255, 255, .14); }
+.nudges.over-photo .nudge-body { color: rgba(255, 255, 255, .82); }
+.nudges.over-photo .act { background: #fff; color: #0b0f18; }
+/* Night: the same dim bedside amber as the night clock, no glow, no pop. */
+.nudges.night .nudge { background: #000; color: var(--bedside); border: 1px solid rgba(185, 143, 99, .3); box-shadow: none; animation: none; }
+.nudges.night .nudge .nudge-ic { background: rgba(185, 143, 99, .12); }
+.nudges.night .nudge-ic, .nudges.night .face { filter: grayscale(.8) brightness(.8); }
+.nudges.night .nudge-body { color: rgba(185, 143, 99, .85); }
+.nudges.night .act { background: none; color: var(--bedside); box-shadow: inset 0 0 0 1.5px rgba(185, 143, 99, .6); }
+/* Kid screens: a quiet note for grown-ups in kid mode's top row, with nothing to press. */
+.nudge-chip { margin: 0 0 0 auto; display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 999px; background: var(--surface); color: var(--muted); font-size: .85rem; font-weight: 700; box-shadow: var(--shadow); }
+.nudge-chip.night { background: #000; color: var(--bedside); box-shadow: none; }
 .feed { display: flex; flex-direction: column; }
 .feed-row { display: flex; justify-content: space-between; gap: 12px; padding: 8px 0; border-top: 1px solid var(--line); font-size: .9rem; }
 .feed-row:first-child { border-top: 0; }
@@ -230,7 +257,14 @@ body:has(.ambient) .nudges { bottom: calc(110px + env(safe-area-inset-bottom, 0p
 @keyframes star-pop { from { transform: scale(0) rotate(-180deg); } }
 @keyframes fade-out { 0%, 75% { opacity: 1; } 100% { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .celebrate, .celebrate span { animation: none; } }
-.moons { letter-spacing: 2px; font-size: 1rem; }
+/* Sleeps to go: a big number, then moons in groups of five so 9 and 10 look different at a glance. */
+.sleeps { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.sleeps b { font-family: var(--display); font-weight: 700; font-size: 1.6rem; line-height: 1; color: color-mix(in srgb, var(--pc) 80%, var(--tint-ink)); }
+.moons { display: inline-flex; flex-wrap: wrap; gap: 4px 10px; font-size: 1rem; }
+.moons > span { white-space: nowrap; letter-spacing: 1px; }
+.tile .sleeps { justify-content: center; gap: 6px; }
+.tile .sleeps b { font-size: 1.15rem; }
+.tile .moons { font-size: .8rem; justify-content: center; gap: 2px 6px; }
 
 /* ---------- week grid ---------- */
 .week-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
@@ -276,7 +310,9 @@ body:has(.ambient) .nudges { bottom: calc(110px + env(safe-area-inset-bottom, 0p
   .dot { width: 9px; height: 9px; }
 }
 .agenda { display: flex; flex-direction: column; gap: 8px; }
-.agenda-row { display: grid; grid-template-columns: 64px auto 1fr auto; gap: 10px; align-items: center; border: 0; text-align: left; border-radius: 14px; padding: 10px 12px; background: color-mix(in srgb, var(--pc) 12%, var(--surface)); border-left: 5px solid var(--pc); }
+.agenda-row { display: grid; grid-template-columns: 64px auto 1fr auto; gap: 10px; align-items: center; border: 0; text-align: left; border-radius: 14px; padding: 10px 12px; background: var(--surface-2); }
+/* Like the Today timeline: one person's event takes their color; a shared one stays neutral and the faces say who. */
+.agenda-row.solo { background: color-mix(in srgb, var(--pc) 12%, var(--surface)); }
 .agenda-row .e { font-size: 1.6rem; }
 .agenda-title { display: flex; flex-direction: column; min-width: 0; }
 .agenda-time { font-weight: 700; font-size: .85rem; }
@@ -288,7 +324,14 @@ body:has(.ambient) .nudges { bottom: calc(110px + env(safe-area-inset-bottom, 0p
 .col { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
 
 /* ---------- kid mode ---------- */
+.kid-top { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; }
+.kid-top .grownups { margin-left: auto; }
+.kid-top .nudge-chip + .grownups { margin-left: 0; }
 .kidpick { display: flex; gap: 14px; flex-wrap: wrap; }
+/* The way out of kid mode: hold it and the house fills up. */
+.grownups { flex: none; width: 64px; height: 64px; border: 0; border-radius: 50%; display: grid; place-items: center; align-content: center; font-size: 1.6rem; line-height: 1; color: var(--muted); background: var(--surface) linear-gradient(color-mix(in srgb, var(--btn) 22%, var(--surface)), color-mix(in srgb, var(--btn) 22%, var(--surface))) bottom / 100% 0 no-repeat; box-shadow: var(--shadow); touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+.grownups small { font-family: var(--body); font-size: .72rem; font-weight: 700; margin-top: 2px; }
+.grownups.holding { background-size: 100% 100%; transition: background-size 1.2s linear; }
 .kidbtn { display: flex; align-items: center; gap: 12px; border: 3px solid transparent; background: var(--surface); border-radius: 999px; padding: 6px 22px 6px 6px; box-shadow: var(--shadow); font-family: var(--display); font-size: 1.4rem; font-weight: 600; text-decoration: none; }
 .kidbtn[aria-current="true"] { border-color: var(--pc); background: color-mix(in srgb, var(--pc) 16%, var(--surface)); }
 .kidbtn .avatar { width: 56px; height: 56px; font-size: 32px; }
@@ -300,7 +343,8 @@ body:has(.ambient) .nudges { bottom: calc(110px + env(safe-area-inset-bottom, 0p
 .now-card.next .big { font-size: 4.5rem; }
 .now-card .word { font-family: var(--display); font-weight: 700; font-size: clamp(2rem, 5vw, 3.2rem); line-height: 1.05; }
 .now-card.next .word { font-size: 2rem; }
-.tagbig { font-family: var(--display); font-weight: 700; font-size: 1.3rem; color: color-mix(in srgb, var(--pc) 80%, var(--tint-ink)); letter-spacing: .04em; }
+.tagbig { font-family: var(--display); font-weight: 700; font-size: 1.3rem; color: color-mix(in srgb, var(--pc) 80%, var(--tint-ink)); letter-spacing: .04em; text-transform: uppercase; }
+.now-dot { display: inline-block; width: 14px; height: 14px; margin-right: 10px; border-radius: 50%; background: var(--pc); vertical-align: 1px; animation: pulse 2s infinite; }
 .face-clock { display: flex; align-items: center; gap: 12px; font-family: var(--display); font-size: 1.2rem; font-weight: 600; }
 .pics { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 12px; }
 .pic { background: var(--surface); border-radius: 22px; padding: 14px; display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; font-family: var(--display); font-weight: 600; font-size: 1.05rem; box-shadow: var(--shadow); }
@@ -335,7 +379,7 @@ body:has(.ambient) .nudges { bottom: calc(110px + env(safe-area-inset-bottom, 0p
 .ph-fg { object-fit: contain; animation: drift 24s ease-in-out infinite alternate; }
 @keyframes fadein { from { opacity: 0; } to { opacity: 1; } }
 /* Night: no photos, just a dim, warm bedside clock. */
-.ambient.night { background: #000; color: #b98f63; }
+.ambient.night { background: #000; color: var(--bedside); }
 .ambient.night .amb-shade { display: none; }
 .ambient.night .amb-content { opacity: .55; }
 .ambient.night .amb-clock { text-shadow: none; }
@@ -385,7 +429,7 @@ body:has(.ambient) .nudges { bottom: calc(110px + env(safe-area-inset-bottom, 0p
 }
 .inline-select { width: auto; border-radius: 999px; padding: 6px 10px; font-weight: 600; border-color: var(--pc, var(--line)); background: var(--surface); }
 .checkline { display: flex; gap: 8px; align-items: center; font-weight: 600; }
-.checkline input { width: 18px; height: 18px; accent-color: var(--focus); }
+.checkline input { width: 18px; height: 18px; flex: none; accent-color: var(--focus); }
 .emoji-grid { display: flex; flex-wrap: wrap; gap: 6px; }
 .emoji-grid button { width: 40px; height: 40px; border-radius: 12px; border: 2px solid transparent; background: var(--surface-2); font-size: 1.3rem; }
 .emoji-grid button[aria-pressed="true"] { border-color: var(--ink); }
@@ -441,3 +485,60 @@ body:has(.ambient) .nudges { bottom: calc(110px + env(safe-area-inset-bottom, 0p
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
+
+/* ---------- tomorrow board ---------- */
+/* The evening run-sheet: when the first person leaves, what still needs sorting, then who goes where. */
+.tb { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); gap: 18px; align-items: start; }
+.tb-left, .tb-right { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.tb-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 14px; flex-wrap: wrap; }
+.tb-head h1 { font-size: clamp(2rem, 5vw, 3rem); }
+.tb-hero { display: flex; flex-direction: column; gap: 10px; padding: 22px 24px; border-radius: 24px; background: color-mix(in srgb, var(--pc, var(--btn)) 14%, var(--surface)); box-shadow: var(--shadow); }
+.tb-time { font-family: var(--display); font-weight: 600; font-size: clamp(3.4rem, 9vw, 5.6rem); line-height: .9; letter-spacing: -.02em; color: color-mix(in srgb, var(--pc, var(--ink)) 70%, var(--tint-ink)); }
+.tb-hero p { margin: 0; display: flex; flex-direction: column; gap: 4px; }
+.tb-hero b { font-family: var(--display); font-weight: 600; font-size: 1.35rem; line-height: 1.3; }
+.tb-hero b .face { vertical-align: middle; margin-right: 4px; border-width: 3px; }
+.tb-gap { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 10px 12px; align-items: center; padding: 12px; border-radius: 18px; background: var(--warn-bg); }
+.tb-gap .e { font-size: 1.8rem; line-height: 1; }
+.tb-gap-main { display: flex; flex-direction: column; min-width: 0; }
+.tb-gap-main b { font-family: var(--display); font-weight: 600; font-size: 1.05rem; }
+.tb-gap .toggles { grid-column: 2; }
+.tb-clash { display: flex; align-items: center; gap: 10px; width: 100%; border: 0; border-radius: 14px; padding: 10px 12px; text-align: left; background: var(--bad-bg); }
+.tb-clash .pill { margin: 0; }
+.tb-clash > span:nth-child(2) { flex: 1; min-width: 0; }
+.tb-sort.all-set { background: var(--good-bg); box-shadow: none; }
+.tb-allset { margin: 0; display: flex; align-items: center; gap: 12px; font-family: var(--display); font-weight: 600; font-size: 1.25rem; color: var(--good); }
+/* The sticker chart's own completion mark, stamped on when tomorrow is sorted. */
+.tb-star { width: 36px; height: 36px; flex: none; border-radius: 50%; display: grid; place-items: center; background: var(--good); color: var(--good-bg); font-size: 20px; animation: stamp .35s cubic-bezier(.3, 1.6, .6, 1); }
+.tb-list { display: flex; flex-direction: column; gap: 8px; }
+.tb-row { display: grid; grid-template-columns: 70px auto minmax(0, 1fr) auto auto; gap: 10px; align-items: center; width: 100%; border: 0; border-radius: 14px; padding: 10px 12px; text-align: left; background: var(--surface-2); }
+.tb-row.solo { background: color-mix(in srgb, var(--pc) 12%, var(--surface)); }
+.tb-row-time { font-family: var(--display); font-weight: 600; font-size: 1rem; white-space: nowrap; }
+.tb-row .e { font-size: 1.6rem; line-height: 1; }
+.tb-row-main { display: flex; flex-direction: column; min-width: 0; }
+.tb-row-main b { font-family: var(--display); font-weight: 600; font-size: 1.05rem; }
+.tb-row-main .pill { align-self: flex-start; }
+.tb-ride { display: inline-flex; align-items: center; gap: 4px; font-weight: 700; font-size: .85rem; white-space: nowrap; }
+.tb-ride .num { font-family: var(--display); font-weight: 600; font-size: .95rem; }
+.tb .allday .pill { border: 1px solid var(--line); }
+@media (max-width: 900px) { .tb { grid-template-columns: 1fr; } }
+@media (max-width: 520px) {
+  /* Narrow: the ride drops under the title instead of squeezing it to a word per line. */
+  .tb-row { grid-template-columns: 66px auto minmax(0, 1fr); row-gap: 4px; }
+  .tb-row .faces { display: none; }
+  .tb-ride { grid-column: 3; justify-self: start; }
+  .tb-ride:empty { display: none; }
+}
+/* After night mode starts on the hub, the whole screen swaps to the bedside amber on black. */
+body:has(.tb.night) {
+  color-scheme: dark;
+  --bg: #000; --surface: #0d0a07; --surface-2: #16110c; --ink: var(--bedside); --muted: #9C7A55; --line: rgba(185, 143, 99, .2);
+  --btn: var(--bedside); --btn-ink: #000; --focus: #C9A27A; --tint-ink: #000; --shadow: none;
+  --warn: #D6A35F; --warn-bg: #1F160B; --bad: #E08A6E; --bad-bg: #22100C; --good: #B5B87A; --good-bg: #12160C;
+}
+body:has(.tb.night) :is(.face, .avatar, .e, .wx-ic), body:has(.tb.night) .tb [aria-hidden="true"] { filter: grayscale(.6) brightness(.8); }
+body:has(.tb.night) .tb-hero { background: var(--surface); }
+/* No person colors at night: every ring and tint goes amber (inline --pc needs the !important). */
+body:has(.tb.night) [style*="--pc"] { --pc: var(--bedside) !important; }
+/* And no solid amber fills to glow in a dark kitchen: actions are outlines, like night nudges. */
+body:has(.tb.night) :is(.tabs a.active, .fab) { background: #000; color: var(--bedside); box-shadow: inset 0 0 0 1.5px rgba(185, 143, 99, .6); }
+body:has(.tb.night) .tb-time { color: var(--ink); }

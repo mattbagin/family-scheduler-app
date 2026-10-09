@@ -105,7 +105,7 @@ export function TodoRow({ todo, showWho }: { todo: Todo; showWho?: boolean }) {
 }
 
 /** A tick-list of what to get ready, grouped by day. */
-export function PrepList({ items, showWho = true }: { items: PrepItem[]; showWho?: boolean }) {
+export function PrepList({ items, showWho = true, dayLabels = true }: { items: PrepItem[]; showWho?: boolean; dayLabels?: boolean }) {
   const f = useFamily();
   const { today } = useNow();
   const toggle = useTogglePrep();
@@ -114,7 +114,7 @@ export function PrepList({ items, showWho = true }: { items: PrepItem[]; showWho
     <div className="stack" style={{ gap: 10 }}>
       {days.map((d) => (
         <div key={d} className="tasks">
-          <div className="label">{d === today ? 'For today' : `For ${dayLabel(today, d).toLowerCase()}`}</div>
+          {dayLabels && <div className="label">{d === today ? 'For today' : `For ${dayLabel(today, d).toLowerCase()}`}</div>}
           {items.filter((p) => p.date === d).map((p) => (
             <div key={p.key} className={`task ${p.done ? 'is-done' : ''}`} style={pc(f.byId(p.memberIds[0])?.color)}>
               <button className="check" aria-pressed={p.done} aria-label={`Mark “${p.text}” ${p.done ? 'not ready' : 'ready'}`} onClick={(e) => toggle(p, e.currentTarget)}>
@@ -143,7 +143,7 @@ export function PrepTiles({ items }: { items: PrepItem[] }) {
       {items.map((p) => (
         <button key={p.key} className={`tile ${p.done ? 'is-done' : ''}`} aria-pressed={p.done} onClick={(e) => toggle(p, e.currentTarget)}>
           <span className="e" aria-hidden="true">{p.icon}</span>{p.text}
-          <span className="note">{p.date === today ? 'Today' : dayLabel(today, p.date)}</span>
+          <span className="note"><span aria-hidden="true">{p.date === today ? '☀️' : p.date === addDays(today, 1) ? '🌙' : '📅'}</span> {p.date === today ? 'Today' : dayLabel(today, p.date)}</span>
         </button>
       ))}
     </div>
