@@ -59,10 +59,12 @@ function EventQuick({ text, setText, toTodo }: { text: string; setText: (t: stri
   const [whoPick, setWhoPick] = useState<number[] | null>(null);
   const [iconPick, setIconPick] = useState<string | null>(null);
   const [catPick, setCatPick] = useState<Category | null>(null);
-  const [driverId, setDriverId] = useState<number | null>(null);
+  // undefined = not picked on the card, so the typed driver ("Dad drives") stands.
+  const [driverPick, setDriverPick] = useState<number | null | undefined>(undefined);
   const [reminders, setReminders] = useState<number[]>([]);
   const parsed = useMemo(() => parseQuickAdd(text, f.members, today), [text, f.members, today]);
   const who = whoPick ?? parsed?.memberIds ?? [];
+  const driverId = driverPick !== undefined ? driverPick : parsed?.driverId ?? null;
   const icon = iconPick ?? parsed?.icon ?? '📅';
   const category = catPick ?? parsed?.category ?? 'family';
   const adults = f.members.filter((m) => m.role === 'adult');
@@ -75,6 +77,7 @@ function EventQuick({ text, setText, toTodo }: { text: string; setText: (t: stri
     setWhoPick(null);
     setIconPick(null);
     setCatPick(null);
+    setDriverPick(undefined);
   };
 
   const draft = (): EventDraft | null => {
@@ -84,7 +87,7 @@ function EventQuick({ text, setText, toTodo }: { text: string; setText: (t: stri
     const length = parsed.startMin !== null && parsed.endMin !== null ? parsed.endMin - parsed.startMin : 60;
     return {
       title: parsed.title, icon, category, start, end: parsed.allDay ? `${addDays(date, 1)}T00:00` : addMinutes(start, length),
-      allDay: parsed.allDay, memberIds: who, location: parsed.location, rrule: parsed.rrule, driverId: hasKid ? driverId : null,
+      allDay: parsed.allDay, memberIds: who, location: parsed.location, bring: parsed.bring, rrule: parsed.rrule, driverId: hasKid ? driverId : null,
       reminders,
     };
   };
@@ -123,6 +126,7 @@ function EventQuick({ text, setText, toTodo }: { text: string; setText: (t: stri
             </dd>
             {parsed.rrule && <><dt>Repeats</dt><dd>🔁 {describeRRule(parsed.rrule)}</dd></>}
             {parsed.location && <><dt>Where</dt><dd>📍 {parsed.location}</dd></>}
+            {parsed.bring && <><dt>Bring</dt><dd>🎒 {parsed.bring}</dd></>}
           </dl>
           {!timed && (
             <button className="mini-btn" style={{ alignSelf: 'flex-start' }} onClick={toTodo}>No set time? Save it as a to-do instead →</button>
@@ -143,7 +147,7 @@ function EventQuick({ text, setText, toTodo }: { text: string; setText: (t: stri
               <div className="label">Who’s driving?</div>
               <div className="toggles">
                 {adults.map((m) => (
-                  <button key={m.id} className="tog" style={pc(m.color)} aria-pressed={driverId === m.id} onClick={() => setDriverId(driverId === m.id ? null : m.id)}>
+                  <button key={m.id} className="tog" style={pc(m.color)} aria-pressed={driverId === m.id} onClick={() => setDriverPick(driverId === m.id ? null : m.id)}>
                     <Face m={m} />{m.name}
                   </button>
                 ))}

@@ -78,6 +78,36 @@ describe('parseQuickAdd', () => {
     expect(guessTodoKind('bring a snack to share')).toBe('prep');
     expect(guessTodoKind('Call the plumber')).toBe('todo');
   });
+
+  it('reads who drives as the driver, not someone going', () => {
+    // From the critique: this used to come out as "Dentist , drives" with Dad going and nobody driving.
+    expect(parseQuickAdd('Emma dentist Tuesday 3:30pm, Dad drives', members, MONDAY)).toMatchObject({
+      title: 'Dentist', memberIds: [3], driverId: 2, date: '2026-09-29', startMin: 15 * 60 + 30,
+    });
+    expect(parseQuickAdd('Soccer Sat 10am Leo, Mom is driving', members, MONDAY)).toMatchObject({ title: 'Soccer', memberIds: [4], driverId: 1 });
+    expect(parseQuickAdd('Party Friday 4pm Emma driven by Dad', members, MONDAY)).toMatchObject({ title: 'Party', memberIds: [3], driverId: 2 });
+    expect(parseQuickAdd('Swim Thursday 5pm Emma, Dad takes her', members, MONDAY)).toMatchObject({ title: 'Swim', driverId: 2 });
+    // A kid isn't a driver, and an adult who is simply named is going.
+    expect(parseQuickAdd('Dentist Tuesday 3pm Mom', members, MONDAY)).toMatchObject({ memberIds: [1], driverId: null });
+  });
+
+  it('puts "bring …" in the packing note, but leaves a to-do that starts with it alone', () => {
+    expect(parseQuickAdd('Leo swim Saturday 10am bring goggles', members, MONDAY)).toMatchObject({ title: 'Swim', bring: 'Goggles', memberIds: [4] });
+    expect(parseQuickAdd('Swim Sat 10am Emma, bring goggles and a towel, at Aquatic Centre', members, MONDAY))
+      .toMatchObject({ title: 'Swim', bring: 'Goggles and a towel', location: 'Aquatic Centre' });
+    expect(parseQuickAdd('Pack gym shoes Thursday Emma', members, MONDAY)).toMatchObject({ title: 'Pack gym shoes', bring: null });
+  });
+
+  it('leaves drivers and bring notes in a to-do as written', () => {
+    expect(parseQuickAdd('Dad drives Leo to practice Friday', members, MONDAY, { event: false }))
+      .toMatchObject({ title: 'Drives to practice', memberIds: [2, 4], driverId: null });
+    expect(parseQuickAdd('Call school Friday, bring forms', members, MONDAY, { event: false })!.bring).toBeNull();
+  });
+
+  it('tidies stray punctuation out of the title', () => {
+    expect(parseQuickAdd('Piano, Tuesday 4pm, Leo', members, MONDAY)!.title).toBe('Piano');
+    expect(parseQuickAdd('Lunch with Grandma, Sunday noon, family', members, MONDAY)!.title).toBe('Lunch with Grandma');
+  });
 });
 
 describe('computeFlags', () => {
