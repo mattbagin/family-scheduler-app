@@ -634,8 +634,10 @@ function HubSection() {
           </div>
         </div>
         <form className="row" onSubmit={find}>
-          <input id="hub-place" style={{ flex: 1 }} aria-label="Town or city for the weather" value={q} onChange={(e) => { setQ(e.target.value); setPlaces(null); }}
-            placeholder={hub.place ? 'Change the town or city' : 'Your town or city'} autoComplete="off" />
+          <div className="field" style={{ flex: 1 }}>
+            <input id="hub-place" aria-label="Town or city for the weather" value={q} onChange={(e) => { setQ(e.target.value); setPlaces(null); }}
+              placeholder={hub.place ? 'Change the town or city' : 'Your town or city'} autoComplete="off" />
+          </div>
           <button className="icon-btn" disabled={!q.trim() || searching}>{searching ? 'Looking…' : 'Find'}</button>
         </form>
         {places && (places.length ? (

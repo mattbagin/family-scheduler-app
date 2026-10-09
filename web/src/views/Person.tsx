@@ -1,5 +1,5 @@
 import { Link, Navigate, useParams } from 'react-router-dom';
-import { addDays, dayLabel, fmtShortDate, fmtTime, type ChoreForDay } from '@shared';
+import { addDays, dayLabel, dayWithDate, fmtTime, type ChoreForDay } from '@shared';
 import { api } from '../api.ts';
 import { namesOf, useAction, useFamily, useNow } from '../context.tsx';
 import { mainRange, money, occDate, personItems, type PersonItem, relDay } from '../lib.ts';
@@ -93,7 +93,7 @@ export function Person() {
         <Avatar m={m} className="xl" />
         <div>
           <h1>{m.name}’s schedule</h1>
-          <div className="note">{dayLabel(today, today)}, {fmtShortDate(today)}</div>
+          <div className="note">{dayWithDate(today, today)}</div>
         </div>
         <nav className="members small" aria-label="Switch person">
           {f.members.filter((x) => x.id !== m.id).map((x) => (
@@ -113,7 +113,7 @@ export function Person() {
             <h2>Next 7 days</h2>
             {nextDays.length ? nextDays.map(({ d, list }) => (
               <div key={d} className="agenda-day">
-                <div className="label">{dayLabel(today, d)} · {fmtShortDate(d)}</div>
+                <div className="label">{dayWithDate(today, d)}</div>
                 {list.map((i) => chip(i, false))}
               </div>
             )) : <p className="note">Nothing else this week.</p>}

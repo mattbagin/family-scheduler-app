@@ -309,7 +309,7 @@ export function PlanCard({ plan, onOpen }: { plan: Plan; onOpen: () => void }) {
           <div className="note">{dayLabel(today, day)}{dayDiff(today, day) >= 7 ? '' : `, ${fmtShortDate(day)}`} · {done} of {plan.tasks.length} done</div>
         </div>
       </div>
-      <div className="bar"><i style={{ width: `${plan.tasks.length ? (done / plan.tasks.length) * 100 : 0}%` }} /></div>
+      <div className="bar"><i style={{ transform: `scaleX(${plan.tasks.length ? done / plan.tasks.length : 0})` }} /></div>
       {next.map((t) => (
         <div key={t.id} className="proj-next">
           {f.byId(t.assigneeId) ? <Face m={f.byId(t.assigneeId)} /> : <span className="face" style={pc(undefined)}>?</span>}

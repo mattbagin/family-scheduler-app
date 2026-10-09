@@ -67,7 +67,7 @@ export function Week() {
         <div className="grid">
           <div className="gh corner" />
           {days.map((d) => (
-            <div key={d} className={`gh ${d === today ? 'today' : ''}`}>
+            <div key={d} className={`gh ${d === today ? 'today' : d < today ? 'past' : ''}`}>
               {WEEKDAYS[weekdayMon(d)].slice(0, 3)}<span className="d num">{Number(d.slice(8))}</span>
             </div>
           ))}
@@ -80,7 +80,7 @@ export function Week() {
                 return (
                   <div
                     key={d}
-                    className={`cell ${d === today ? 'today' : ''} ${over === cellKey ? 'over' : ''}`}
+                    className={`cell ${d === today ? 'today' : d < today ? 'past' : ''} ${over === cellKey ? 'over' : ''}`}
                     style={pc(m.color)}
                     onDragOver={(e) => { if (dragKey) { e.preventDefault(); setOver(cellKey); } }}
                     onDragLeave={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setOver(null); }}

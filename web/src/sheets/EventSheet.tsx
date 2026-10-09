@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import {
-  addDays, computeFlags, dayLabel, describeRRule, fmtShortDate, fmtTime, minutesOf, reminderLabel, type EventRecord, type Occurrence, type Plan,
+  addDays, computeFlags, dayWithDate, describeRRule, fmtShortDate, fmtTime, minutesOf, reminderLabel, type EventRecord, type Occurrence, type Plan,
 } from '@shared';
 import { api } from '../api.ts';
 import { namesOf, useAction, useFamily, useNow } from '../context.tsx';
@@ -52,8 +52,8 @@ export function EventSheet({ occ: initial }: { occ: Occurrence }) {
   };
 
   const when = occ.allDay
-    ? `${dayLabel(today, day)}, ${fmtShortDate(day)} · all day`
-    : `${dayLabel(today, day)}, ${fmtShortDate(day)} · ${fmtTime(minutesOf(occ.start))} – ${fmtTime(minutesOf(occ.end))}`;
+    ? `${dayWithDate(today, day)} · all day`
+    : `${dayWithDate(today, day)} · ${fmtTime(minutesOf(occ.start))} – ${fmtTime(minutesOf(occ.end))}`;
 
   return (
     <Sheet title={occ.title} icon={occ.icon} sub={when}>
@@ -109,7 +109,7 @@ export function EventSheet({ occ: initial }: { occ: Occurrence }) {
             </div>
           </div>
         </div>
-        {plan && plan.tasks.length > 0 && <div className="bar"><i style={{ width: `${(plan.tasks.filter((t) => t.doneAt).length / plan.tasks.length) * 100}%` }} /></div>}
+        {plan && plan.tasks.length > 0 && <div className="bar"><i style={{ transform: `scaleX(${plan.tasks.filter((t) => t.doneAt).length / plan.tasks.length})` }} /></div>}
       </button>
 
       <div className="row">

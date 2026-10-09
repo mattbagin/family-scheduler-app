@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { addDays, dayDiff, dayLabel, fmtShortDate, fmtTime, guessTaskIcon, minutesOf, type Plan, type PlanTask } from '@shared';
+import { addDays, dayDiff, dayLabel, dayWithDate, fmtShortDate, fmtTime, guessTaskIcon, minutesOf, type Plan, type PlanTask } from '@shared';
 import { api } from '../api.ts';
 import { useAction, useFamily, useNow } from '../context.tsx';
 import { dueLabel, relDay } from '../lib.ts';
@@ -117,10 +117,10 @@ export function PlanSheet({ planId }: { planId: number }) {
       wide
       icon={plan.icon}
       title={plan.title}
-      sub={`${dayLabel(today, eventDay)}, ${fmtShortDate(eventDay)} at ${fmtTime(minutesOf(plan.start))}${plan.notes ? ` · ${plan.notes}` : ''}`}
+      sub={`${dayWithDate(today, eventDay)} at ${fmtTime(minutesOf(plan.start))}${plan.notes ? ` · ${plan.notes}` : ''}`}
     >
       <div className="bar big" role="progressbar" aria-valuenow={done} aria-valuemax={plan.tasks.length} aria-label="Tasks done">
-        <i style={{ width: `${plan.tasks.length ? (done / plan.tasks.length) * 100 : 0}%` }} />
+        <i style={{ transform: `scaleX(${plan.tasks.length ? done / plan.tasks.length : 0})` }} />
       </div>
       {perPerson.length > 0 && (
         <div className="toggles">

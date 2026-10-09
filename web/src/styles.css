@@ -18,7 +18,7 @@
     color-scheme: dark;
     --bg: #10141F; --surface: #1A1F2E; --surface-2: #222839; --ink: #EEF1F8; --muted: #9AA3BD; --line: #2E3549;
     --focus: #6AA6F5;
-    --warn: #F5C06A; --warn-bg: #3A2C12; --bad: #FF8599; --bad-bg: #3D1A22; --good: #62D8A0; --good-bg: #143325;
+    --warn: #F5C06A; --warn-bg: #2D2517; --bad: #FF8599; --bad-bg: #3D1A22; --good: #62D8A0; --good-bg: #143325;
     --btn: #EEF1F8; --btn-ink: #10141F; --on-bad: #10141F;
     --tint-ink: #FFFFFF;
     --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 8px 24px rgba(0, 0, 0, .25);
@@ -111,7 +111,7 @@ h3 { font-size: var(--fs-title-sm); }
 .pill.good { background: var(--good-bg); color: var(--good); }
 .pill.muted { background: var(--surface-2); color: var(--muted); }
 .heads { display: flex; flex-wrap: wrap; gap: 10px; }
-.alert { flex: 1 1 300px; display: flex; align-items: center; gap: 12px; background: var(--surface); border-radius: 16px; padding: 10px 14px; box-shadow: var(--shadow); }
+.alert { flex: 1 1 300px; display: flex; align-items: center; gap: 12px; background: var(--surface); border-radius: 18px; padding: 10px 14px; box-shadow: var(--shadow); }
 .alert .ic { font-size: 1.5rem; }
 /* The action drops under the text when the card is narrow, rather than squeezing the words. */
 .alert { flex-wrap: wrap; }
@@ -192,8 +192,8 @@ h3 { font-size: var(--fs-title-sm); }
 .proj-next { display: flex; gap: 10px; align-items: center; font-size: var(--fs-small); }
 .proj-next .face { width: 24px; height: 24px; font-size: 13px; }
 .proj-next .note { margin-left: auto; white-space: nowrap; }
-.bar { height: 8px; border-radius: 999px; background: var(--line); overflow: hidden; }
-.bar i { display: block; height: 100%; background: var(--good); border-radius: 999px; transition: width .4s; }
+.bar { flex: none; height: 8px; border-radius: 999px; background: var(--line); overflow: hidden; }
+.bar i { display: block; height: 100%; background: var(--good); transform-origin: left; transition: transform .4s cubic-bezier(.2, .8, .2, 1); }
 .bar.big { height: 12px; }
 .tasks { display: flex; flex-direction: column; gap: 8px; }
 .task { display: flex; align-items: center; gap: 12px; background: var(--surface-2); border-radius: 14px; padding: 10px 12px; flex-wrap: wrap; }
@@ -203,7 +203,7 @@ h3 { font-size: var(--fs-title-sm); }
 .task.is-done .task-main b { text-decoration: line-through; color: var(--muted); }
 .check { width: 32px; height: 32px; border-radius: 50%; border: 3px solid var(--pc); background: var(--surface); color: #fff; font-weight: 900; flex: none; display: grid; place-items: center; }
 .check[aria-pressed="true"] { background: color-mix(in srgb, var(--pc) 85%, #000); border-color: color-mix(in srgb, var(--pc) 85%, #000); }
-.x-btn { border: 0; background: none; color: var(--muted); font-size: 1rem; padding: 4px 6px; border-radius: 8px; }
+.x-btn { border: 0; background: none; color: var(--muted); font-size: 1rem; padding: 4px 6px; border-radius: 10px; }
 .x-btn:hover { color: var(--bad); background: var(--bad-bg); }
 
 /* ---------- tiles (chores) ---------- */
@@ -302,6 +302,9 @@ body:has(.ambient) .nudges { bottom: calc(110px + env(safe-area-inset-bottom, 0p
 .rowlab { border: 0; border-bottom: 1px solid var(--line); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; padding: 10px 4px; font-weight: 700; background: color-mix(in srgb, var(--pc) 12%, var(--surface)); }
 .rowlab .avatar { width: 40px; height: 40px; font-size: 22px; }
 .cell { border-bottom: 1px solid var(--line); border-left: 1px solid var(--line); padding: 8px 6px; display: flex; flex-direction: column; gap: 6px; min-height: 104px; }
+/* Days already gone fade back, like past chips. */
+.gh.past { color: var(--muted); }
+.cell.past .ev { opacity: .55; }
 .cell.today { background: color-mix(in srgb, var(--focus) 5%, var(--surface)); }
 .cell.over { background: color-mix(in srgb, var(--pc) 16%, var(--surface)); outline: 2px dashed var(--pc); outline-offset: -4px; }
 .ev { border: 0; text-align: left; border-radius: 10px; padding: 6px 8px; background: color-mix(in srgb, var(--pc) 15%, var(--surface)); font-size: var(--fs-small); line-height: 1.25; cursor: grab; width: 100%; }
@@ -440,13 +443,15 @@ body:has(.ambient) .nudges { bottom: calc(110px + env(safe-area-inset-bottom, 0p
 .seg { display: flex; background: var(--surface-2); border-radius: 999px; padding: 4px; gap: 4px; }
 .seg button { flex: 1; border: 0; background: none; border-radius: 999px; padding: 8px; font-weight: 700; color: var(--muted); }
 .seg button[aria-selected="true"] { background: var(--surface); color: var(--ink); box-shadow: var(--shadow); }
-.big-input { width: 100%; font: inherit; font-size: var(--fs-title-sm); padding: 14px 16px; border-radius: 16px; border: 2px solid var(--line); background: var(--surface-2); color: var(--ink); }
+.big-input { width: 100%; font: inherit; font-size: var(--fs-title-sm); padding: 14px 16px; border-radius: 14px; border: 2px solid var(--line); background: var(--surface-2); color: var(--ink); }
 .form { display: flex; flex-direction: column; gap: 12px; }
 .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
 .field { display: flex; flex-direction: column; gap: 4px; font-size: var(--fs-small); font-weight: 700; color: var(--muted); min-width: 0; }
 /* Fields are body size: smaller than 16px and iPhones zoom in when one is tapped. */
 .field input, .field select, .field textarea, .inline-select { font: inherit; font-size: var(--fs-body); font-weight: 500; color: var(--ink); background: var(--surface-2); border: 2px solid var(--line); border-radius: 12px; padding: 9px 12px; width: 100%; }
 .field textarea { min-height: 70px; resize: vertical; }
+/* Placeholders at the muted ink (the browser grey was 4.3:1 on Cloud). */
+::placeholder { color: var(--muted); opacity: 1; }
 /* iOS Safari sizes date and time inputs to their text and won't shrink them, so on phones they spill into the next column. */
 .field input { min-width: 0; }
 @supports (-webkit-touch-callout: none) {
@@ -463,7 +468,7 @@ body:has(.ambient) .nudges { bottom: calc(110px + env(safe-area-inset-bottom, 0p
 .swatch { width: 34px; height: 34px; border-radius: 50%; border: 3px solid var(--surface); box-shadow: 0 0 0 2px var(--line); }
 .swatch[aria-pressed="true"] { box-shadow: 0 0 0 3px var(--ink); }
 .error { background: var(--bad-bg); color: var(--bad); border-radius: 12px; padding: 10px 12px; font-weight: 600; }
-.confirm { background: var(--bad-bg); border-radius: 16px; padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+.confirm { background: var(--bad-bg); border-radius: 18px; padding: 12px; display: flex; flex-direction: column; gap: 10px; }
 
 /* ---------- sign in & setup ---------- */
 .center-page { min-height: calc(100dvh - 120px); display: grid; place-items: center; }

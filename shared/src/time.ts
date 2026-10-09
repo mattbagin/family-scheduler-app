@@ -122,6 +122,12 @@ export function dayLabel(today: Ymd, d: Ymd): string {
   return `${WEEKDAYS[weekdayMon(d)].slice(0, 3)}, ${fmtShortDate(d)}`;
 }
 
+/** "Tomorrow, Oct 10" or "Fri, Oct 16": the date said once (dayLabel already carries it beyond a week). */
+export function dayWithDate(today: Ymd, d: Ymd): string {
+  const label = dayLabel(today, d);
+  return label.includes(fmtShortDate(d)) ? label : `${label}, ${fmtShortDate(d)}`;
+}
+
 /** The instant a wall-clock time happens here (the family's time zone is the device's own). */
 export function parseLocal(dt: LocalDateTime): Date {
   const [y, m, d] = parts(datePart(dt));
