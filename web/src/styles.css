@@ -231,10 +231,9 @@ body:has(.ambient) .nudges { bottom: calc(110px + env(safe-area-inset-bottom, 0p
 .nudges.night .nudge-ic, .nudges.night .face { filter: grayscale(.8) brightness(.8); }
 .nudges.night .nudge-body { color: rgba(185, 143, 99, .85); }
 .nudges.night .act { background: none; color: var(--bedside); box-shadow: inset 0 0 0 1.5px rgba(185, 143, 99, .6); }
-/* Kid screens: a quiet note for grown-ups, with nothing to press. */
-.nudges.kid-chip { left: 16px; right: auto; width: auto; transform: none; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); }
-.nudge-chip { margin: 0; display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 999px; background: var(--surface); color: var(--muted); font-size: .85rem; font-weight: 700; box-shadow: var(--shadow); }
-.kid-chip.night .nudge-chip { background: #000; color: var(--bedside); box-shadow: none; }
+/* Kid screens: a quiet note for grown-ups in kid mode's top row, with nothing to press. */
+.nudge-chip { margin: 0 0 0 auto; display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 999px; background: var(--surface); color: var(--muted); font-size: .85rem; font-weight: 700; box-shadow: var(--shadow); }
+.nudge-chip.night { background: #000; color: var(--bedside); box-shadow: none; }
 .feed { display: flex; flex-direction: column; }
 .feed-row { display: flex; justify-content: space-between; gap: 12px; padding: 8px 0; border-top: 1px solid var(--line); font-size: .9rem; }
 .feed-row:first-child { border-top: 0; }
@@ -258,7 +257,14 @@ body:has(.ambient) .nudges { bottom: calc(110px + env(safe-area-inset-bottom, 0p
 @keyframes star-pop { from { transform: scale(0) rotate(-180deg); } }
 @keyframes fade-out { 0%, 75% { opacity: 1; } 100% { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .celebrate, .celebrate span { animation: none; } }
-.moons { letter-spacing: 2px; font-size: 1rem; }
+/* Sleeps to go: a big number, then moons in groups of five so 9 and 10 look different at a glance. */
+.sleeps { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.sleeps b { font-family: var(--display); font-weight: 700; font-size: 1.6rem; line-height: 1; color: color-mix(in srgb, var(--pc) 80%, var(--tint-ink)); }
+.moons { display: inline-flex; flex-wrap: wrap; gap: 4px 10px; font-size: 1rem; }
+.moons > span { white-space: nowrap; letter-spacing: 1px; }
+.tile .sleeps { justify-content: center; gap: 6px; }
+.tile .sleeps b { font-size: 1.15rem; }
+.tile .moons { font-size: .8rem; justify-content: center; gap: 2px 6px; }
 
 /* ---------- week grid ---------- */
 .week-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
@@ -318,7 +324,14 @@ body:has(.ambient) .nudges { bottom: calc(110px + env(safe-area-inset-bottom, 0p
 .col { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
 
 /* ---------- kid mode ---------- */
+.kid-top { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; }
+.kid-top .grownups { margin-left: auto; }
+.kid-top .nudge-chip + .grownups { margin-left: 0; }
 .kidpick { display: flex; gap: 14px; flex-wrap: wrap; }
+/* The way out of kid mode: hold it and the house fills up. */
+.grownups { flex: none; width: 64px; height: 64px; border: 0; border-radius: 50%; display: grid; place-items: center; align-content: center; font-size: 1.6rem; line-height: 1; color: var(--muted); background: var(--surface) linear-gradient(color-mix(in srgb, var(--btn) 22%, var(--surface)), color-mix(in srgb, var(--btn) 22%, var(--surface))) bottom / 100% 0 no-repeat; box-shadow: var(--shadow); touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+.grownups small { font-family: var(--body); font-size: .72rem; font-weight: 700; margin-top: 2px; }
+.grownups.holding { background-size: 100% 100%; transition: background-size 1.2s linear; }
 .kidbtn { display: flex; align-items: center; gap: 12px; border: 3px solid transparent; background: var(--surface); border-radius: 999px; padding: 6px 22px 6px 6px; box-shadow: var(--shadow); font-family: var(--display); font-size: 1.4rem; font-weight: 600; text-decoration: none; }
 .kidbtn[aria-current="true"] { border-color: var(--pc); background: color-mix(in srgb, var(--pc) 16%, var(--surface)); }
 .kidbtn .avatar { width: 56px; height: 56px; font-size: 32px; }
@@ -330,7 +343,8 @@ body:has(.ambient) .nudges { bottom: calc(110px + env(safe-area-inset-bottom, 0p
 .now-card.next .big { font-size: 4.5rem; }
 .now-card .word { font-family: var(--display); font-weight: 700; font-size: clamp(2rem, 5vw, 3.2rem); line-height: 1.05; }
 .now-card.next .word { font-size: 2rem; }
-.tagbig { font-family: var(--display); font-weight: 700; font-size: 1.3rem; color: color-mix(in srgb, var(--pc) 80%, var(--tint-ink)); letter-spacing: .04em; }
+.tagbig { font-family: var(--display); font-weight: 700; font-size: 1.3rem; color: color-mix(in srgb, var(--pc) 80%, var(--tint-ink)); letter-spacing: .04em; text-transform: uppercase; }
+.now-dot { display: inline-block; width: 14px; height: 14px; margin-right: 10px; border-radius: 50%; background: var(--pc); vertical-align: 1px; animation: pulse 2s infinite; }
 .face-clock { display: flex; align-items: center; gap: 12px; font-family: var(--display); font-size: 1.2rem; font-weight: 600; }
 .pics { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 12px; }
 .pic { background: var(--surface); border-radius: 22px; padding: 14px; display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; font-family: var(--display); font-weight: 600; font-size: 1.05rem; box-shadow: var(--shadow); }

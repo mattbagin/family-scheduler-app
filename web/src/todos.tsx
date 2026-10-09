@@ -143,7 +143,7 @@ export function PrepTiles({ items }: { items: PrepItem[] }) {
       {items.map((p) => (
         <button key={p.key} className={`tile ${p.done ? 'is-done' : ''}`} aria-pressed={p.done} onClick={(e) => toggle(p, e.currentTarget)}>
           <span className="e" aria-hidden="true">{p.icon}</span>{p.text}
-          <span className="note">{p.date === today ? 'Today' : dayLabel(today, p.date)}</span>
+          <span className="note"><span aria-hidden="true">{p.date === today ? '☀️' : p.date === addDays(today, 1) ? '🌙' : '📅'}</span> {p.date === today ? 'Today' : dayLabel(today, p.date)}</span>
         </button>
       ))}
     </div>

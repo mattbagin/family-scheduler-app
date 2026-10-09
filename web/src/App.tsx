@@ -109,7 +109,8 @@ function Shell() {
       <a className="skip" href="#main">Skip to the main content</a>
       {!connected && <div className="offline" role="status">Reconnecting to the home server…</div>}
       <NudgeBanners ambient={ambient} night={isHub && night} />
-      <header className="top">
+      {/* Kid mode is a space of its own: no parent tabs, settings or PIN button (Kid has its own way out). */}
+      {!isKidScreen && <header className="top">
         <Link to="/" className="brand"><b>Homebase</b><span>{f.familyName}</span></Link>
         <nav className="tabs" aria-label="Views">
           <NavLink to="/" end>Today</NavLink>
@@ -132,7 +133,7 @@ function Shell() {
           <NavLink to="/settings" className="icon-btn" aria-label="Settings">⚙️</NavLink>
           {f.me ? <Link to={`/person/${f.me.id}`} aria-label={`${f.me.name}’s page`}><Avatar m={f.me} /></Link> : <span className="icon-btn" title="This device is the family hub">🏡 Hub</span>}
         </div>
-      </header>
+      </header>}
 
       <main className="stack" id="main" tabIndex={-1}>
         <Routes>

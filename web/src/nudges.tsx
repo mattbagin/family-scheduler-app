@@ -5,6 +5,7 @@ import type { Nudge, NudgeKind } from '@shared';
 import { api } from './api.ts';
 import { useAction, useFamily } from './context.tsx';
 import { ago } from './lib.ts';
+import { useNight } from './hub.tsx';
 import { chime, Face } from './ui.tsx';
 
 export const useActiveNudges = (enabled: boolean) =>
@@ -23,7 +24,7 @@ function splitTitle(n: Nudge): [icon: string, text: string] {
  * Banners for nudges nobody has answered yet, on the hub (even over the ambient screen) and on
  * parents' screens. The hub also plays a soft chime when one arrives.
  * Each is one line until tapped. Over photos it turns frosted, at night it dims to the bedside
- * amber, and on kid screens it shrinks to a quiet chip with nothing for small hands to press.
+ * amber. Kid screens show GrownUpsNote in their own top row instead.
  */
 export function NudgeBanners({ ambient = false, night = false }: { ambient?: boolean; night?: boolean }) {
   const f = useFamily();
@@ -51,14 +52,7 @@ export function NudgeBanners({ ambient = false, night = false }: { ambient?: boo
   // Screen readers hear the newest title once, not every banner's details on every change.
   const announce = <p className="sr-only" role="status">{splitTitle(nudges[0])[1]}</p>;
 
-  if (kidScreen) {
-    return (
-      <div className={`nudges kid-chip${night ? ' night' : ''}`}>
-        {announce}
-        <p className="nudge-chip"><span aria-hidden="true">🔔</span> {nudges.length === 1 ? 'A note' : `${nudges.length} notes`} for grown-ups</p>
-      </div>
-    );
-  }
+  if (kidScreen) return null;
 
   const look = night ? ' night' : ambient ? ' over-photo' : '';
   return (
@@ -86,6 +80,20 @@ export function NudgeBanners({ ambient = false, night = false }: { ambient?: boo
         );
       })}
     </section>
+  );
+}
+
+/** Kid mode's stand-in for the banners: a quiet note in its top row, with nothing for small hands to press. */
+export function GrownUpsNote() {
+  const f = useFamily();
+  const isHub = f.session.kind === 'hub';
+  const night = useNight() && isHub;
+  const { data: nudges = [] } = useActiveNudges(isHub || f.me?.role === 'adult');
+  if (!nudges.length) return null;
+  return (
+    <p className={`nudge-chip${night ? ' night' : ''}`} role="status">
+      <span aria-hidden="true">🔔</span> {nudges.length === 1 ? 'A note' : `${nudges.length} notes`} for grown-ups
+    </p>
   );
 }
 
