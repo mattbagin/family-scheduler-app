@@ -1,0 +1,805 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-09T01:41:46.098Z",
+  "title": "Design System: Homebase",
+  "extensions": {
+    "colorMeta": {
+      "ink-navy": {
+        "role": "primary",
+        "displayName": "Ink Navy",
+        "canonical": "#18203A",
+        "oklch": "oklch(25.0% 0.051 269.6)",
+        "tonalRamp": [
+          "oklch(15% 0.025 269.6)",
+          "oklch(26% 0.025 269.6)",
+          "oklch(37% 0.051 269.6)",
+          "oklch(48% 0.051 269.6)",
+          "oklch(59% 0.051 269.6)",
+          "oklch(70% 0.051 269.6)",
+          "oklch(82% 0.051 269.6)",
+          "oklch(95% 0.025 269.6)"
+        ]
+      },
+      "slate-muted": {
+        "role": "neutral",
+        "displayName": "Slate Muted",
+        "canonical": "#5B6583",
+        "oklch": "oklch(51.0% 0.049 270.3)",
+        "tonalRamp": [
+          "oklch(15% 0.025 270.3)",
+          "oklch(26% 0.025 270.3)",
+          "oklch(37% 0.049 270.3)",
+          "oklch(48% 0.049 270.3)",
+          "oklch(59% 0.049 270.3)",
+          "oklch(70% 0.049 270.3)",
+          "oklch(82% 0.049 270.3)",
+          "oklch(95% 0.025 270.3)"
+        ]
+      },
+      "mist-bg": {
+        "role": "neutral",
+        "displayName": "Mist Bg",
+        "canonical": "#EEF1F7",
+        "oklch": "oklch(95.8% 0.009 264.5)",
+        "tonalRamp": [
+          "oklch(15% 0.004 264.5)",
+          "oklch(26% 0.004 264.5)",
+          "oklch(37% 0.009 264.5)",
+          "oklch(48% 0.009 264.5)",
+          "oklch(59% 0.009 264.5)",
+          "oklch(70% 0.009 264.5)",
+          "oklch(82% 0.009 264.5)",
+          "oklch(95% 0.004 264.5)"
+        ]
+      },
+      "paper-white": {
+        "role": "neutral",
+        "displayName": "Paper White",
+        "canonical": "#FFFFFF",
+        "oklch": "oklch(100.0% 0 89.9)",
+        "tonalRamp": [
+          "oklch(15% 0 89.9)",
+          "oklch(26% 0 89.9)",
+          "oklch(37% 0 89.9)",
+          "oklch(48% 0 89.9)",
+          "oklch(59% 0 89.9)",
+          "oklch(70% 0 89.9)",
+          "oklch(82% 0 89.9)",
+          "oklch(95% 0 89.9)"
+        ]
+      },
+      "cloud-surface": {
+        "role": "neutral",
+        "displayName": "Cloud Surface",
+        "canonical": "#F5F7FB",
+        "oklch": "oklch(97.6% 0.006 264.5)",
+        "tonalRamp": [
+          "oklch(15% 0.003 264.5)",
+          "oklch(26% 0.003 264.5)",
+          "oklch(37% 0.006 264.5)",
+          "oklch(48% 0.006 264.5)",
+          "oklch(59% 0.006 264.5)",
+          "oklch(70% 0.006 264.5)",
+          "oklch(82% 0.006 264.5)",
+          "oklch(95% 0.003 264.5)"
+        ]
+      },
+      "soft-line": {
+        "role": "neutral",
+        "displayName": "Soft Line",
+        "canonical": "#DCE1EC",
+        "oklch": "oklch(90.9% 0.016 266.3)",
+        "tonalRamp": [
+          "oklch(15% 0.008 266.3)",
+          "oklch(26% 0.008 266.3)",
+          "oklch(37% 0.016 266.3)",
+          "oklch(48% 0.016 266.3)",
+          "oklch(59% 0.016 266.3)",
+          "oklch(70% 0.016 266.3)",
+          "oklch(82% 0.016 266.3)",
+          "oklch(95% 0.008 266.3)"
+        ]
+      },
+      "focus-blue": {
+        "role": "secondary",
+        "displayName": "Focus Blue",
+        "canonical": "#2569C9",
+        "oklch": "oklch(53.2% 0.164 258.0)",
+        "tonalRamp": [
+          "oklch(15% 0.082 258.0)",
+          "oklch(26% 0.082 258.0)",
+          "oklch(37% 0.164 258.0)",
+          "oklch(48% 0.164 258.0)",
+          "oklch(59% 0.164 258.0)",
+          "oklch(70% 0.164 258.0)",
+          "oklch(82% 0.164 258.0)",
+          "oklch(95% 0.082 258.0)"
+        ]
+      },
+      "amber-warn": {
+        "role": "status",
+        "displayName": "Amber Warn",
+        "canonical": "#9A5B00",
+        "oklch": "oklch(53.1% 0.119 65.1)",
+        "tonalRamp": [
+          "oklch(15% 0.06 65.1)",
+          "oklch(26% 0.06 65.1)",
+          "oklch(37% 0.119 65.1)",
+          "oklch(48% 0.119 65.1)",
+          "oklch(59% 0.119 65.1)",
+          "oklch(70% 0.119 65.1)",
+          "oklch(82% 0.119 65.1)",
+          "oklch(95% 0.06 65.1)"
+        ]
+      },
+      "amber-warn-bg": {
+        "role": "status",
+        "displayName": "Amber Warn Bg",
+        "canonical": "#FFF0D2",
+        "oklch": "oklch(95.9% 0.042 84.6)",
+        "tonalRamp": [
+          "oklch(15% 0.021 84.6)",
+          "oklch(26% 0.021 84.6)",
+          "oklch(37% 0.042 84.6)",
+          "oklch(48% 0.042 84.6)",
+          "oklch(59% 0.042 84.6)",
+          "oklch(70% 0.042 84.6)",
+          "oklch(82% 0.042 84.6)",
+          "oklch(95% 0.021 84.6)"
+        ]
+      },
+      "berry-bad": {
+        "role": "status",
+        "displayName": "Berry Bad",
+        "canonical": "#B7263F",
+        "oklch": "oklch(51.3% 0.179 17.5)",
+        "tonalRamp": [
+          "oklch(15% 0.09 17.5)",
+          "oklch(26% 0.09 17.5)",
+          "oklch(37% 0.179 17.5)",
+          "oklch(48% 0.179 17.5)",
+          "oklch(59% 0.179 17.5)",
+          "oklch(70% 0.179 17.5)",
+          "oklch(82% 0.179 17.5)",
+          "oklch(95% 0.09 17.5)"
+        ]
+      },
+      "berry-bad-bg": {
+        "role": "status",
+        "displayName": "Berry Bad Bg",
+        "canonical": "#FDE3E8",
+        "oklch": "oklch(93.8% 0.029 4.5)",
+        "tonalRamp": [
+          "oklch(15% 0.015 4.5)",
+          "oklch(26% 0.015 4.5)",
+          "oklch(37% 0.029 4.5)",
+          "oklch(48% 0.029 4.5)",
+          "oklch(59% 0.029 4.5)",
+          "oklch(70% 0.029 4.5)",
+          "oklch(82% 0.029 4.5)",
+          "oklch(95% 0.015 4.5)"
+        ]
+      },
+      "pine-good": {
+        "role": "status",
+        "displayName": "Pine Good",
+        "canonical": "#17704A",
+        "oklch": "oklch(48.5% 0.102 159.6)",
+        "tonalRamp": [
+          "oklch(15% 0.051 159.6)",
+          "oklch(26% 0.051 159.6)",
+          "oklch(37% 0.102 159.6)",
+          "oklch(48% 0.102 159.6)",
+          "oklch(59% 0.102 159.6)",
+          "oklch(70% 0.102 159.6)",
+          "oklch(82% 0.102 159.6)",
+          "oklch(95% 0.051 159.6)"
+        ]
+      },
+      "pine-good-bg": {
+        "role": "status",
+        "displayName": "Pine Good Bg",
+        "canonical": "#DDF4E7",
+        "oklch": "oklch(94.7% 0.03 161.1)",
+        "tonalRamp": [
+          "oklch(15% 0.015 161.1)",
+          "oklch(26% 0.015 161.1)",
+          "oklch(37% 0.03 161.1)",
+          "oklch(48% 0.03 161.1)",
+          "oklch(59% 0.03 161.1)",
+          "oklch(70% 0.03 161.1)",
+          "oklch(82% 0.03 161.1)",
+          "oklch(95% 0.015 161.1)"
+        ]
+      },
+      "night-bg": {
+        "role": "neutral",
+        "displayName": "Night Bg",
+        "canonical": "#10141F",
+        "oklch": "oklch(19.3% 0.023 268.8)",
+        "tonalRamp": [
+          "oklch(15% 0.012 268.8)",
+          "oklch(26% 0.012 268.8)",
+          "oklch(37% 0.023 268.8)",
+          "oklch(48% 0.023 268.8)",
+          "oklch(59% 0.023 268.8)",
+          "oklch(70% 0.023 268.8)",
+          "oklch(82% 0.023 268.8)",
+          "oklch(95% 0.012 268.8)"
+        ]
+      },
+      "night-surface": {
+        "role": "neutral",
+        "displayName": "Night Surface",
+        "canonical": "#1A1F2E",
+        "oklch": "oklch(24.2% 0.03 269.9)",
+        "tonalRamp": [
+          "oklch(15% 0.015 269.9)",
+          "oklch(26% 0.015 269.9)",
+          "oklch(37% 0.03 269.9)",
+          "oklch(48% 0.03 269.9)",
+          "oklch(59% 0.03 269.9)",
+          "oklch(70% 0.03 269.9)",
+          "oklch(82% 0.03 269.9)",
+          "oklch(95% 0.015 269.9)"
+        ]
+      },
+      "night-surface-2": {
+        "role": "neutral",
+        "displayName": "Night Surface 2",
+        "canonical": "#222839",
+        "oklch": "oklch(27.9% 0.033 269.2)",
+        "tonalRamp": [
+          "oklch(15% 0.016 269.2)",
+          "oklch(26% 0.016 269.2)",
+          "oklch(37% 0.033 269.2)",
+          "oklch(48% 0.033 269.2)",
+          "oklch(59% 0.033 269.2)",
+          "oklch(70% 0.033 269.2)",
+          "oklch(82% 0.033 269.2)",
+          "oklch(95% 0.016 269.2)"
+        ]
+      },
+      "night-ink": {
+        "role": "primary",
+        "displayName": "Night Ink",
+        "canonical": "#EEF1F8",
+        "oklch": "oklch(95.8% 0.01 267.4)",
+        "tonalRamp": [
+          "oklch(15% 0.005 267.4)",
+          "oklch(26% 0.005 267.4)",
+          "oklch(37% 0.01 267.4)",
+          "oklch(48% 0.01 267.4)",
+          "oklch(59% 0.01 267.4)",
+          "oklch(70% 0.01 267.4)",
+          "oklch(82% 0.01 267.4)",
+          "oklch(95% 0.005 267.4)"
+        ]
+      },
+      "night-muted": {
+        "role": "neutral",
+        "displayName": "Night Muted",
+        "canonical": "#9AA3BD",
+        "oklch": "oklch(71.7% 0.039 270.3)",
+        "tonalRamp": [
+          "oklch(15% 0.02 270.3)",
+          "oklch(26% 0.02 270.3)",
+          "oklch(37% 0.039 270.3)",
+          "oklch(48% 0.039 270.3)",
+          "oklch(59% 0.039 270.3)",
+          "oklch(70% 0.039 270.3)",
+          "oklch(82% 0.039 270.3)",
+          "oklch(95% 0.02 270.3)"
+        ]
+      },
+      "night-line": {
+        "role": "neutral",
+        "displayName": "Night Line",
+        "canonical": "#2E3549",
+        "oklch": "oklch(33.1% 0.037 269.4)",
+        "tonalRamp": [
+          "oklch(15% 0.018 269.4)",
+          "oklch(26% 0.018 269.4)",
+          "oklch(37% 0.037 269.4)",
+          "oklch(48% 0.037 269.4)",
+          "oklch(59% 0.037 269.4)",
+          "oklch(70% 0.037 269.4)",
+          "oklch(82% 0.037 269.4)",
+          "oklch(95% 0.018 269.4)"
+        ]
+      },
+      "night-focus": {
+        "role": "secondary",
+        "displayName": "Night Focus",
+        "canonical": "#6AA6F5",
+        "oklch": "oklch(71.8% 0.132 255.8)",
+        "tonalRamp": [
+          "oklch(15% 0.066 255.8)",
+          "oklch(26% 0.066 255.8)",
+          "oklch(37% 0.132 255.8)",
+          "oklch(48% 0.132 255.8)",
+          "oklch(59% 0.132 255.8)",
+          "oklch(70% 0.132 255.8)",
+          "oklch(82% 0.132 255.8)",
+          "oklch(95% 0.066 255.8)"
+        ]
+      },
+      "night-warn": {
+        "role": "status",
+        "displayName": "Night Warn",
+        "canonical": "#F5C06A",
+        "oklch": "oklch(83.8% 0.12 78.0)",
+        "tonalRamp": [
+          "oklch(15% 0.06 78.0)",
+          "oklch(26% 0.06 78.0)",
+          "oklch(37% 0.12 78.0)",
+          "oklch(48% 0.12 78.0)",
+          "oklch(59% 0.12 78.0)",
+          "oklch(70% 0.12 78.0)",
+          "oklch(82% 0.12 78.0)",
+          "oklch(95% 0.06 78.0)"
+        ]
+      },
+      "night-warn-bg": {
+        "role": "status",
+        "displayName": "Night Warn Bg",
+        "canonical": "#3A2C12",
+        "oklch": "oklch(30.3% 0.045 81.1)",
+        "tonalRamp": [
+          "oklch(15% 0.022 81.1)",
+          "oklch(26% 0.022 81.1)",
+          "oklch(37% 0.045 81.1)",
+          "oklch(48% 0.045 81.1)",
+          "oklch(59% 0.045 81.1)",
+          "oklch(70% 0.045 81.1)",
+          "oklch(82% 0.045 81.1)",
+          "oklch(95% 0.022 81.1)"
+        ]
+      },
+      "night-bad": {
+        "role": "status",
+        "displayName": "Night Bad",
+        "canonical": "#FF8599",
+        "oklch": "oklch(75.8% 0.149 10.9)",
+        "tonalRamp": [
+          "oklch(15% 0.074 10.9)",
+          "oklch(26% 0.074 10.9)",
+          "oklch(37% 0.149 10.9)",
+          "oklch(48% 0.149 10.9)",
+          "oklch(59% 0.149 10.9)",
+          "oklch(70% 0.149 10.9)",
+          "oklch(82% 0.149 10.9)",
+          "oklch(95% 0.074 10.9)"
+        ]
+      },
+      "night-bad-bg": {
+        "role": "status",
+        "displayName": "Night Bad Bg",
+        "canonical": "#3D1A22",
+        "oklch": "oklch(27.1% 0.056 7.0)",
+        "tonalRamp": [
+          "oklch(15% 0.028 7.0)",
+          "oklch(26% 0.028 7.0)",
+          "oklch(37% 0.056 7.0)",
+          "oklch(48% 0.056 7.0)",
+          "oklch(59% 0.056 7.0)",
+          "oklch(70% 0.056 7.0)",
+          "oklch(82% 0.056 7.0)",
+          "oklch(95% 0.028 7.0)"
+        ]
+      },
+      "night-good": {
+        "role": "status",
+        "displayName": "Night Good",
+        "canonical": "#62D8A0",
+        "oklch": "oklch(79.9% 0.135 160.4)",
+        "tonalRamp": [
+          "oklch(15% 0.067 160.4)",
+          "oklch(26% 0.067 160.4)",
+          "oklch(37% 0.135 160.4)",
+          "oklch(48% 0.135 160.4)",
+          "oklch(59% 0.135 160.4)",
+          "oklch(70% 0.135 160.4)",
+          "oklch(82% 0.135 160.4)",
+          "oklch(95% 0.067 160.4)"
+        ]
+      },
+      "night-good-bg": {
+        "role": "status",
+        "displayName": "Night Good Bg",
+        "canonical": "#143325",
+        "oklch": "oklch(29.3% 0.045 162.2)",
+        "tonalRamp": [
+          "oklch(15% 0.023 162.2)",
+          "oklch(26% 0.023 162.2)",
+          "oklch(37% 0.045 162.2)",
+          "oklch(48% 0.045 162.2)",
+          "oklch(59% 0.045 162.2)",
+          "oklch(70% 0.045 162.2)",
+          "oklch(82% 0.045 162.2)",
+          "oklch(95% 0.023 162.2)"
+        ]
+      },
+      "person-rose": {
+        "role": "tertiary",
+        "displayName": "Person Rose",
+        "canonical": "#D9487A",
+        "oklch": "oklch(61.6% 0.184 3.1)",
+        "tonalRamp": [
+          "oklch(15% 0.092 3.1)",
+          "oklch(26% 0.092 3.1)",
+          "oklch(37% 0.184 3.1)",
+          "oklch(48% 0.184 3.1)",
+          "oklch(59% 0.184 3.1)",
+          "oklch(70% 0.184 3.1)",
+          "oklch(82% 0.184 3.1)",
+          "oklch(95% 0.092 3.1)"
+        ]
+      },
+      "person-blue": {
+        "role": "tertiary",
+        "displayName": "Person Blue",
+        "canonical": "#2F7DE1",
+        "oklch": "oklch(59.5% 0.17 256.4)",
+        "tonalRamp": [
+          "oklch(15% 0.085 256.4)",
+          "oklch(26% 0.085 256.4)",
+          "oklch(37% 0.17 256.4)",
+          "oklch(48% 0.17 256.4)",
+          "oklch(59% 0.17 256.4)",
+          "oklch(70% 0.17 256.4)",
+          "oklch(82% 0.17 256.4)",
+          "oklch(95% 0.085 256.4)"
+        ]
+      },
+      "person-marigold": {
+        "role": "tertiary",
+        "displayName": "Person Marigold",
+        "canonical": "#DB8616",
+        "oklch": "oklch(69.5% 0.15 65.1)",
+        "tonalRamp": [
+          "oklch(15% 0.075 65.1)",
+          "oklch(26% 0.075 65.1)",
+          "oklch(37% 0.15 65.1)",
+          "oklch(48% 0.15 65.1)",
+          "oklch(59% 0.15 65.1)",
+          "oklch(70% 0.15 65.1)",
+          "oklch(82% 0.15 65.1)",
+          "oklch(95% 0.075 65.1)"
+        ]
+      },
+      "person-green": {
+        "role": "tertiary",
+        "displayName": "Person Green",
+        "canonical": "#1F9C62",
+        "oklch": "oklch(61.4% 0.137 157.1)",
+        "tonalRamp": [
+          "oklch(15% 0.068 157.1)",
+          "oklch(26% 0.068 157.1)",
+          "oklch(37% 0.137 157.1)",
+          "oklch(48% 0.137 157.1)",
+          "oklch(59% 0.137 157.1)",
+          "oklch(70% 0.137 157.1)",
+          "oklch(82% 0.137 157.1)",
+          "oklch(95% 0.068 157.1)"
+        ]
+      },
+      "person-violet": {
+        "role": "tertiary",
+        "displayName": "Person Violet",
+        "canonical": "#8B5CF6",
+        "oklch": "oklch(60.6% 0.219 292.7)",
+        "tonalRamp": [
+          "oklch(15% 0.109 292.7)",
+          "oklch(26% 0.109 292.7)",
+          "oklch(37% 0.219 292.7)",
+          "oklch(48% 0.219 292.7)",
+          "oklch(59% 0.219 292.7)",
+          "oklch(70% 0.219 292.7)",
+          "oklch(82% 0.219 292.7)",
+          "oklch(95% 0.109 292.7)"
+        ]
+      },
+      "person-tomato": {
+        "role": "tertiary",
+        "displayName": "Person Tomato",
+        "canonical": "#E0533D",
+        "oklch": "oklch(62.8% 0.18 31.4)",
+        "tonalRamp": [
+          "oklch(15% 0.09 31.4)",
+          "oklch(26% 0.09 31.4)",
+          "oklch(37% 0.18 31.4)",
+          "oklch(48% 0.18 31.4)",
+          "oklch(59% 0.18 31.4)",
+          "oklch(70% 0.18 31.4)",
+          "oklch(82% 0.18 31.4)",
+          "oklch(95% 0.09 31.4)"
+        ]
+      },
+      "person-teal": {
+        "role": "tertiary",
+        "displayName": "Person Teal",
+        "canonical": "#0E9AA7",
+        "oklch": "oklch(62.7% 0.105 205.6)",
+        "tonalRamp": [
+          "oklch(15% 0.053 205.6)",
+          "oklch(26% 0.053 205.6)",
+          "oklch(37% 0.105 205.6)",
+          "oklch(48% 0.105 205.6)",
+          "oklch(59% 0.105 205.6)",
+          "oklch(70% 0.105 205.6)",
+          "oklch(82% 0.105 205.6)",
+          "oklch(95% 0.053 205.6)"
+        ]
+      },
+      "person-ochre": {
+        "role": "tertiary",
+        "displayName": "Person Ochre",
+        "canonical": "#B7791F",
+        "oklch": "oklch(62.6% 0.125 70.4)",
+        "tonalRamp": [
+          "oklch(15% 0.062 70.4)",
+          "oklch(26% 0.062 70.4)",
+          "oklch(37% 0.125 70.4)",
+          "oklch(48% 0.125 70.4)",
+          "oklch(59% 0.125 70.4)",
+          "oklch(70% 0.125 70.4)",
+          "oklch(82% 0.125 70.4)",
+          "oklch(95% 0.062 70.4)"
+        ]
+      },
+      "bedside-amber": {
+        "role": "neutral",
+        "displayName": "Bedside Amber",
+        "canonical": "#B98F63",
+        "oklch": "oklch(68.0% 0.078 67.2)",
+        "tonalRamp": [
+          "oklch(15% 0.039 67.2)",
+          "oklch(26% 0.039 67.2)",
+          "oklch(37% 0.078 67.2)",
+          "oklch(48% 0.078 67.2)",
+          "oklch(59% 0.078 67.2)",
+          "oklch(70% 0.078 67.2)",
+          "oklch(82% 0.078 67.2)",
+          "oklch(95% 0.039 67.2)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "The Today clock; scales to 10rem on the ambient screen."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Page titles (h1)."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Panel headings, event and plan titles, names, nudge titles."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Everything read up close."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Small uppercase section labels, weekday headers, countdown units."
+      }
+    },
+    "shadows": [
+      {
+        "name": "board-lift",
+        "value": "0 1px 2px rgba(24,32,58,.06), 0 6px 20px rgba(24,32,58,.07)",
+        "purpose": "Panels, tabs, kid cards: one level above the board."
+      },
+      {
+        "name": "board-lift-dark",
+        "value": "0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.25)",
+        "purpose": "Board lift in dark mode."
+      },
+      {
+        "name": "floating",
+        "value": "0 10px 30px rgba(0,0,0,.25)",
+        "purpose": "The + button and toasts."
+      },
+      {
+        "name": "nudge",
+        "value": "0 12px 36px rgba(0,0,0,.28)",
+        "purpose": "Nudge banners."
+      },
+      {
+        "name": "sheet",
+        "value": "0 30px 80px rgba(0,0,0,.3)",
+        "purpose": "Dialogs, over a rgba(8,11,20,.45) scrim."
+      },
+      {
+        "name": "state-ring",
+        "value": "inset 0 0 0 2px var(--pc)",
+        "purpose": "Now, conflict and today rings without shifting layout."
+      }
+    ],
+    "motion": [
+      {
+        "name": "stamp",
+        "value": ".35s cubic-bezier(.3, 1.6, .6, 1)",
+        "purpose": "The star stamping onto a done tile."
+      },
+      {
+        "name": "pop",
+        "value": ".22s cubic-bezier(.2, 1.3, .5, 1)",
+        "purpose": "Sheets, nudges and toasts arriving."
+      },
+      {
+        "name": "star-pop",
+        "value": ".7s cubic-bezier(.3, 1.6, .6, 1)",
+        "purpose": "The full-screen celebration emoji."
+      },
+      {
+        "name": "press",
+        "value": "transform .15s",
+        "purpose": "Tiles scale to .95, faces lift 2px, + scales to 1.06."
+      },
+      {
+        "name": "pulse",
+        "value": "2s infinite",
+        "purpose": "The dot of an event happening now."
+      },
+      {
+        "name": "drift",
+        "value": "24s ease-in-out infinite alternate",
+        "purpose": "Slow pan and zoom on ambient photos and scenes; 2.4s crossfade."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "animation: none; transition: none",
+        "purpose": "Everything off under prefers-reduced-motion."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "phone",
+        "value": "520px"
+      },
+      {
+        "name": "compact",
+        "value": "700px"
+      },
+      {
+        "name": "stack",
+        "value": "900px"
+      },
+      {
+        "name": "max",
+        "value": "1400px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The one strong action per sheet or panel.",
+      "html": "<button class=\"ds-primary\">Save</button>",
+      "css": ".ds-primary{border:0;background:var(--btn,#18203A);color:var(--btn-ink,#fff);border-radius:999px;padding:12px 22px;font:800 1rem Figtree,system-ui,sans-serif;cursor:pointer;transition:transform .15s}.ds-primary:hover{transform:translateY(-1px)}.ds-primary:active{transform:scale(.97)}.ds-primary:focus-visible{outline:3px solid var(--focus,#2569C9);outline-offset:2px}"
+    },
+    {
+      "name": "Icon Button",
+      "kind": "button",
+      "refersTo": "button-icon",
+      "description": "Quiet secondary action: emoji plus a word.",
+      "html": "<button class=\"ds-icon-btn\"><span aria-hidden=\"true\">⚙️</span> Settings</button>",
+      "css": ".ds-icon-btn{border:1px solid var(--line,#DCE1EC);background:var(--surface,#fff);color:var(--ink,#18203A);border-radius:999px;padding:8px 14px;font:600 15px Figtree,system-ui,sans-serif;display:inline-flex;gap:6px;align-items:center;cursor:pointer}.ds-icon-btn:hover{background:var(--surface-2,#F5F7FB)}.ds-icon-btn:focus-visible{outline:3px solid var(--focus,#2569C9);outline-offset:2px}"
+    },
+    {
+      "name": "Tabs",
+      "kind": "nav",
+      "refersTo": "tab-active",
+      "description": "Top navigation: pill tabs in a white tray.",
+      "html": "<nav class=\"ds-tabs\"><a class=\"active\" href=\"#\">Today</a><a href=\"#\">Week</a><a href=\"#\">Month</a></nav>",
+      "css": ".ds-tabs{display:inline-flex;gap:4px;background:var(--surface,#fff);padding:4px;border-radius:999px;box-shadow:0 1px 2px rgba(24,32,58,.06),0 6px 20px rgba(24,32,58,.07);font-family:Figtree,system-ui,sans-serif}.ds-tabs a{padding:8px 16px;border-radius:999px;font-weight:600;color:var(--muted,#5B6583);text-decoration:none}.ds-tabs a:hover{color:var(--ink,#18203A)}.ds-tabs a.active{background:var(--btn,#18203A);color:var(--btn-ink,#fff)}.ds-tabs a:focus-visible{outline:3px solid var(--focus,#2569C9);outline-offset:2px}"
+    },
+    {
+      "name": "Text Field",
+      "kind": "input",
+      "refersTo": "input-field",
+      "description": "Form field with its label above.",
+      "html": "<label class=\"ds-field\">Where<input placeholder=\"Riverside Park\" /></label>",
+      "css": ".ds-field{display:flex;flex-direction:column;gap:4px;font:700 .85rem Figtree,system-ui,sans-serif;color:var(--muted,#5B6583)}.ds-field input{font:500 15px Figtree,system-ui,sans-serif;color:var(--ink,#18203A);background:var(--surface-2,#F5F7FB);border:2px solid var(--line,#DCE1EC);border-radius:12px;padding:9px 12px}.ds-field input:focus-visible{outline:3px solid var(--focus,#2569C9);outline-offset:2px}"
+    },
+    {
+      "name": "Person Toggle",
+      "kind": "chip",
+      "description": "Pick who is going: face plus name; pressed takes the person color.",
+      "html": "<button class=\"ds-tog\" aria-pressed=\"true\" style=\"--pc:#DB8616\"><span class=\"ds-face\" aria-hidden=\"true\">👧</span>Emma</button><button class=\"ds-tog\" aria-pressed=\"false\" style=\"--pc:#1F9C62\"><span class=\"ds-face\" aria-hidden=\"true\">👦</span>Leo</button>",
+      "css": ".ds-tog{display:inline-flex;align-items:center;gap:6px;border:2px solid var(--line,#DCE1EC);background:var(--surface,#fff);color:var(--ink,#18203A);border-radius:999px;padding:4px 12px 4px 4px;font:700 15px Figtree,system-ui,sans-serif;cursor:pointer;margin-right:6px}.ds-tog[aria-pressed=true]{border-color:var(--pc);background:color-mix(in srgb,var(--pc) 16%,var(--surface,#fff))}.ds-tog:focus-visible{outline:3px solid var(--focus,#2569C9);outline-offset:2px}.ds-face{width:30px;height:30px;border-radius:50%;display:inline-grid;place-items:center;font-size:15px;background:color-mix(in srgb,var(--pc) 22%,#fff);border:2px solid var(--pc)}"
+    },
+    {
+      "name": "Status Pills",
+      "kind": "chip",
+      "refersTo": "pill-warn",
+      "description": "Small status labels: warn, bad, good.",
+      "html": "<span class=\"ds-pill warn\">🚗 No driver</span> <span class=\"ds-pill bad\">Clash</span> <span class=\"ds-pill good\">Paid</span>",
+      "css": ".ds-pill{display:inline-flex;align-items:center;gap:4px;font:700 .75rem Figtree,system-ui,sans-serif;padding:2px 8px;border-radius:999px}.ds-pill.warn{background:var(--warn-bg,#FFF0D2);color:var(--warn,#9A5B00)}.ds-pill.bad{background:var(--bad-bg,#FDE3E8);color:var(--bad,#B7263F)}.ds-pill.good{background:var(--good-bg,#DDF4E7);color:var(--good,#17704A)}"
+    },
+    {
+      "name": "Panel",
+      "kind": "card",
+      "refersTo": "panel",
+      "description": "The white, board-lifted container for each section.",
+      "html": "<section class=\"ds-panel\"><h2>Get ready</h2><div class=\"ds-chip\"><b>5:00</b> Soccer at Riverside</div></section>",
+      "css": ".ds-panel{background:var(--surface,#fff);border-radius:24px;box-shadow:0 1px 2px rgba(24,32,58,.06),0 6px 20px rgba(24,32,58,.07);padding:18px;display:flex;flex-direction:column;gap:14px;font:15px/1.45 Figtree,system-ui,sans-serif;color:var(--ink,#18203A)}.ds-panel h2{font:600 1.25rem Fredoka,Nunito,system-ui,sans-serif;margin:0}.ds-chip{display:flex;gap:10px;align-items:center;background:var(--surface-2,#F5F7FB);border-radius:12px;padding:8px 10px;font-size:.92rem}.ds-chip b{color:var(--muted,#5B6583);font-size:.8rem;min-width:40px}"
+    },
+    {
+      "name": "Chore Tile",
+      "kind": "custom",
+      "description": "The sticker chart: dashed while waiting, solid with a stamped star when done.",
+      "html": "<button class=\"ds-tile\" style=\"--pc:#DB8616\"><span class=\"e\" aria-hidden=\"true\">🛏️</span>Make bed</button><button class=\"ds-tile done\" style=\"--pc:#DB8616\"><span class=\"e\" aria-hidden=\"true\">🦷</span>Brush teeth</button>",
+      "css": ".ds-tile{position:relative;width:104px;margin:8px;border:2px dashed color-mix(in srgb,var(--pc) 55%,transparent);background:color-mix(in srgb,var(--pc) 7%,#fff);border-radius:18px;padding:12px 6px 10px;display:inline-flex;flex-direction:column;align-items:center;gap:4px;font:600 .85rem Figtree,system-ui,sans-serif;color:#18203A;cursor:pointer;transition:transform .15s}.ds-tile .e{font-size:2rem;line-height:1}.ds-tile:active{transform:scale(.95)}.ds-tile:focus-visible{outline:3px solid var(--focus,#2569C9);outline-offset:2px}.ds-tile.done{border-style:solid;border-color:var(--pc);background:color-mix(in srgb,var(--pc) 20%,#fff)}.ds-tile.done::after{content:\"★\";position:absolute;top:-10px;right:-8px;width:30px;height:30px;border-radius:50%;background:color-mix(in srgb,var(--pc) 85%,#000);color:#fff;display:grid;place-items:center;font-size:17px;animation:ds-stamp .35s cubic-bezier(.3,1.6,.6,1)}@keyframes ds-stamp{from{transform:scale(0) rotate(-40deg)}}"
+    },
+    {
+      "name": "Nudge Banner",
+      "kind": "custom",
+      "description": "Bottom banner for a nudge; the left stripe shows its kind.",
+      "html": "<div class=\"ds-nudge\"><span aria-hidden=\"true\" style=\"font-size:1.6rem\">🚗</span><div><b>Time to leave for soccer</b><p>Dad’s driving · starts at 5:00</p></div><button>Got it</button></div>",
+      "css": ".ds-nudge{display:flex;align-items:center;gap:12px;background:var(--surface,#fff);color:var(--ink,#18203A);border-radius:18px;padding:12px 14px;box-shadow:0 12px 36px rgba(0,0,0,.28);border-left:6px solid var(--bad,#B7263F);font:15px Figtree,system-ui,sans-serif;max-width:520px}.ds-nudge div{flex:1}.ds-nudge b{font:600 1.1rem Fredoka,Nunito,system-ui,sans-serif}.ds-nudge p{margin:2px 0 0;font-size:.9rem;color:var(--muted,#5B6583)}.ds-nudge button{border:0;background:var(--btn,#18203A);color:var(--btn-ink,#fff);border-radius:999px;padding:8px 16px;font-weight:700;cursor:pointer}.ds-nudge button:focus-visible{outline:3px solid var(--focus,#2569C9);outline-offset:2px}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Family Sticker Chart",
+    "overview": "Homebase is the chart on the fridge, grown up into the whole household's calendar. Its heart is the moment a kid presses a tile and a star stamps on, or the last job of the day sets off confetti. Everything else (the timeline, the week grid, bills and plans) is laid out tidily around that heart on a calm, cool-grey board, so parents can scan it in a glance and kids can find their own face.\n\nThe board itself is quiet: a misty blue-grey background, white rounded panels, one dark navy for actions, and soft rounded type. The color comes from the people. Each member's color rings their face, tints their events and fills their tiles, so \"who\" reads before \"what\". Emoji do the work of illustration, which means a picture always sits next to the words for children who can't read yet.\n\nPlay is placed deliberately. Kid mode, the chore tiles and the celebrations are chunky, bouncy and big. Parent tools (forms, settings, the week grid, the nudge feed) keep the same rounded shapes but stay orderly and restrained. It must never look like a corporate calendar (thin lines, grey boxes, dense text) or like a toy (primary-color clutter on the parents' screens).",
+    "keyCharacteristics": [
+      "A calm, cool board. The only strong color belongs to people, plus a few status colors.",
+      "Rounded everything: pill buttons and tabs, 18 to 32px cards, circular faces.",
+      "Fredoka for anything you'd read from across the room; Figtree for everything you read up close.",
+      "Emoji as the picture layer, beside text and never instead of it for adults.",
+      "Shadows that are soft and low, used to lift panels off the board rather than to stack layers.",
+      "Motion that rewards: stamps, pops and confetti on completion, with all of it off under reduced motion."
+    ],
+    "rules": [
+      {
+        "name": "The People Own the Color Rule",
+        "body": "Saturated hues on screen belong to a person or a status. Never add a brand accent, decorative gradient or category color to the app shell. Categories show as emoji, not color.",
+        "section": "colors"
+      },
+      {
+        "name": "The Mixed, Not Painted Rule",
+        "body": "Person colors reach surfaces only through `color-mix` with the surface (7 to 22%). Full-strength person color is kept for rings, dots, borders and the \"done\" star.",
+        "section": "colors"
+      },
+      {
+        "name": "The Across-the-Room Rule",
+        "body": "Anything meant to be glanced at (times, names, titles, counts, the clock, kid-mode words) is set in Fredoka. Anything meant to be read up close (notes, form labels, settings copy) is Figtree.",
+        "section": "typography"
+      },
+      {
+        "name": "The Tabular Time Rule",
+        "body": "Clocks and counts use tabular numbers so they don't jitter as they tick.",
+        "section": "typography"
+      },
+      {
+        "name": "The One Lift Rule",
+        "body": "Content sits one level above the board, never more. Stacked cards-in-cards with their own shadows are not allowed; nested surfaces change tone instead.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do give every person-related element the person's color through `--pc` (set with `pc()`), mixed 7 to 22% into the surface for fills.",
+      "Do pair every item with an emoji, and mark decorative emoji `aria-hidden` when text sits beside it.",
+      "Do use Fredoka for anything glanceable and Figtree for anything read up close.",
+      "Do keep one Ink Navy primary action per sheet or panel, as a full pill.",
+      "Do show \"now\" and conflicts with a 2px inset ring, not by changing size or layout.",
+      "Do celebrate completion (stamp, pop, confetti) and turn all motion off under `prefers-reduced-motion`.",
+      "Do keep touch targets big: 64px number keys, 104px or larger tiles, 64px + button."
+    ],
+    "donts": [
+      "Don't drift toward a corporate calendar: no thin-ruled dense grids, no grey boxed cells packed with small text, no square corners.",
+      "Don't go babyish on the parents' screens: no rainbow fills, extra colors, bouncing or confetti in Settings, forms, the week grid or the nudge feed. Keep the play for kid mode, tiles and completion.",
+      "Don't introduce a brand color, gradient or category color into the shell. Saturated color is for people and status only.",
+      "Don't stack shadowed cards inside shadowed panels. Nest with tone (Cloud on Paper White) instead.",
+      "Don't rely on text alone on kid-facing screens. A picture, a face or a color has to carry the meaning too.",
+      "Don't use full-strength person color as small text. Mix it with Tint Ink first so it stays readable."
+    ]
+  }
+}
