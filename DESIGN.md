@@ -307,7 +307,7 @@ Friendly but tidy: one strong button per area, the rest quiet.
 ### Cards / Containers
 - **Panel:** Paper White, 24px corners, the board lift, 18px padding, and a Fredoka heading row.
 - **Timeline card:** Cloud (or a 11% person tint when it's one person's), 18px corners, a big emoji, a Fredoka title and stacked faces at the end. A person-colored dot on a hairline spine sits beside it, and it pulses while the event is happening.
-- **Alert (heads-up):** a white or status-tinted card, 16px corners, with an emoji, a bold line and a small Ink Navy action pill.
+- **Heads-up:** Today leads with the day, not with alerts. Only urgent alerts (leave within 15 minutes, overdue) are cards above it: berry-tinted, 18px corners, an emoji, a bold line, the first item with "+N more", and the one Ink Navy action. Everything else waits in one row of chips (pill, 40px tall, warn-tinted when it needs a decision, white for information); a chip opens its card underneath with a quiet outlined action. On phones the row scrolls sideways. A leave-by the nudge banner is already showing isn't repeated as a card.
 
 ### Inputs / Fields
 - **Style:** Cloud fill, 2px Soft Line border, 12px corners, 9px 12px padding. The label sits above in small bold Slate Muted.

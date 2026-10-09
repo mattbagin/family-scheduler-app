@@ -122,6 +122,15 @@ h3 { font-size: var(--fs-title-sm); }
 .alert-text .link-btn { font-size: var(--fs-small); }
 .alert.warn { background: var(--warn-bg); } .alert.warn .alert-text b { color: var(--warn); }
 .alert.bad { background: var(--bad-bg); } .alert.bad .alert-text b { color: var(--bad); }
+/* Only urgent cards get the strong button; the rest are quiet. */
+.alert:not(.bad) .act { background: var(--surface); color: var(--ink); box-shadow: inset 0 0 0 1px var(--line); }
+/* The heads-up row: one line of chips, each opening its card. Phones scroll it sideways. */
+.ticker-wrap { display: flex; flex-direction: column; gap: 10px; }
+.ticker { display: flex; gap: 8px; flex-wrap: wrap; }
+.tick { display: inline-flex; align-items: center; gap: 6px; border: 0; border-radius: 999px; padding: 8px 14px; min-height: 40px; background: var(--surface); box-shadow: var(--shadow); font-weight: 700; font-size: var(--fs-small); white-space: nowrap; }
+.tick.warn { background: var(--warn-bg); color: var(--warn); }
+.tick[aria-expanded="true"] { box-shadow: inset 0 0 0 2px var(--focus); }
+@media (max-width: 520px) { .ticker { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin-inline: -16px; padding: 2px 16px 6px; } }
 .alert .act { border: 0; background: var(--btn); color: var(--btn-ink); border-radius: 999px; padding: 6px 12px; font-weight: 700; font-size: var(--fs-small); white-space: nowrap; }
 
 /* ---------- panels ---------- */

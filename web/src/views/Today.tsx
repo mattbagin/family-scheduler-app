@@ -6,6 +6,7 @@ import {
 import { api } from '../api.ts';
 import { namesOf, useAction, useFamily, useNow } from '../context.tsx';
 import { WeatherNow } from '../hub.tsx';
+import { useActiveNudges } from '../nudges.tsx';
 import { dueLabel, endAbs, leaveBy, mainRange, money, occDate, sleepsWord, startAbs, relDay } from '../lib.ts';
 import { useBills, useCalendars, useChores, useOccurrences, usePlans, usePrep, useTodos, useWeather } from '../queries.ts';
 import { EventSheet } from '../sheets/EventSheet.tsx';
@@ -18,6 +19,7 @@ import { ChoreTile } from './Person.tsx';
 const WINDOW_MIN = 6 * 60;
 
 interface Alert {
+  /** 'bad' is urgent (a card of its own); the rest wait in the heads-up row until opened. */
   cls: '' | 'warn' | 'bad';
   icon: string;
   title: string;
@@ -42,6 +44,18 @@ function AlertItems({ a }: { a: Alert }) {
   );
 }
 
+/** One heads-up: its words, and the action that settles it. */
+function AlertCard({ a }: { a: Alert }) {
+  return (
+    <div className={`alert ${a.cls}`}>
+      <span className="ic" aria-hidden="true">{a.icon}</span>
+      <AlertItems a={a} />
+      {a.action && <button className="act" onClick={a.action.run}>{a.action.label}</button>}
+      {a.link && <Link className="act" to={a.link} style={{ textDecoration: 'none' }}>See to-dos</Link>}
+    </div>
+  );
+}
+
 export function Today() {
   const f = useFamily();
   const sheets = useSheets();
@@ -56,6 +70,8 @@ export function Today() {
   const { data: todos = [] } = useTodos();
   const { data: prep = [] } = usePrep(today, addDays(today, 2), nowMin);
   const { data: weather } = useWeather();
+  const { data: nudges = [] } = useActiveNudges(true);
+  const [openAlert, setOpenAlert] = useState<string | null>(null);
   const flags = computeFlags(occs, f.members);
   // Person color first; an unassigned event from a subscribed calendar takes the calendar's color.
   const colorOf = (o: Occurrence) => f.byId(o.memberIds[0])?.color ?? calendars.find((c) => c.id === o.calendarId)?.color;
@@ -71,6 +87,7 @@ export function Today() {
   const alerts: Alert[] = [];
   for (const o of occs) {
     if (occDate(o) !== today || !o.travelMin || !o.driverId) continue;
+    if (nudges.some((n) => n.kind === 'leave_by' && n.title.endsWith(`for ${o.title}`))) continue;
     const mins = leaveBy(o) - nowMin;
     if (mins > -5 && mins <= 90) {
       alerts.push({
@@ -128,6 +145,10 @@ export function Today() {
     });
   }
 
+  const urgent = alerts.filter((a) => a.cls === 'bad');
+  const later = alerts.filter((a) => a.cls !== 'bad');
+  const shown = later.find((a) => a.title === openAlert);
+
   /* ---- people, plans, countdowns ---- */
   const openCount = (id: number) =>
     chores.filter((c) => c.assigneeId === id && c.scheduled && !c.done).length +
@@ -164,17 +185,21 @@ export function Today() {
         </nav>
       </section>
 
-      {alerts.length > 0 && (
-        <div className="heads" aria-label="Heads up">
-          {alerts.map((a) => (
-            <div key={a.title} className={`alert ${a.cls}`}>
-              <span className="ic" aria-hidden="true">{a.icon}</span>
-              <AlertItems a={a} />
-              {a.action && <button className="act" onClick={a.action.run}>{a.action.label}</button>}
-              {a.link && <Link className="act" to={a.link} style={{ textDecoration: 'none' }}>See to-dos</Link>}
-            </div>
-          ))}
-        </div>
+      {urgent.length > 0 && <div className="heads">{urgent.map((a) => <AlertCard key={a.title} a={a} />)}</div>}
+
+      {/* Everything not urgent waits in one row; a chip opens its card underneath. */}
+      {later.length > 0 && (
+        <section className="ticker-wrap" aria-label="Heads up">
+          <div className="ticker">
+            {later.map((a) => (
+              <button key={a.title} className={`tick ${a.cls}`} aria-expanded={openAlert === a.title} aria-controls="tick-open"
+                onClick={() => setOpenAlert(openAlert === a.title ? null : a.title)}>
+                <span aria-hidden="true">{a.icon}</span>{a.title}{a.items.length > 1 && !/d/.test(a.title) ? ` · ${a.items.length}` : ''}
+              </button>
+            ))}
+          </div>
+          {shown && <div id="tick-open"><AlertCard a={shown} /></div>}
+        </section>
       )}
 
       <div className="today-main">
