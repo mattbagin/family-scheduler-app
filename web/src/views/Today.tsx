@@ -177,7 +177,7 @@ export function Today() {
         </div>
         <nav className="members" aria-label="Family members">
           {f.members.map((m) => (
-            <Link key={m.id} to={`/person/${m.id}`} className="mem-btn" style={pc(m.color)}
+            <Link key={m.id} to={f.session.kind === 'hub' && m.role === 'kid' ? `/kid/${m.id}` : `/person/${m.id}`} className="mem-btn" style={pc(m.color)}
               aria-label={`${m.name}${openCount(m.id) ? `, ${openCount(m.id)} still to do` : ''}`} title={openCount(m.id) ? `${openCount(m.id)} jobs, to-dos and things to pack still open` : undefined}>
               <Avatar m={m} badge={openCount(m.id)} />{m.name}
             </Link>

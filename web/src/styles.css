@@ -280,6 +280,8 @@ body:has(.ambient) .nudges { bottom: calc(110px + env(safe-area-inset-bottom, 0p
 .chart-row .who .avatar { width: 36px; height: 36px; font-size: 20px; }
 .chart-row .stars { margin-left: auto; font-family: var(--body); font-size: var(--fs-small); color: var(--muted); font-weight: 700; }
 .chart-row .tiles { grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); }
+/* Phones: two by two, rather than three and one left over. */
+@media (max-width: 520px) { .chart-row .tiles { grid-template-columns: repeat(2, 1fr); } }
 .chart-row .tile { padding: 8px 4px; font-size: var(--fs-label); }
 .chart-row .tile .e { font-size: 1.6rem; }
 .celebrate { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; pointer-events: none; z-index: 60; animation: fade-out 2.4s forwards; }

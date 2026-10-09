@@ -1,4 +1,4 @@
-import { Fragment, useState } from 'react';
+import { Fragment, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   addDays, computeFlags, dayDiff, fmtShortDate, fmtTime, minutesOf, startOfWeek, weekdayMon, WEEKDAYS, withMinutes, type Occurrence,
@@ -23,6 +23,16 @@ export function Week() {
   const [over, setOver] = useState<string | null>(null);
   const first = addDays(startOfWeek(today), offset * 7);
   const days = Array.from({ length: 7 }, (_, i) => addDays(first, i));
+  // When the grid is wider than the screen (phones), open on today rather than Monday.
+  const scrollRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = scrollRef.current;
+    const col = el?.querySelector<HTMLElement>('.gh.today');
+    const label = el?.querySelector<HTMLElement>('.gh.corner');
+    if (el && col && label && el.scrollWidth > el.clientWidth) {
+      el.scrollLeft += col.getBoundingClientRect().left - el.getBoundingClientRect().left - label.offsetWidth;
+    }
+  }, [offset]);
   const { data: occs = [], isFetching } = useOccurrences(first, addDays(first, 7));
   const flags = computeFlags(occs, f.members);
 
@@ -63,7 +73,7 @@ export function Week() {
           <span className="hint-touch">Tap an event for details · + adds one</span>
         </div>
       </div>
-      <div className="scroll">
+      <div className="scroll" ref={scrollRef}>
         <div className="grid">
           <div className="gh corner" />
           {days.map((d) => (
