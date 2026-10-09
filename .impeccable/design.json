@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-10-09T14:50:56.770044Z",
+  "generatedAt": "2026-10-09T16:37:18.286Z",
   "title": "Design System: Homebase",
   "extensions": {
     "colorMeta": {
@@ -593,15 +593,27 @@
       },
       "title": {
         "displayName": "Title",
-        "purpose": "Panel headings, event and plan titles, names, nudge titles."
+        "purpose": "Panel headings, timeline event titles, kid-mode labels."
       },
       "body": {
         "displayName": "Body",
-        "purpose": "Everything read up close."
+        "purpose": "Everything read up close, and every form field (16px floor)."
       },
       "label": {
         "displayName": "Label",
-        "purpose": "Small uppercase section labels, weekday headers, countdown units."
+        "purpose": "Uppercase section labels, weekday headers, pills, badges. The smallest text on screen."
+      },
+      "title-lg": {
+        "displayName": "Large title",
+        "purpose": "Wordmark, week-grid day numbers, timeline times, the Tomorrow hero sentence."
+      },
+      "title-sm": {
+        "displayName": "Small title",
+        "purpose": "Card and row titles, h3, the quick-add box."
+      },
+      "small": {
+        "displayName": "Small",
+        "purpose": "Secondary lines: notes, field labels, chips, the dense week grid."
       }
     },
     "shadows": [
@@ -857,6 +869,11 @@
         "name": "The One Lift Rule",
         "body": "Content sits one level above the board, never more. Stacked cards-in-cards with their own shadows are not allowed; nested surfaces change tone instead.",
         "section": "elevation"
+      },
+      {
+        "name": "The Six Sizes Rule",
+        "body": "Text takes one of six role sizes (label, small, body, small title, title, large title) through the `--fs-*` variables; a new screen picks a role, never a new number. Body and form fields never go below 16px, so phones don't zoom into a field when it's tapped.",
+        "section": "typography"
       }
     ],
     "dos": [

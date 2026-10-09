@@ -51,19 +51,34 @@ typography:
     fontSize: "clamp(1.5rem, 4vw, 2.2rem)"
     fontWeight: 600
     lineHeight: 1.1
+  title-lg:
+    fontFamily: "Fredoka, Nunito, Trebuchet MS, system-ui, sans-serif"
+    fontSize: "1.5rem"
+    fontWeight: 600
+    lineHeight: 1.1
   title:
     fontFamily: "Fredoka, Nunito, Trebuchet MS, system-ui, sans-serif"
-    fontSize: "1.2rem"
+    fontSize: "1.25rem"
+    fontWeight: 600
+    lineHeight: 1.2
+  title-sm:
+    fontFamily: "Fredoka, Nunito, Trebuchet MS, system-ui, sans-serif"
+    fontSize: "1.125rem"
     fontWeight: 600
     lineHeight: 1.2
   body:
     fontFamily: "Figtree, Segoe UI, system-ui, -apple-system, sans-serif"
-    fontSize: "15px"
+    fontSize: "1rem"
     fontWeight: 400
     lineHeight: 1.45
+  small:
+    fontFamily: "Figtree, Segoe UI, system-ui, -apple-system, sans-serif"
+    fontSize: "0.875rem"
+    fontWeight: 400
+    lineHeight: 1.4
   label:
     fontFamily: "Figtree, Segoe UI, system-ui, -apple-system, sans-serif"
-    fontSize: "0.72rem"
+    fontSize: "0.75rem"
     fontWeight: 700
     letterSpacing: "0.08em"
 rounded:
@@ -217,14 +232,21 @@ When the hub's night mode is on, anything still awake on the hub goes amber on b
 ### Hierarchy
 - **Display** (Fredoka 600, clamp 3.2 to 5.6rem, line-height 0.9, tabular numbers): the Today clock and the Tomorrow board's leave-by time (which starts slightly larger, at 3.4rem). The ambient clock scales it up to 10rem, and kid-mode "now" emoji and words sit at a similar size.
 - **Headline** (Fredoka 600, clamp 1.5 to 2.2rem, 1.1): page titles (h1), with balanced wrapping.
-- **Title** (Fredoka 600, 1.05 to 1.25rem): panel headings (h2), event titles in the timeline, plan names, nudge titles, people's names.
-- **Body** (Figtree 400/500, 15px, 1.45): everything else. Secondary text drops to 0.82 to 0.92rem in Slate Muted.
-- **Label** (Figtree 700, 0.72rem, 0.08em tracking, uppercase, Slate Muted): small section labels, month weekday headers, countdown units.
+- **Large title** (Fredoka 600, 1.5rem, `--fs-title-lg`): the wordmark, day numbers in the week grid, timeline times, the Tomorrow hero sentence.
+- **Title** (Fredoka 600, 1.25rem, `--fs-title`): panel headings (h2), timeline event titles, kid-mode labels, the PIN prompt.
+- **Small title** (Fredoka 600, 1.125rem, `--fs-title-sm`): card and row titles (plans, countdowns, nudges, agenda and Tomorrow rows), h3, quick add's box.
+- **Body** (Figtree 400/500, 1rem / 16px, 1.45, `--fs-body`): everything else, and every form field.
+- **Small** (Figtree, 0.875rem, `--fs-small`): secondary lines in Slate Muted: notes, field labels, chips, the dense week grid, legends.
+- **Label** (Figtree 700, 0.75rem, 0.08em tracking, uppercase, Slate Muted, `--fs-label`): section labels, weekday headers, pills, badges, countdown units. Nothing on screen is smaller.
+
+Big numbers (counts, sleeps, the PIN keys, weather) and display sizes keep their own sizes on their elements; emoji and avatars are pictures and sit outside the type scale.
 
 ### Named Rules
 **The Across-the-Room Rule.** Anything meant to be glanced at (times, names, titles, counts, the clock, kid-mode words) is set in Fredoka. Anything meant to be read up close (notes, form labels, settings copy) is Figtree.
 
 **The Tabular Time Rule.** Clocks and counts use tabular numbers so they don't jitter as they tick.
+
+**The Six Sizes Rule.** Text takes one of six role sizes (label, small, body, small title, title, large title) through the `--fs-*` variables; a new screen picks a role, never a new number. Body and form fields never go below 16px, so phones don't zoom into a field when it's tapped.
 
 ## Layout
 
