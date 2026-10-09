@@ -304,7 +304,9 @@ body:has(.ambient) .nudges { bottom: calc(110px + env(safe-area-inset-bottom, 0p
   .dot { width: 9px; height: 9px; }
 }
 .agenda { display: flex; flex-direction: column; gap: 8px; }
-.agenda-row { display: grid; grid-template-columns: 64px auto 1fr auto; gap: 10px; align-items: center; border: 0; text-align: left; border-radius: 14px; padding: 10px 12px; background: color-mix(in srgb, var(--pc) 12%, var(--surface)); border-left: 5px solid var(--pc); }
+.agenda-row { display: grid; grid-template-columns: 64px auto 1fr auto; gap: 10px; align-items: center; border: 0; text-align: left; border-radius: 14px; padding: 10px 12px; background: var(--surface-2); }
+/* Like the Today timeline: one person's event takes their color; a shared one stays neutral and the faces say who. */
+.agenda-row.solo { background: color-mix(in srgb, var(--pc) 12%, var(--surface)); }
 .agenda-row .e { font-size: 1.6rem; }
 .agenda-title { display: flex; flex-direction: column; min-width: 0; }
 .agenda-time { font-weight: 700; font-size: .85rem; }
