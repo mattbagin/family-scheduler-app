@@ -108,7 +108,7 @@ function Shell() {
     <div className="app">
       <a className="skip" href="#main">Skip to the main content</a>
       {!connected && <div className="offline" role="status">Reconnecting to the home server…</div>}
-      <NudgeBanners />
+      <NudgeBanners ambient={ambient} night={isHub && night} />
       <header className="top">
         <Link to="/" className="brand"><b>Homebase</b><span>{f.familyName}</span></Link>
         <nav className="tabs" aria-label="Views">

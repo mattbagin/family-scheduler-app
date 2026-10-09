@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { addDays, parseLocal, ymd, type Nudge } from '../../shared/src/index.ts';
 import { buildApp } from '../src/app.ts';
 import { openDb } from '../src/db.ts';
-import { setupFamily, type App } from './helpers.ts';
+import { sessionFrom, setupFamily, type App } from './helpers.ts';
 
 /*
  * A stand-in push service. Each "phone" has its own key pair; the service decrypts what the
@@ -131,6 +131,25 @@ describe('nudges', () => {
     await app.nudger.tick(at('16:45'));
     expect(alexPhone.inbox).toHaveLength(1);
     expect((await app.inject({ url: '/api/nudges/active', cookies: adult })).json()).toEqual([]);
+  });
+
+  it('needs a parent’s PIN to answer a nudge on the hub, and remembers which parent', async () => {
+    const { adult, alex, robin, kit } = await family();
+    await app.inject({
+      method: 'POST', url: '/api/events', cookies: adult,
+      payload: { title: 'Swim', start: `${DAY}T17:00`, end: `${DAY}T18:00`, memberIds: [kit.id], driverId: alex.id, travelMin: 20 },
+    });
+    const [n] = await app.nudger.tick(at('16:30'));
+    const hub = sessionFrom(await app.inject({ method: 'POST', url: '/api/login', payload: { memberId: alex.id, pin: '2468', asHub: true } }));
+
+    const locked = await app.inject({ method: 'POST', url: `/api/nudges/${n.id}/ack`, cookies: hub });
+    expect(locked.statusCode).toBe(403);
+    expect(locked.json()).toMatchObject({ error: 'locked' });
+    expect((await app.inject({ url: '/api/nudges/active', cookies: hub })).json()).toHaveLength(1);
+
+    await app.inject({ method: 'POST', url: '/api/unlock', cookies: hub, payload: { memberId: robin.id, pin: '1357' } });
+    const ack = await app.inject({ method: 'POST', url: `/api/nudges/${n.id}/ack`, cookies: hub });
+    expect(ack.json<Nudge>()).toMatchObject({ ackedBy: robin.id });
   });
 
   it('holds nudges during quiet hours and sends them once quiet hours end', async () => {

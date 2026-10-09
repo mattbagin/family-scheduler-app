@@ -5,6 +5,7 @@
   --btn: #18203A; --btn-ink: #FFFFFF; --on-bad: #FFFFFF;
   /* Person colors used as text are mixed toward this so small labels stay readable (WCAG AA). */
   --tint-ink: #000000;
+  --bedside: #B98F63;
   --shadow: 0 1px 2px rgba(24, 32, 58, .06), 0 6px 20px rgba(24, 32, 58, .07);
   --display: "Fredoka", "Nunito", "Trebuchet MS", system-ui, sans-serif;
   --body: "Figtree", "Segoe UI", system-ui, -apple-system, sans-serif;
@@ -194,19 +195,46 @@ h3 { font-size: 1.05rem; }
 
 /* ---------- swipe rows, chore chart, celebration ---------- */
 /* ---------- nudges ---------- */
-/* Along the bottom, clear of the header tabs and the + button, and above the ambient screen. */
 .nudges { position: fixed; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); left: 50%; transform: translateX(-50%); z-index: 55; width: min(620px, calc(100% - 200px)); display: flex; flex-direction: column; gap: 8px; }
-@media (max-width: 700px) { .nudges { left: 12px; right: 92px; width: auto; transform: none; } }
+/* Phones: full width just above the + button, in thumb reach, and never more than 40% of the screen. */
+@media (max-width: 700px) {
+  .nudges { left: 12px; right: 12px; width: auto; transform: none; bottom: calc(96px + env(safe-area-inset-bottom, 0px)); max-height: 40dvh; overflow-y: auto; overscroll-behavior: contain; }
+  .nudges .nudge { box-shadow: 0 6px 18px rgba(0, 0, 0, .22); }
+  /* Narrow: two lines rather than cutting off the one word that matters ("…for Pia…"). */
+  .nudges .nudge-text b { white-space: normal; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; font-size: 1rem; }
+  .nudges .nudge-main[aria-expanded="true"] .nudge-text b { display: block; }
+}
 /* Over the ambient screen, sit above its row of people. */
 body:has(.ambient) .nudges { bottom: calc(110px + env(safe-area-inset-bottom, 0px)); }
-.nudge { display: flex; align-items: center; gap: 12px; background: var(--surface); color: var(--ink); border-radius: 18px; padding: 12px 14px; box-shadow: 0 12px 36px rgba(0, 0, 0, .28); border-left: 6px solid var(--focus); animation: pop .25s ease-out; }
-.nudge.leave_by { border-left-color: var(--bad); }
-.nudge.bill { border-left-color: var(--warn); }
-.nudge.evening, .nudge.morning { border-left-color: var(--good); }
-.nudge-text { flex: 1; min-width: 0; }
-.nudge-text b { font-family: var(--display); font-size: 1.1rem; }
-.nudge-text p { margin: 2px 0 0; font-size: .9rem; color: var(--muted); white-space: pre-line; }
-.nudge .act { border: 0; background: var(--btn); color: var(--btn-ink); border-radius: 999px; padding: 8px 16px; font-weight: 700; white-space: nowrap; }
+/* One line until tapped: what it is, who it's for, and Got it. The kind shows in the icon tile. */
+.nudge { display: flex; align-items: center; gap: 10px; background: var(--surface); color: var(--ink); border-radius: 18px; padding: 8px; box-shadow: 0 12px 36px rgba(0, 0, 0, .28); animation: pop .25s ease-out; }
+.nudge-main { flex: 1; min-width: 0; min-height: 44px; display: flex; align-items: center; gap: 12px; border: 0; background: none; padding: 0; color: inherit; text-align: left; border-radius: 12px; }
+.nudge-ic { width: 40px; height: 40px; flex: none; border-radius: 12px; display: grid; place-items: center; font-size: 1.35rem; background: var(--surface-2); }
+.nudge.leave_by .nudge-ic { background: var(--bad-bg); }
+.nudge.bill .nudge-ic { background: var(--warn-bg); }
+.nudge.morning .nudge-ic, .nudge.evening .nudge-ic { background: var(--good-bg); }
+.nudge-text { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.nudge-text b { font-family: var(--display); font-weight: 600; font-size: 1.08rem; line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.nudge-main[aria-expanded="true"] .nudge-text b { white-space: normal; }
+.nudge-body { margin-top: 4px; font-size: .9rem; color: var(--muted); white-space: pre-line; }
+.nudge-body small { display: block; margin-top: 4px; font-size: .8rem; }
+.nudge .faces { flex: none; padding-right: 6px; }
+.nudge .act { flex: none; min-height: 44px; border: 0; background: var(--btn); color: var(--btn-ink); border-radius: 999px; padding: 0 18px; font-weight: 700; white-space: nowrap; }
+/* Over photos: frosted, like the ambient screen's own pills. */
+.nudges.over-photo .nudge { background: rgba(10, 14, 24, .55); backdrop-filter: blur(14px); color: #fff; box-shadow: 0 8px 30px rgba(0, 0, 0, .3); }
+.nudges.over-photo .nudge .nudge-ic { background: rgba(255, 255, 255, .14); }
+.nudges.over-photo .nudge-body { color: rgba(255, 255, 255, .82); }
+.nudges.over-photo .act { background: #fff; color: #0b0f18; }
+/* Night: the same dim bedside amber as the night clock, no glow, no pop. */
+.nudges.night .nudge { background: #000; color: var(--bedside); border: 1px solid rgba(185, 143, 99, .3); box-shadow: none; animation: none; }
+.nudges.night .nudge .nudge-ic { background: rgba(185, 143, 99, .12); }
+.nudges.night .nudge-ic, .nudges.night .face { filter: grayscale(.8) brightness(.8); }
+.nudges.night .nudge-body { color: rgba(185, 143, 99, .85); }
+.nudges.night .act { background: none; color: var(--bedside); box-shadow: inset 0 0 0 1.5px rgba(185, 143, 99, .6); }
+/* Kid screens: a quiet note for grown-ups, with nothing to press. */
+.nudges.kid-chip { left: 16px; right: auto; width: auto; transform: none; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); }
+.nudge-chip { margin: 0; display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 999px; background: var(--surface); color: var(--muted); font-size: .85rem; font-weight: 700; box-shadow: var(--shadow); }
+.kid-chip.night .nudge-chip { background: #000; color: var(--bedside); box-shadow: none; }
 .feed { display: flex; flex-direction: column; }
 .feed-row { display: flex; justify-content: space-between; gap: 12px; padding: 8px 0; border-top: 1px solid var(--line); font-size: .9rem; }
 .feed-row:first-child { border-top: 0; }
@@ -335,7 +363,7 @@ body:has(.ambient) .nudges { bottom: calc(110px + env(safe-area-inset-bottom, 0p
 .ph-fg { object-fit: contain; animation: drift 24s ease-in-out infinite alternate; }
 @keyframes fadein { from { opacity: 0; } to { opacity: 1; } }
 /* Night: no photos, just a dim, warm bedside clock. */
-.ambient.night { background: #000; color: #b98f63; }
+.ambient.night { background: #000; color: var(--bedside); }
 .ambient.night .amb-shade { display: none; }
 .ambient.night .amb-content { opacity: .55; }
 .ambient.night .amb-clock { text-shadow: none; }
