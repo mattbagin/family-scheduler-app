@@ -37,7 +37,7 @@ export function useFamily(): Family {
 }
 
 export const namesOf = (f: Family, ids: number[]) =>
-  ids.map((id) => f.byId(id)?.name).filter(Boolean).join(' & ');
+  ids.length > 1 && ids.length === f.members.length ? 'everyone' : ids.map((id) => f.byId(id)?.name).filter(Boolean).join(' & ');
 
 /** The current time, refreshed every 20 seconds; `today` rolls over at midnight. */
 export function useNow() {

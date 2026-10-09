@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   addDays, computeFlags, dayDiff, dayLabel, fmtDur, fmtShortDate, fmtTime, minutesOf, weatherLook, type Occurrence, type Plan,
@@ -20,9 +21,25 @@ interface Alert {
   cls: '' | 'warn' | 'bad';
   icon: string;
   title: string;
-  text: string;
+  /** What it's about, one line each; the first shows, the rest open with "+N more". */
+  items: string[];
   action?: { label: string; run: () => void };
   link?: string;
+}
+
+/** A heads-up's headline, its first item, and the rest one tap away (instead of a run-on line). */
+function AlertItems({ a }: { a: Alert }) {
+  const [open, setOpen] = useState(false);
+  const [first, ...rest] = a.items;
+  return (
+    <div className="alert-text">
+      <b>{a.title}</b>
+      {open ? <ul>{a.items.map((t) => <li key={t}>{t}</li>)}</ul> : <span>{first}</span>}
+      {rest.length > 0 && (
+        <button className="link-btn" aria-expanded={open} onClick={() => setOpen(!open)}>{open ? 'Show less' : `+${rest.length} more`}</button>
+      )}
+    </div>
+  );
 }
 
 export function Today() {
@@ -59,7 +76,7 @@ export function Today() {
       alerts.push({
         cls: mins <= 15 ? 'bad' : 'warn', icon: '🚗',
         title: `Leave ${mins <= 0 ? 'now' : `in ${fmtDur(mins)}`} for ${o.title}`,
-        text: `${f.byId(o.driverId)?.name} driving ${namesOf(f, o.memberIds)} · by ${fmtTime(leaveBy(o))}`,
+        items: [`${f.byId(o.driverId)?.name} is driving ${namesOf(f, o.memberIds)} · leave by ${fmtTime(leaveBy(o))}`],
         action: { label: 'Details', run: () => openOcc(o) },
       });
     }
@@ -68,8 +85,8 @@ export function Today() {
   if (rides.length) {
     alerts.push({
       cls: 'warn', icon: '🚦', title: `${rides.length} ride${rides.length > 1 ? 's' : ''} still need a driver`,
-      text: rides.map((r) => `${dayLabel(today, occDate(r))} ${fmtTime(minutesOf(r.start))}: ${namesOf(f, r.memberIds)}’s ${r.title.toLowerCase()}`).join(' · '),
-      action: { label: 'Assign', run: () => openOcc(rides[0]) },
+      items: rides.map((r) => `${r.title} · ${dayLabel(today, occDate(r))} ${fmtTime(minutesOf(r.start))} (${namesOf(f, r.memberIds)})`),
+      action: { label: 'Pick a driver', run: () => openOcc(rides[0]) },
     });
   }
   const dueSoon = [
@@ -81,8 +98,8 @@ export function Today() {
     const firstPerson = dueSoon.find((t) => !t.plan && t.assigneeId)?.assigneeId;
     alerts.push({
       cls: dueSoon.some((t) => t.due < today) ? 'bad' : '', icon: '✅', title: `${dueSoon.length} task${dueSoon.length > 1 ? 's' : ''} due soon`,
-      text: dueSoon.map((t) => `${f.byId(t.assigneeId)?.name ?? 'Anyone'}: ${t.text.toLowerCase()} (${dueLabel(today, t.due).toLowerCase()})`).join(' · '),
-      action: firstPlan ? { label: 'Open', run: () => openPlan(firstPlan) } : undefined,
+      items: dueSoon.map((t) => `${t.text} · ${f.byId(t.assigneeId)?.name ?? 'Anyone'} · ${dueLabel(today, t.due)}`),
+      action: firstPlan ? { label: 'Open the plan', run: () => openPlan(firstPlan) } : undefined,
       link: !firstPlan && firstPerson ? `/person/${firstPerson}` : undefined,
     });
   }
@@ -90,7 +107,7 @@ export function Today() {
     if (b.paidAt || b.autopay || dayDiff(today, b.due) > 3) continue;
     const d = dayDiff(today, b.due);
     alerts.push({
-      cls: d < 0 ? 'bad' : '', icon: '💵', title: `${b.name} bill ${d < 0 ? 'overdue' : `due ${relDay(today, b.due)}`}`, text: money(b.amountCents),
+      cls: d < 0 ? 'bad' : '', icon: '💵', title: `${b.name} bill ${d < 0 ? 'overdue' : `due ${relDay(today, b.due)}`}`, items: [money(b.amountCents)],
       action: f.canEdit || f.session.kind === 'hub' ? { label: 'Mark paid', run: () => act(() => api(`/bills/${b.id}/pay`, { method: 'POST' }), `${b.name} marked paid`) } : undefined,
     });
   }
@@ -100,14 +117,14 @@ export function Today() {
     const look = weatherLook(wxDay.code);
     alerts.push({
       cls: '', icon: '☔', title: `Umbrella ${wxDay.date === today ? 'day' : 'tomorrow'}`,
-      text: `${look.text}, ${wxDay.rainChance}% chance of rain · high ${wxDay.hi}°. Grab raincoats on the way out.`,
+      items: [`${look.text}, ${wxDay.rainChance}% chance of rain, high of ${wxDay.hi}°. Grab raincoats on the way out.`],
     });
   }
   const pack = prep.filter((p) => !p.done && p.date === addDays(today, 1));
   if (pack.length) {
     alerts.push({
       cls: '', icon: '🎒', title: 'Pack for tomorrow',
-      text: pack.map((p) => `${p.text}${p.memberIds.length ? ` (${namesOf(f, p.memberIds)})` : ''}`).join(' · '),
+      items: pack.map((p) => `${p.text}${p.memberIds.length ? ` (${namesOf(f, p.memberIds)})` : ''}`),
     });
   }
 
@@ -139,7 +156,8 @@ export function Today() {
         </div>
         <nav className="members" aria-label="Family members">
           {f.members.map((m) => (
-            <Link key={m.id} to={`/person/${m.id}`} className="mem-btn" style={pc(m.color)}>
+            <Link key={m.id} to={`/person/${m.id}`} className="mem-btn" style={pc(m.color)}
+              aria-label={`${m.name}${openCount(m.id) ? `, ${openCount(m.id)} still to do` : ''}`} title={openCount(m.id) ? `${openCount(m.id)} jobs, to-dos and things to pack still open` : undefined}>
               <Avatar m={m} badge={openCount(m.id)} />{m.name}
             </Link>
           ))}
@@ -151,9 +169,9 @@ export function Today() {
           {alerts.map((a) => (
             <div key={a.title} className={`alert ${a.cls}`}>
               <span className="ic" aria-hidden="true">{a.icon}</span>
-              <p><b>{a.title}</b>{a.text}</p>
+              <AlertItems a={a} />
               {a.action && <button className="act" onClick={a.action.run}>{a.action.label}</button>}
-              {a.link && <Link className="act" to={a.link} style={{ textDecoration: 'none' }}>Open</Link>}
+              {a.link && <Link className="act" to={a.link} style={{ textDecoration: 'none' }}>See to-dos</Link>}
             </div>
           ))}
         </div>

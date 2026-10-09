@@ -59,7 +59,7 @@ export function Person() {
 
   const items = personItems(today, occs, m.id);
   const todays = items.filter((i) => occDate(i.occ) === today || (i.s < 1440 && i.e > 0));
-  const label = (i: PersonItem) => (i.drive ? `Drive ${namesOf(f, i.occ.memberIds)} to ${i.occ.title.toLowerCase()}` : i.occ.title);
+  const label = (i: PersonItem) => (i.drive ? `Drive ${namesOf(f, i.occ.memberIds)} to ${i.occ.title}` : i.occ.title);
   const isKid = m.role === 'kid';
   const myChores = chores.filter((c) => c.assigneeId === m.id && c.scheduled);
   const myPrep = prep.filter((p) => p.memberIds.includes(m.id));

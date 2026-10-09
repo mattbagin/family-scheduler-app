@@ -67,7 +67,7 @@ export function NudgeBanners({ ambient = false, night = false }: { ambient?: boo
               <span className="nudge-ic" aria-hidden="true">{icon}</span>
               <span className="nudge-text">
                 <b>{text}</b>
-                {expanded && <span className="nudge-body">{n.body}<small>{ago(n.createdAt)}</small></span>}
+                {expanded && <span className="nudge-body">{n.body}<small>{ago(n.createdAt)}{n.kind === 'leave_by' ? ' · Got it stops the repeats, so it isn’t passed to the other parent.' : ''}</small></span>}
               </span>
               <span className="faces" aria-label={`For ${n.audience.map((id) => f.byId(id)?.name).filter(Boolean).join(' and ')}`}>
                 {n.audience.map((id) => <Face key={id} m={f.byId(id)} size={24} />)}
