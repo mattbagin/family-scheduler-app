@@ -306,6 +306,18 @@ body:has(.ambient) .nudges { bottom: calc(110px + env(safe-area-inset-bottom, 0p
 @media (max-width: 520px) { .chart-row .tiles { grid-template-columns: repeat(2, 1fr); } }
 .chart-row .tile { padding: 8px 4px; font-size: var(--fs-label); }
 .chart-row .tile .e { font-size: 1.6rem; }
+/* The hub: the sticker chart leads Today, full width and full size (DESIGN.md's 104px+ tiles). */
+.chart-wide .chart-rows { display: grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); gap: 14px 28px; }
+.chart-wide .chart-row { border-top: 0; padding-top: 0; }
+.chart-wide .chart-row .who .avatar { width: 52px; height: 52px; font-size: 30px; }
+.chart-wide .chart-row .who { font-size: var(--fs-title); }
+.chart-wide .chart-row .tiles { grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); }
+.chart-wide .chart-row .tile { padding: 14px 6px 12px; font-size: var(--fs-small); }
+.chart-wide .chart-row .tile .e { font-size: 2.4rem; }
+/* The hub's hero: faces lead, the clock steps back (the ambient screen keeps the big one). */
+.hero.hub .clock { font-size: clamp(2.4rem, 4vw, 3.4rem); }
+.hero.hub .mem-btn { font-size: var(--fs-body); }
+.hero.hub .mem-btn .avatar { width: 80px; height: 80px; font-size: 46px; }
 .celebrate { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; pointer-events: none; z-index: 60; animation: fade-out 2.4s forwards; }
 .celebrate span { font-size: 9rem; line-height: 1; animation: star-pop .7s cubic-bezier(.3, 1.6, .6, 1); filter: drop-shadow(0 8px 24px rgba(0, 0, 0, .25)); }
 .celebrate b { font-family: var(--display); font-size: clamp(1.6rem, 5vw, 2.6rem); background: var(--surface); color: var(--ink); padding: 10px 24px; border-radius: 999px; box-shadow: var(--shadow); }

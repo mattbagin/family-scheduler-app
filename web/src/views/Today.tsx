@@ -163,10 +163,33 @@ export function Today() {
     .filter((o) => (seen.has(o.id) ? false : (seen.add(o.id), true)))
     .slice(0, 4);
 
+  // On the shared hub the sticker chart is the heart of Today: it leads, full width, at full size.
+  const isHub = f.session.kind === 'hub';
+  const chart = kidsWithJobs.length > 0 && (
+    <section className={`panel${isHub ? ' chart-wide' : ''}`} aria-label="Chore chart">
+      <div className="panel-head"><h2>Today’s jobs</h2><span className="label">Tap when it’s done</span></div>
+      <div className="chart-rows">
+        {kidsWithJobs.map((k) => {
+          const mine = chores.filter((c) => c.assigneeId === k.id && c.scheduled);
+          const done = mine.filter((c) => c.done).length;
+          return (
+            <div key={k.id} className="chart-row" style={pc(k.color)}>
+              <div className="who">
+                <Avatar m={k} />{k.name}
+                <span className="stars">{done === mine.length ? '⭐ All done!' : `${done} of ${mine.length}`}</span>
+              </div>
+              <div className="tiles">{mine.map((c) => <ChoreTile key={c.id} c={c} all={chores} />)}</div>
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+
   const h = now.getHours();
   return (
     <>
-      <section className="hero">
+      <section className={`hero${isHub ? ' hub' : ''}`}>
         <div className="clock num">{h % 12 || 12}<span className="colon">:</span>{String(now.getMinutes()).padStart(2, '0')}<small>{h >= 12 ? 'PM' : 'AM'}</small></div>
         <div className="row" style={{ gap: '12px 28px' }}>
           <div>
@@ -186,6 +209,8 @@ export function Today() {
       </section>
 
       {urgent.length > 0 && <div className="heads">{urgent.map((a) => <AlertCard key={a.title} a={a} />)}</div>}
+
+      {isHub && chart}
 
       {/* Everything not urgent waits in one row; a chip opens its card underneath. */}
       {later.length > 0 && (
@@ -263,24 +288,7 @@ export function Today() {
         </section>
 
         <div className="side">
-          {kidsWithJobs.length > 0 && (
-            <section className="panel" aria-label="Chore chart">
-              <div className="panel-head"><h2>Today’s jobs</h2><span className="label">Tap when it’s done</span></div>
-              {kidsWithJobs.map((k) => {
-                const mine = chores.filter((c) => c.assigneeId === k.id && c.scheduled);
-                const done = mine.filter((c) => c.done).length;
-                return (
-                  <div key={k.id} className="chart-row" style={pc(k.color)}>
-                    <div className="who">
-                      <Avatar m={k} />{k.name}
-                      <span className="stars">{done === mine.length ? '⭐ All done!' : `${done} of ${mine.length}`}</span>
-                    </div>
-                    <div className="tiles">{mine.map((c) => <ChoreTile key={c.id} c={c} all={chores} />)}</div>
-                  </div>
-                );
-              })}
-            </section>
-          )}
+          {!isHub && chart}
           {prep.length > 0 && (
             <section className="panel">
               <div className="panel-head">
