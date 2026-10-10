@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-10-09T16:37:18.286Z",
+  "generatedAt": "2026-10-10T21:41:42.544Z",
   "title": "Design System: Homebase",
   "extensions": {
     "colorMeta": {
@@ -343,17 +343,17 @@
       "night-warn-bg": {
         "role": "status",
         "displayName": "Night Warn Bg",
-        "canonical": "#3A2C12",
-        "oklch": "oklch(30.3% 0.045 81.1)",
+        "canonical": "#2D2517",
+        "oklch": "oklch(26.9% 0.027 81.1)",
         "tonalRamp": [
-          "oklch(15% 0.022 81.1)",
-          "oklch(26% 0.022 81.1)",
-          "oklch(37% 0.045 81.1)",
-          "oklch(48% 0.045 81.1)",
-          "oklch(59% 0.045 81.1)",
-          "oklch(70% 0.045 81.1)",
-          "oklch(82% 0.045 81.1)",
-          "oklch(95% 0.022 81.1)"
+          "oklch(15% 0.013 81.1)",
+          "oklch(26% 0.013 81.1)",
+          "oklch(37% 0.027 81.1)",
+          "oklch(48% 0.027 81.1)",
+          "oklch(59% 0.027 81.1)",
+          "oklch(70% 0.027 81.1)",
+          "oklch(82% 0.027 81.1)",
+          "oklch(95% 0.013 81.1)"
         ]
       },
       "night-bad": {
@@ -375,17 +375,17 @@
       "night-bad-bg": {
         "role": "status",
         "displayName": "Night Bad Bg",
-        "canonical": "#3D1A22",
-        "oklch": "oklch(27.1% 0.056 7.0)",
+        "canonical": "#321C22",
+        "oklch": "oklch(25.8% 0.036 2.2)",
         "tonalRamp": [
-          "oklch(15% 0.028 7.0)",
-          "oklch(26% 0.028 7.0)",
-          "oklch(37% 0.056 7.0)",
-          "oklch(48% 0.056 7.0)",
-          "oklch(59% 0.056 7.0)",
-          "oklch(70% 0.056 7.0)",
-          "oklch(82% 0.056 7.0)",
-          "oklch(95% 0.028 7.0)"
+          "oklch(15% 0.018 2.2)",
+          "oklch(26% 0.018 2.2)",
+          "oklch(37% 0.036 2.2)",
+          "oklch(48% 0.036 2.2)",
+          "oklch(59% 0.036 2.2)",
+          "oklch(70% 0.036 2.2)",
+          "oklch(82% 0.036 2.2)",
+          "oklch(95% 0.018 2.2)"
         ]
       },
       "night-good": {
@@ -563,7 +563,7 @@
           "oklch(82% 0.078 67.2)",
           "oklch(95% 0.039 67.2)"
         ],
-        "purpose": "Ink and action color of the bedside night look (ambient night, night nudges, the Tomorrow board at night)."
+        "purpose": "Ink and action color of the bedside night look (ambient night, night nudges, kid mode and the Tomorrow board at night)."
       },
       "bedside-muted": {
         "role": "neutral",
@@ -635,7 +635,12 @@
       {
         "name": "nudge",
         "value": "0 12px 36px rgba(0,0,0,.28)",
-        "purpose": "Nudge banners."
+        "purpose": "Nudge banners. Over ambient photos they are frosted instead; at night there is no shadow."
+      },
+      {
+        "name": "nudge-phone",
+        "value": "0 6px 18px rgba(0,0,0,.22)",
+        "purpose": "Softer floating shadow for nudge banners stacked on phones (700px and below)."
       },
       {
         "name": "sheet",
@@ -655,7 +660,7 @@
       {
         "name": "night-outline",
         "value": "inset 0 0 0 1.5px rgba(185,143,99,.6)",
-        "purpose": "Actions at night (active tab, +, Got it): amber outlines instead of solid fills. All other shadows are none at night."
+        "purpose": "Actions at night (active tab, +, Got it): amber outlines instead of solid fills. All other shadows are none at night: on the Tomorrow board, in kid mode and on night nudges."
       }
     ],
     "motion": [
@@ -667,7 +672,7 @@
       {
         "name": "pop",
         "value": ".22s cubic-bezier(.2, 1.3, .5, 1)",
-        "purpose": "Sheets, nudges and toasts arriving."
+        "purpose": "Sheets arriving (rise 16px, scale from .97). Nudge banners use the same keyframes over .25s ease-out, toasts over .2s ease-out; night nudges do not pop."
       },
       {
         "name": "star-pop",
@@ -683,6 +688,11 @@
         "name": "pulse",
         "value": "2s infinite",
         "purpose": "The dot of an event happening now."
+      },
+      {
+        "name": "hold",
+        "value": "background-size 1.2s linear",
+        "purpose": "Kid mode's hold-to-leave house fills from the bottom."
       },
       {
         "name": "drift",
@@ -714,7 +724,7 @@
       }
     ],
     "nightTheme": {
-      "trigger": "body:has(.tb.night): the hub in night mode showing the Tomorrow board",
+      "trigger": "body:has(.tb.night, .kid-space.night): the hub in night mode showing the Tomorrow board or kid mode",
       "tokens": {
         "--bg": "#000",
         "--surface": "#0d0a07",
@@ -735,7 +745,8 @@
         "--good-bg": "#12160C"
       },
       "personColors": "forced to var(--bedside)",
-      "decorativeFilter": "grayscale(.6) brightness(.8)"
+      "decorativeFilter": "grayscale(.6) brightness(.8) on faces, avatars, emoji and aria-hidden decoration",
+      "actions": "Active tab and + button become black with Bedside Amber text and inset 0 0 0 1.5px rgba(185,143,99,.6); the Tomorrow hero drops its tint to --surface and its time to --ink."
     }
   },
   "components": [
@@ -746,14 +757,6 @@
       "description": "The one strong action per sheet or panel.",
       "html": "<button class=\"ds-primary\">Save</button>",
       "css": ".ds-primary{border:0;background:var(--btn,#18203A);color:var(--btn-ink,#fff);border-radius:999px;padding:12px 22px;font:800 1rem Figtree,system-ui,sans-serif;cursor:pointer;transition:transform .15s}.ds-primary:hover{transform:translateY(-1px)}.ds-primary:active{transform:scale(.97)}.ds-primary:focus-visible{outline:3px solid var(--focus,#2569C9);outline-offset:2px}"
-    },
-    {
-      "name": "Icon Button",
-      "kind": "button",
-      "refersTo": "button-icon",
-      "description": "Quiet secondary action: emoji plus a word.",
-      "html": "<button class=\"ds-icon-btn\"><span aria-hidden=\"true\">⚙️</span> Settings</button>",
-      "css": ".ds-icon-btn{border:1px solid var(--line,#DCE1EC);background:var(--surface,#fff);color:var(--ink,#18203A);border-radius:999px;padding:8px 14px;font:600 15px Figtree,system-ui,sans-serif;display:inline-flex;gap:6px;align-items:center;cursor:pointer}.ds-icon-btn:hover{background:var(--surface-2,#F5F7FB)}.ds-icon-btn:focus-visible{outline:3px solid var(--focus,#2569C9);outline-offset:2px}"
     },
     {
       "name": "Tabs",
@@ -767,60 +770,60 @@
       "name": "Text Field",
       "kind": "input",
       "refersTo": "input-field",
-      "description": "Form field with its label above.",
+      "description": "Form field with a small bold muted label above; the field is body size so phones do not zoom.",
       "html": "<label class=\"ds-field\">Where<input placeholder=\"Riverside Park\" /></label>",
-      "css": ".ds-field{display:flex;flex-direction:column;gap:4px;font:700 .85rem Figtree,system-ui,sans-serif;color:var(--muted,#5B6583)}.ds-field input{font:500 15px Figtree,system-ui,sans-serif;color:var(--ink,#18203A);background:var(--surface-2,#F5F7FB);border:2px solid var(--line,#DCE1EC);border-radius:12px;padding:9px 12px}.ds-field input:focus-visible{outline:3px solid var(--focus,#2569C9);outline-offset:2px}"
+      "css": ".ds-field{display:flex;flex-direction:column;gap:4px;font:700 .875rem Figtree,\"Segoe UI\",system-ui,sans-serif;color:var(--muted,#5B6583)}.ds-field input{font:500 1rem Figtree,\"Segoe UI\",system-ui,sans-serif;color:var(--ink,#18203A);background:var(--surface-2,#F5F7FB);border:2px solid var(--line,#DCE1EC);border-radius:12px;padding:9px 12px}.ds-field input::placeholder{color:var(--muted,#5B6583);opacity:1}.ds-field input:hover{border-color:color-mix(in srgb,var(--focus,#2569C9) 35%,var(--line,#DCE1EC))}.ds-field input:focus-visible{outline:3px solid var(--focus,#2569C9);outline-offset:2px}"
     },
     {
       "name": "Person Toggle",
       "kind": "chip",
-      "description": "Pick who is going: face plus name; pressed takes the person color.",
+      "description": "A choice of who: face plus name in a 2px-bordered pill; pressed takes the person color as border and a 16% tint.",
       "html": "<button class=\"ds-tog\" aria-pressed=\"true\" style=\"--pc:#DB8616\"><span class=\"ds-face\" aria-hidden=\"true\">👧</span>Emma</button><button class=\"ds-tog\" aria-pressed=\"false\" style=\"--pc:#1F9C62\"><span class=\"ds-face\" aria-hidden=\"true\">👦</span>Leo</button>",
-      "css": ".ds-tog{display:inline-flex;align-items:center;gap:6px;border:2px solid var(--line,#DCE1EC);background:var(--surface,#fff);color:var(--ink,#18203A);border-radius:999px;padding:4px 12px 4px 4px;font:700 15px Figtree,system-ui,sans-serif;cursor:pointer;margin-right:6px}.ds-tog[aria-pressed=true]{border-color:var(--pc);background:color-mix(in srgb,var(--pc) 16%,var(--surface,#fff))}.ds-tog:focus-visible{outline:3px solid var(--focus,#2569C9);outline-offset:2px}.ds-face{width:30px;height:30px;border-radius:50%;display:inline-grid;place-items:center;font-size:15px;background:color-mix(in srgb,var(--pc) 22%,#fff);border:2px solid var(--pc)}"
+      "css": ".ds-tog{display:inline-flex;align-items:center;gap:6px;border:2px solid var(--line,#DCE1EC);background:var(--surface,#fff);color:var(--ink,#18203A);border-radius:999px;padding:4px 12px 4px 4px;font:700 1rem Figtree,\"Segoe UI\",system-ui,sans-serif;cursor:pointer;margin-right:8px}.ds-tog:hover{border-color:color-mix(in srgb,var(--pc) 50%,var(--line,#DCE1EC))}.ds-tog[aria-pressed=true]{border-color:var(--pc);background:color-mix(in srgb,var(--pc) 16%,var(--surface,#fff))}.ds-tog:focus-visible{outline:3px solid var(--focus,#2569C9);outline-offset:2px}.ds-face{width:30px;height:30px;border-radius:50%;display:inline-grid;place-items:center;font-size:15px;background:color-mix(in srgb,var(--pc) 22%,var(--surface,#fff));border:2px solid var(--pc);flex:none}"
+    },
+    {
+      "name": "Who Chip",
+      "kind": "chip",
+      "description": "Someone shown, not chosen (event attendees, per-person plan progress): face plus name, no toggle ring, no pressed or hover state.",
+      "html": "<span class=\"ds-who\" style=\"--pc:#DB8616\"><span class=\"ds-who-f\" aria-hidden=\"true\">👧</span>Emma</span><span class=\"ds-who\" style=\"--pc:#2F7DE1\"><span class=\"ds-who-f\" aria-hidden=\"true\">👨</span>Dad <span class=\"ds-who-n\">2 of 3</span></span>",
+      "css": ".ds-who{display:inline-flex;align-items:center;gap:6px;font:700 1rem Figtree,\"Segoe UI\",system-ui,sans-serif;color:var(--ink,#18203A);padding:2px 10px 2px 2px;margin-right:6px}.ds-who-f{width:28px;height:28px;border-radius:50%;display:inline-grid;place-items:center;font-size:15px;background:color-mix(in srgb,var(--pc) 22%,var(--surface,#fff));border:2px solid var(--pc);flex:none}.ds-who-n{font-size:.875rem;font-weight:400;color:var(--muted,#5B6583);font-variant-numeric:tabular-nums}"
     },
     {
       "name": "Status Pills",
       "kind": "chip",
       "refersTo": "pill-warn",
-      "description": "Small status labels: warn, bad, good.",
-      "html": "<span class=\"ds-pill warn\">🚗 No driver</span> <span class=\"ds-pill bad\">Clash</span> <span class=\"ds-pill good\">Paid</span>",
-      "css": ".ds-pill{display:inline-flex;align-items:center;gap:4px;font:700 .75rem Figtree,system-ui,sans-serif;padding:2px 8px;border-radius:999px}.ds-pill.warn{background:var(--warn-bg,#FFF0D2);color:var(--warn,#9A5B00)}.ds-pill.bad{background:var(--bad-bg,#FDE3E8);color:var(--bad,#B7263F)}.ds-pill.good{background:var(--good-bg,#DDF4E7);color:var(--good,#17704A)}"
+      "description": "Small status labels in the warn, bad, good or muted pair: a capsule on one line, a neat rounded block when it wraps.",
+      "html": "<span class=\"ds-pill warn\">🚗 Needs a ride</span> <span class=\"ds-pill bad\">Clash</span> <span class=\"ds-pill good\">Paid</span> <span class=\"ds-pill muted\">Tomorrow</span>",
+      "css": ".ds-pill{display:inline-flex;align-items:center;gap:4px;font:700 .75rem/1.3 Figtree,\"Segoe UI\",system-ui,sans-serif;padding:4px 9px;border-radius:12px}.ds-pill.warn{background:var(--warn-bg,#FFF0D2);color:var(--warn,#9A5B00)}.ds-pill.bad{background:var(--bad-bg,#FDE3E8);color:var(--bad,#B7263F)}.ds-pill.good{background:var(--good-bg,#DDF4E7);color:var(--good,#17704A)}.ds-pill.muted{background:var(--surface-2,#F5F7FB);color:var(--muted,#5B6583)}"
+    },
+    {
+      "name": "Heads-up Chip",
+      "kind": "chip",
+      "description": "Today's heads-up row: 40px pills that open their card underneath. White for information, warn-tinted when it needs a decision; the open one shows a focus-blue ring.",
+      "html": "<div class=\"ds-ticker\"><button class=\"ds-tick\" aria-expanded=\"false\"><span aria-hidden=\"true\">🚗</span>Mom leaves 3:10 PM for Playdate</button><button class=\"ds-tick warn\" aria-expanded=\"true\"><span aria-hidden=\"true\">🧾</span>Water bill due Friday</button></div>",
+      "css": ".ds-ticker{display:flex;gap:8px;flex-wrap:wrap}.ds-tick{display:inline-flex;align-items:center;gap:6px;border:0;border-radius:999px;padding:8px 14px;min-height:40px;background:var(--surface,#fff);color:var(--ink,#18203A);box-shadow:var(--shadow,0 1px 2px rgba(24,32,58,.06),0 6px 20px rgba(24,32,58,.07));font:700 .875rem Figtree,\"Segoe UI\",system-ui,sans-serif;white-space:nowrap;cursor:pointer}.ds-tick.warn{background:var(--warn-bg,#FFF0D2);color:var(--warn,#9A5B00)}.ds-tick:hover{filter:brightness(.98)}.ds-tick[aria-expanded=true]{box-shadow:inset 0 0 0 2px var(--focus,#2569C9)}.ds-tick:focus-visible{outline:3px solid var(--focus,#2569C9);outline-offset:2px}"
     },
     {
       "name": "Panel",
       "kind": "card",
       "refersTo": "panel",
-      "description": "The white, board-lifted container for each section.",
-      "html": "<section class=\"ds-panel\"><h2>Get ready</h2><div class=\"ds-chip\"><b>5:00</b> Soccer at Riverside</div></section>",
-      "css": ".ds-panel{background:var(--surface,#fff);border-radius:24px;box-shadow:0 1px 2px rgba(24,32,58,.06),0 6px 20px rgba(24,32,58,.07);padding:18px;display:flex;flex-direction:column;gap:14px;font:15px/1.45 Figtree,system-ui,sans-serif;color:var(--ink,#18203A)}.ds-panel h2{font:600 1.25rem Fredoka,Nunito,system-ui,sans-serif;margin:0}.ds-chip{display:flex;gap:10px;align-items:center;background:var(--surface-2,#F5F7FB);border-radius:12px;padding:8px 10px;font-size:.92rem}.ds-chip b{color:var(--muted,#5B6583);font-size:.8rem;min-width:40px}"
+      "description": "The white, board-lifted container for each section; nested rows change tone (Cloud), never add a shadow.",
+      "html": "<section class=\"ds-panel\"><h2>Get ready</h2><button class=\"ds-chip\"><b>5:00 PM</b> Soccer at Riverside</button></section>",
+      "css": ".ds-panel{background:var(--surface,#fff);border-radius:24px;box-shadow:var(--shadow,0 1px 2px rgba(24,32,58,.06),0 6px 20px rgba(24,32,58,.07));padding:18px;display:flex;flex-direction:column;gap:14px;font:1rem/1.45 Figtree,\"Segoe UI\",system-ui,sans-serif;color:var(--ink,#18203A)}.ds-panel h2{font:600 1.25rem Fredoka,Nunito,\"Trebuchet MS\",system-ui,sans-serif;margin:0}.ds-chip{display:flex;gap:10px;align-items:center;width:100%;border:0;text-align:left;background:var(--surface-2,#F5F7FB);color:inherit;border-radius:12px;padding:8px 10px;font:.875rem Figtree,\"Segoe UI\",system-ui,sans-serif;cursor:pointer}.ds-chip b{color:var(--muted,#5B6583);min-width:66px}.ds-chip:hover{background:color-mix(in srgb,var(--focus,#2569C9) 8%,var(--surface-2,#F5F7FB))}.ds-chip:focus-visible{outline:3px solid var(--focus,#2569C9);outline-offset:2px}"
     },
     {
       "name": "Chore Tile",
       "kind": "custom",
-      "description": "The sticker chart: dashed while waiting, solid with a stamped star when done.",
+      "description": "The sticker chart: dashed person-colored border while waiting, solid with a stamped star when done.",
       "html": "<button class=\"ds-tile\" style=\"--pc:#DB8616\"><span class=\"e\" aria-hidden=\"true\">🛏️</span>Make bed</button><button class=\"ds-tile done\" style=\"--pc:#DB8616\"><span class=\"e\" aria-hidden=\"true\">🦷</span>Brush teeth</button>",
-      "css": ".ds-tile{position:relative;width:104px;margin:8px;border:2px dashed color-mix(in srgb,var(--pc) 55%,transparent);background:color-mix(in srgb,var(--pc) 7%,#fff);border-radius:18px;padding:12px 6px 10px;display:inline-flex;flex-direction:column;align-items:center;gap:4px;font:600 .85rem Figtree,system-ui,sans-serif;color:#18203A;cursor:pointer;transition:transform .15s}.ds-tile .e{font-size:2rem;line-height:1}.ds-tile:active{transform:scale(.95)}.ds-tile:focus-visible{outline:3px solid var(--focus,#2569C9);outline-offset:2px}.ds-tile.done{border-style:solid;border-color:var(--pc);background:color-mix(in srgb,var(--pc) 20%,#fff)}.ds-tile.done::after{content:\"★\";position:absolute;top:-10px;right:-8px;width:30px;height:30px;border-radius:50%;background:color-mix(in srgb,var(--pc) 85%,#000);color:#fff;display:grid;place-items:center;font-size:17px;animation:ds-stamp .35s cubic-bezier(.3,1.6,.6,1)}@keyframes ds-stamp{from{transform:scale(0) rotate(-40deg)}}"
+      "css": ".ds-tile{position:relative;width:104px;margin:8px;border:2px dashed color-mix(in srgb,var(--pc) 55%,transparent);background:color-mix(in srgb,var(--pc) 7%,var(--surface,#fff));border-radius:18px;padding:12px 6px 10px;display:inline-flex;flex-direction:column;align-items:center;gap:4px;font:600 .875rem Figtree,\"Segoe UI\",system-ui,sans-serif;color:var(--ink,#18203A);cursor:pointer;transition:transform .15s}.ds-tile .e{font-size:2rem;line-height:1}.ds-tile:hover{background:color-mix(in srgb,var(--pc) 12%,var(--surface,#fff))}.ds-tile:active{transform:scale(.95)}.ds-tile:focus-visible{outline:3px solid var(--focus,#2569C9);outline-offset:2px}.ds-tile.done{border-style:solid;border-color:var(--pc);background:color-mix(in srgb,var(--pc) 20%,var(--surface,#fff))}.ds-tile.done::after{content:\"★\";position:absolute;top:-10px;right:-8px;width:30px;height:30px;border-radius:50%;background:color-mix(in srgb,var(--pc) 85%,#000);color:#fff;display:grid;place-items:center;font-size:17px;animation:ds-stamp .35s cubic-bezier(.3,1.6,.6,1)}@keyframes ds-stamp{from{transform:scale(0) rotate(-40deg)}}@media (prefers-reduced-motion:reduce){.ds-tile,.ds-tile.done::after{animation:none;transition:none}}"
     },
     {
       "name": "Nudge Banner",
       "kind": "custom",
-      "description": "One-line bottom banner; a tinted icon tile shows its kind.",
-      "html": "<div class=\"ds-nudge\"><span class=\"ds-nudge-ic\" aria-hidden=\"true\">🚗</span><b>Time to leave for soccer</b><button>Got it</button></div>",
-      "css": ".ds-nudge{display:flex;align-items:center;gap:12px;background:var(--surface,#fff);color:var(--ink,#18203A);border-radius:18px;padding:8px;box-shadow:0 12px 36px rgba(0,0,0,.28);font:15px Figtree,system-ui,sans-serif;max-width:520px}.ds-nudge-ic{width:40px;height:40px;flex:none;border-radius:12px;display:grid;place-items:center;font-size:1.35rem;background:var(--bad-bg,#FDE3E8)}.ds-nudge b{flex:1;min-width:0;font:600 1.08rem Fredoka,Nunito,system-ui,sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ds-nudge button{flex:none;min-height:44px;border:0;background:var(--btn,#18203A);color:var(--btn-ink,#fff);border-radius:999px;padding:0 18px;font-weight:700;cursor:pointer}.ds-nudge button:focus-visible{outline:3px solid var(--focus,#2569C9);outline-offset:2px}"
-    },
-    {
-      "name": "Leave-by Hero",
-      "kind": "custom",
-      "description": "Tomorrow board: clock-sized leave-by time in the driver's color, driver's face leading the sentence.",
-      "html": "<section class=\"ds-hero\" style=\"--pc:#2F7DE1\"><span class=\"ds-hero-t\">7:55</span><b><span class=\"ds-hero-f\" aria-hidden=\"true\">👨</span> Dad leaves for School</b><span class=\"ds-hero-n\">Emma and Leo · starts 8:15 · 20 min drive</span></section>",
-      "css": ".ds-hero{display:flex;flex-direction:column;gap:10px;padding:22px 24px;border-radius:24px;background:color-mix(in srgb,var(--pc) 14%,#fff);box-shadow:0 1px 2px rgba(24,32,58,.06),0 6px 20px rgba(24,32,58,.07);color:#18203A;font:15px Figtree,system-ui,sans-serif;max-width:420px}.ds-hero-t{font:600 clamp(3.4rem,9vw,5.6rem)/.9 Fredoka,Nunito,system-ui,sans-serif;letter-spacing:-.02em;font-variant-numeric:tabular-nums;color:color-mix(in srgb,var(--pc) 70%,#000)}.ds-hero b{font:600 1.35rem/1.3 Fredoka,Nunito,system-ui,sans-serif}.ds-hero-f{display:inline-grid;place-items:center;width:44px;height:44px;border-radius:50%;border:3px solid var(--pc);background:color-mix(in srgb,var(--pc) 22%,#fff);vertical-align:middle;margin-right:4px}.ds-hero-n{color:#5B6583;font-size:.9rem}"
-    },
-    {
-      "name": "All Set",
-      "kind": "custom",
-      "description": "Tomorrow board when nothing needs sorting: the sticker chart's star on the good background.",
-      "html": "<p class=\"ds-allset\"><span class=\"ds-star\" aria-hidden=\"true\">★</span> All set for tomorrow</p>",
-      "css": ".ds-allset{display:flex;align-items:center;gap:12px;margin:0;padding:18px;border-radius:24px;background:var(--good-bg,#DDF4E7);color:var(--good,#17704A);font:600 1.25rem Fredoka,Nunito,system-ui,sans-serif}.ds-star{width:36px;height:36px;flex:none;border-radius:50%;display:grid;place-items:center;background:var(--good,#17704A);color:var(--good-bg,#DDF4E7);font-size:20px;animation:ds-stamp2 .35s cubic-bezier(.3,1.6,.6,1)}@keyframes ds-stamp2{from{transform:scale(0) rotate(-40deg)}}@media (prefers-reduced-motion:reduce){.ds-star{animation:none}}"
+      "description": "One-line bottom banner with no side stripe: a 40px icon tile whose tint shows the kind, a truncating Fredoka title and a Got it pill. Past the leave time the title goes amber for five minutes, then berry.",
+      "html": "<div class=\"ds-nudge leave late-soon\"><button class=\"ds-nudge-main\" aria-expanded=\"false\"><span class=\"ds-nudge-ic\" aria-hidden=\"true\">🚗</span><b>Leave now for Soccer · 2 min late</b></button><button class=\"ds-nudge-act\">Got it</button></div><div class=\"ds-nudge bill\"><button class=\"ds-nudge-main\" aria-expanded=\"false\"><span class=\"ds-nudge-ic\" aria-hidden=\"true\">🧾</span><b>Water bill due tomorrow</b></button><button class=\"ds-nudge-act\">Got it</button></div>",
+      "css": ".ds-nudge{display:flex;align-items:center;gap:10px;background:var(--surface,#fff);color:var(--ink,#18203A);border-radius:18px;padding:8px;box-shadow:0 12px 36px rgba(0,0,0,.28);font:1rem Figtree,\"Segoe UI\",system-ui,sans-serif;max-width:620px;margin-bottom:8px;animation:ds-pop .25s ease-out}.ds-nudge-main{flex:1;min-width:0;min-height:44px;display:flex;align-items:center;gap:12px;border:0;background:none;padding:0;color:inherit;text-align:left;border-radius:12px;cursor:pointer}.ds-nudge-ic{width:40px;height:40px;flex:none;border-radius:12px;display:grid;place-items:center;font-size:1.35rem;background:var(--surface-2,#F5F7FB)}.ds-nudge.leave .ds-nudge-ic{background:var(--bad-bg,#FDE3E8)}.ds-nudge.bill .ds-nudge-ic{background:var(--warn-bg,#FFF0D2)}.ds-nudge.brief .ds-nudge-ic{background:var(--good-bg,#DDF4E7)}.ds-nudge b{flex:1;min-width:0;font:600 1.125rem/1.25 Fredoka,Nunito,\"Trebuchet MS\",system-ui,sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ds-nudge-main[aria-expanded=true] b{white-space:normal}.ds-nudge.late-soon b{color:var(--warn,#9A5B00)}.ds-nudge.late b{color:var(--bad,#B7263F)}.ds-nudge-act{flex:none;min-height:44px;border:0;background:var(--btn,#18203A);color:var(--btn-ink,#fff);border-radius:999px;padding:0 18px;font:700 1rem Figtree,\"Segoe UI\",system-ui,sans-serif;white-space:nowrap;cursor:pointer}.ds-nudge-act:hover{transform:translateY(-1px)}.ds-nudge-main:focus-visible{outline:3px solid var(--focus,#2569C9);outline-offset:2px}.ds-nudge-act:focus-visible{outline:3px solid var(--focus,#2569C9);outline-offset:2px}@keyframes ds-pop{from{transform:translateY(16px) scale(.97);opacity:0}}@media (prefers-reduced-motion:reduce){.ds-nudge{animation:none}}"
     }
   ],
   "narrative": {
@@ -847,7 +850,7 @@
       },
       {
         "name": "The Solo Tint Rule",
-        "body": "An event row takes its person's tint (11 to 12%) only when exactly one person goes. A shared event stays neutral Cloud and its faces say who. Who and kind are never shown with a colored side stripe. This holds for the Today timeline, the Month agenda and the Tomorrow board.",
+        "body": "An event row takes its person's tint (11 to 12%; 20% in dark mode, so it separates from the panel) only when exactly one person goes. A shared event stays neutral Cloud and its faces say who. Who and kind are never shown with a colored side stripe. This holds for the Today timeline, the Month agenda and the Tomorrow board.",
         "section": "colors"
       },
       {
@@ -866,14 +869,14 @@
         "section": "typography"
       },
       {
-        "name": "The One Lift Rule",
-        "body": "Content sits one level above the board, never more. Stacked cards-in-cards with their own shadows are not allowed; nested surfaces change tone instead.",
-        "section": "elevation"
-      },
-      {
         "name": "The Six Sizes Rule",
         "body": "Text takes one of six role sizes (label, small, body, small title, title, large title) through the `--fs-*` variables; a new screen picks a role, never a new number. Body and form fields never go below 16px, so phones don't zoom into a field when it's tapped.",
         "section": "typography"
+      },
+      {
+        "name": "The One Lift Rule",
+        "body": "Content sits one level above the board, never more. Stacked cards-in-cards with their own shadows are not allowed; nested surfaces change tone instead.",
+        "section": "elevation"
       }
     ],
     "dos": [
