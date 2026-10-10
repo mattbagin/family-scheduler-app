@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { useEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { leaveByTitle, type Nudge, type NudgeKind } from '@shared';
 import { api } from './api.ts';
@@ -39,6 +39,23 @@ export function NudgeBanners({ ambient = false, night = false }: { ambient?: boo
   const range = mainRange(today);
   const { data: occs = [] } = useOccurrences(range.from, range.to, show);
   const kidScreen = useLocation().pathname.startsWith('/kid') && !ambient;
+  // Phones show the most urgent nudge and roll the rest into "2 more nudges ▾".
+  const narrow = useNarrow();
+  const [all, setAll] = useState(false);
+  // The stack reports how much of the screen bottom it covers, so the page can scroll out from
+  // under it and toasts can sit above it (--nudge-clear, in px from the bottom of the window).
+  const stack = useRef<HTMLElement>(null);
+  useLayoutEffect(() => {
+    const root = document.documentElement.style;
+    const el = stack.current;
+    if (!el) { root.setProperty('--nudge-clear', '0px'); return; }
+    const measure = () => root.setProperty('--nudge-clear', `${Math.ceil(innerHeight - el.getBoundingClientRect().top)}px`);
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    addEventListener('resize', measure);
+    return () => { ro.disconnect(); removeEventListener('resize', measure); root.setProperty('--nudge-clear', '0px'); };
+  });
 
   useEffect(() => {
     if (!isHub) return;
@@ -61,12 +78,19 @@ export function NudgeBanners({ ambient = false, night = false }: { ambient?: boo
   if (kidScreen) return null;
 
   const look = night ? ' night' : ambient ? ' over-photo' : '';
+  // A leave-by banner's ride, so it can keep time (and be ordered by when that ride has to go).
+  const rideOf = (n: Nudge) => (n.kind === 'leave_by' ? occs.find((o) => o.driverId && occDate(o) === today && n.title.endsWith(`for ${o.title}`)) : undefined);
+  const leaveAt = (n: Nudge) => { const o = rideOf(n); return o ? leaveBy(o) : Infinity; };
+  // Time-to-leave first, the earliest (most overdue) leading; everything else newest first.
+  const ordered = [...nudges].sort((a, b) => Number(b.kind === 'leave_by') - Number(a.kind === 'leave_by') || leaveAt(a) - leaveAt(b) || b.createdAt.localeCompare(a.createdAt));
+  const rolled = narrow && !all && ordered.length > 1;
+  const shown = rolled ? ordered.slice(0, 1) : ordered;
   return (
-    <section className={`nudges${look}`} aria-label="Nudges">
+    <section ref={stack} className={`nudges${look}`} aria-label="Nudges">
       {announce}
-      {nudges.map((n) => {
+      {shown.map((n) => {
         const [icon, written] = splitTitle(n);
-        const ride = n.kind === 'leave_by' ? occs.find((o) => o.driverId && occDate(o) === today && n.title.endsWith(`for ${o.title}`)) : undefined;
+        const ride = rideOf(n);
         const mins = ride ? leaveBy(ride) - nowMin : null;
         const text = ride && mins !== null ? leaveByTitle(mins, ride.title) : written;
         // Same steps as the timeline pill: amber for the first five minutes late, then red.
@@ -90,8 +114,26 @@ export function NudgeBanners({ ambient = false, night = false }: { ambient?: boo
           </div>
         );
       })}
+      {narrow && ordered.length > 1 && (
+        <button className="nudge-more" aria-expanded={all} onClick={() => setAll(!all)}>
+          {all ? 'Show just the first' : `${ordered.length - 1} more nudge${ordered.length > 2 ? 's' : ''} ▾`}
+        </button>
+      )}
     </section>
   );
+}
+
+/** True on phone-width screens (matches the 520px breakpoint in styles.css). */
+function useNarrow(): boolean {
+  const q = '(max-width: 520px)';
+  const [narrow, setNarrow] = useState(() => matchMedia(q).matches);
+  useEffect(() => {
+    const mq = matchMedia(q);
+    const on = () => setNarrow(mq.matches);
+    mq.addEventListener('change', on);
+    return () => mq.removeEventListener('change', on);
+  }, []);
+  return narrow;
 }
 
 /** Kid mode's stand-in for the banners: a quiet note in its top row, with nothing for small hands to press. */
