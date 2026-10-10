@@ -63,7 +63,7 @@ const RANGE = /\b(from\s+)?(\d{1,2})(?::(\d{2}))?\s*(am|pm)?\s*(?:-|–|—|to|u
  * how often and where, with what's left over as the title. Times without am/pm before 8 are
  * read as afternoon (family events rarely start at 5 AM).
  */
-export function parseQuickAdd(text: string, members: Member[], today: Ymd, opts: { event?: boolean } = {}): QuickAddResult | null {
+export function parseQuickAdd(text: string, members: Member[], today: Ymd, opts: { event?: boolean; nowMin?: number } = {}): QuickAddResult | null {
   // A driver and a packing note belong to events; a to-do keeps those words as written.
   const event = opts.event ?? true;
   const raw = text.trim();
@@ -117,6 +117,8 @@ export function parseQuickAdd(text: string, members: Member[], today: Ymd, opts:
 
   /* ---- which day ---- */
   let date: Ymd | null = null;
+  // Set when the day came from a weekday name ("Saturday"), which can mean next week once its time has passed.
+  let byWeekday = false;
   if (take(/\b(today|tonight)\b/i)) date = today;
   else if (take(/\btomorrow\b/i)) date = addDays(today, 1);
   else if ((m = take(/\bin\s+(\d{1,2}|a|one|two|three)\s+(days?|weeks?)\b/i))) {
@@ -135,9 +137,11 @@ export function parseQuickAdd(text: string, members: Member[], today: Ymd, opts:
     date = here && here >= today ? here : ymdOf(mo === 12 ? y + 1 : y, (mo % 12) + 1, Number(m[1]));
   } else if ((m = take(new RegExp(`\\b(next\\s+)?(${DAY})\\b`, 'i')))) {
     date = nextWeekday(today, dayIndex(m[2]), !!m[1]);
+    byWeekday = true;
   }
   if (!date && repeat?.freq === 'WEEKLY' && repeat.byDay?.length) {
     date = repeat.byDay.map((d) => nextWeekday(today, d)).sort()[0];
+    byWeekday = true;
   }
 
   /* ---- what time ---- */
@@ -163,6 +167,9 @@ export function parseQuickAdd(text: string, members: Member[], today: Ymd, opts:
     const ampm = m[3]?.toLowerCase();
     if (h <= 23 && min < 60) startMin = toMin(h, min, ampm) + (!ampm && h < 8 ? 720 : 0);
   }
+  // "Saturday 10am" typed on Saturday afternoon means next Saturday, not four hours ago.
+  if (byWeekday && date === today && startMin !== null && opts.nowMin !== undefined && startMin < opts.nowMin) date = addDays(today, 7);
+
   const dur = take(/\bfor\s+(an?|one|half an|\d+(?:\.\d+)?)\s*(hours?|hrs?|h|minutes?|mins?)\b/i);
   if (dur && startMin !== null && endMin === null) {
     const n = ({ a: 1, an: 1, one: 1, 'half an': 0.5 } as Record<string, number>)[dur[1].toLowerCase()] ?? Number(dur[1]);

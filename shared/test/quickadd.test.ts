@@ -98,6 +98,18 @@ describe('parseQuickAdd', () => {
     expect(parseQuickAdd('Pack gym shoes Thursday Emma', members, MONDAY)).toMatchObject({ title: 'Pack gym shoes', bring: null });
   });
 
+  it('rolls a weekday that is today to next week once its time has passed', () => {
+    // From the critique: "Saturday 10am" typed on Saturday at 2:17 PM was booked four hours ago.
+    const SATURDAY = '2026-10-03';
+    const at = (h: number, m = 0) => ({ nowMin: h * 60 + m });
+    expect(parseQuickAdd('Leo swim Saturday 10am', members, SATURDAY, at(14, 17))!.date).toBe('2026-10-10');
+    expect(parseQuickAdd('Leo swim Saturday 4pm', members, SATURDAY, at(14, 17))!.date).toBe(SATURDAY);
+    expect(parseQuickAdd('Swim every Saturday 10am Leo', members, SATURDAY, at(14, 17))!.date).toBe('2026-10-10');
+    // Said outright, today stays today; no time given stays today too.
+    expect(parseQuickAdd('Swim today 10am Leo', members, SATURDAY, at(14, 17))!.date).toBe(SATURDAY);
+    expect(parseQuickAdd('Swim Saturday Leo', members, SATURDAY, at(14, 17))!.date).toBe(SATURDAY);
+  });
+
   it('leaves drivers and bring notes in a to-do as written', () => {
     expect(parseQuickAdd('Dad drives Leo to practice Friday', members, MONDAY, { event: false }))
       .toMatchObject({ title: 'Drives to practice', memberIds: [2, 4], driverId: null });

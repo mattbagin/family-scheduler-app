@@ -1,6 +1,6 @@
 import { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {
-  addDays, addMinutes, CATEGORIES, dayLabel, describeRRule, EVENT_ICONS, fmtShortDate, fmtTime, parseQuickAdd, parseRRule, presetToRRule,
+  addDays, addMinutes, CATEGORIES, dayLabel, describeRRule, EVENT_ICONS, dayWithDate, fmtTime, parseQuickAdd, parseRRule, presetToRRule,
   REMINDER_CHOICES, REPEAT_PRESETS, rruleToPreset, weekdayMon, withMinutes, type Category, type Plan, type RepeatPreset, type TodoKind,
 } from '@shared';
 import { api } from '../api.ts';
@@ -54,7 +54,9 @@ function EventQuick({ text, setText, toTodo }: { text: string; setText: (t: stri
   const f = useFamily();
   const act = useAction();
   const sheets = useSheets();
-  const { today } = useNow();
+  const { today, nowMin } = useNow();
+  // Whole minutes, so the parse (and the memo) only change once a minute.
+  const minute = Math.floor(nowMin);
   // Choices made on the card win over what was typed, until the text changes.
   const [whoPick, setWhoPick] = useState<number[] | null>(null);
   const [iconPick, setIconPick] = useState<string | null>(null);
@@ -62,7 +64,7 @@ function EventQuick({ text, setText, toTodo }: { text: string; setText: (t: stri
   // undefined = not picked on the card, so the typed driver ("Dad drives") stands.
   const [driverPick, setDriverPick] = useState<number | null | undefined>(undefined);
   const [reminders, setReminders] = useState<number[]>([]);
-  const parsed = useMemo(() => parseQuickAdd(text, f.members, today), [text, f.members, today]);
+  const parsed = useMemo(() => parseQuickAdd(text, f.members, today, { nowMin: minute }), [text, f.members, today, minute]);
   const who = whoPick ?? parsed?.memberIds ?? [];
   const driverId = driverPick !== undefined ? driverPick : parsed?.driverId ?? null;
   const icon = iconPick ?? parsed?.icon ?? '📅';
@@ -94,7 +96,7 @@ function EventQuick({ text, setText, toTodo }: { text: string; setText: (t: stri
   const timed = !!parsed && (parsed.allDay || parsed.startMin !== null);
   const ready = !!parsed && parsed.date !== null && timed && who.length > 0;
   const when = parsed && [
-    parsed.date === null ? null : `${dayLabel(today, parsed.date)}${addDays(today, 1) < parsed.date ? `, ${fmtShortDate(parsed.date)}` : ''}`,
+    parsed.date === null ? null : dayWithDate(today, parsed.date),
     parsed.allDay ? 'all day'
       : parsed.startMin === null ? null
         : `${fmtTime(parsed.startMin)}${parsed.endMin !== null ? ` – ${fmtTime(parsed.endMin)}` : ''}`,
@@ -122,7 +124,8 @@ function EventQuick({ text, setText, toTodo }: { text: string; setText: (t: stri
             <dd>
               {when}{' '}
               {parsed.date === null && <span className="pill warn">Add a day</span>}{' '}
-              {!timed && <span className="pill warn">Add a time, or “all day”</span>}
+              {!timed && <span className="pill warn">Add a time, or “all day”</span>}{' '}
+              {parsed.date === today && parsed.startMin !== null && !parsed.allDay && parsed.startMin < minute && <span className="pill warn">That’s earlier today</span>}
             </dd>
             {parsed.rrule && <><dt>Repeats</dt><dd>🔁 {describeRRule(parsed.rrule)}</dd></>}
             {parsed.location && <><dt>Where</dt><dd>📍 {parsed.location}</dd></>}

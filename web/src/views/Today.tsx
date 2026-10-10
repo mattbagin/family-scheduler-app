@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  addDays, chipLabel, computeFlags, leaveByTitle, rideStatus, dayDiff, dayLabel, fmtDur, fmtShortDate, fmtTime, minutesOf, weatherLook, type Occurrence, type Plan,
+  addDays, chipLabel, computeFlags, leaveByTitle, rideStatus, dayDiff, dayLabel, fmtDur, dayWithDate, fmtTime, minutesOf, weatherLook, type Occurrence, type Plan,
 } from '@shared';
 import { api } from '../api.ts';
 import { namesOf, useAction, useFamily, useNow } from '../context.tsx';
@@ -308,7 +308,7 @@ export function Today() {
                   return (
                     <button key={o.key} className="count" onClick={() => openOcc(o)}>
                       <span className="e" aria-hidden="true">{o.icon}</span>
-                      <div><b>{o.title}</b><div className="note">{dayLabel(today, occDate(o))}{n >= 7 ? '' : `, ${fmtShortDate(occDate(o))}`}</div></div>
+                      <div><b>{o.title}</b><div className="note">{dayWithDate(today, occDate(o))}</div></div>
                       <div className="n num">{n}<small>{sleepsWord(n)}</small></div>
                     </button>
                   );
@@ -334,7 +334,7 @@ export function PlanCard({ plan, onOpen }: { plan: Plan; onOpen: () => void }) {
         <span className="e" aria-hidden="true">{plan.icon}</span>
         <div>
           <b>{plan.title}</b>
-          <div className="note">{dayLabel(today, day)}{dayDiff(today, day) >= 7 ? '' : `, ${fmtShortDate(day)}`} · {done} of {plan.tasks.length} done</div>
+          <div className="note">{dayWithDate(today, day)} · {done} of {plan.tasks.length} done</div>
         </div>
       </div>
       <div className="bar"><i style={{ transform: `scaleX(${plan.tasks.length ? done / plan.tasks.length : 0})` }} /></div>
