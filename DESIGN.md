@@ -252,7 +252,9 @@ Big numbers (counts, sleeps, the PIN keys, weather) and display sizes keep their
 
 A single centered column up to 1400px, with a 16px side gutter, an 18px gap between major blocks and 14px inside panels. The bottom keeps 96px clear (plus the safe area) for the floating + button and nudge banners.
 
-- **Today:** a hero row (clock and date | weather | faces), then a 1.7 : 1 two-column split (timeline left, chores/heads-up/countdowns right).
+- **Today:** a hero row (clock and date | weather | faces), the heads-up chips, then a 1.7 : 1 two-column split (timeline left; jobs, packing, plans and countdowns right).
+- **Today on the hub:** the sticker chart is the heart, so it leads. The hero's clock steps back (2.4–3.4rem; the ambient screen keeps the big one) and the faces grow to 80px. Under the hero, the chore chart takes a full-width band with the kids side by side, tiles at 104px or more and 2.4rem emoji. The chips and the timeline follow, and the right column keeps packing, plans and countdowns.
+- **Today on phones:** no clock (the phone shows the time): the date, a strip of 44px faces, the chips, then the day.
 - **Week:** a horizontally scrolling grid: a 104px person column, then 7 day columns of at least 128px (1000px minimum). People run down the side and days across the top, so conflicts line up.
 - **Month:** a 7-column grid of 88px day buttons with a dot per busy person. It shrinks to 64px days and 9px dots on phones.
 - **Tomorrow board:** a 1 : 1.25 split. On the left are the day heading with tomorrow's weather, the leave-by hero, and Needs sorting (or All set). On the right are "Who's going where" and Packing. It's a single column below 900px. Below 520px a row's ride drops under its title and its faces hide.
