@@ -290,14 +290,15 @@ export function ClockFace({ min, color, size = 80 }: { min: number; color: strin
   const ha = ((min / 60) % 12) * 30 - 90;
   const ma = (min % 60) * 6 - 90;
   return (
-    <svg width={size} height={size} viewBox="0 0 80 80" aria-hidden="true">
-      <circle cx="40" cy="40" r="38" fill="var(--surface)" stroke={color} strokeWidth="3" />
+    <svg width={size} height={size} viewBox="0 0 80 80" aria-hidden="true" style={pc(color)}>
+      <circle cx="40" cy="40" r="38" fill="var(--surface)" stroke="var(--pc)" strokeWidth="3" />
       {Array.from({ length: 12 }, (_, i) => {
         const a = rad(i * 30);
         return <line key={i} x1={40 + 33 * Math.cos(a)} y1={40 + 33 * Math.sin(a)} x2={40 + 36 * Math.cos(a)} y2={40 + 36 * Math.sin(a)} stroke="var(--muted)" strokeWidth="2" />;
       })}
       <line x1="40" y1="40" x2={40 + 22 * Math.cos(rad(ha))} y2={40 + 22 * Math.sin(rad(ha))} stroke="var(--ink)" strokeWidth="5" strokeLinecap="round" />
-      <line x1="40" y1="40" x2={40 + 31 * Math.cos(rad(ma))} y2={40 + 31 * Math.sin(rad(ma))} stroke={color} strokeWidth="3.5" strokeLinecap="round" />
+      <line x1="40" y1="40" x2={40 + 31 * Math.cos(rad(ma))} y2={40 + 31 * Math.sin(rad(ma))} stroke="var(--pc)" strokeWidth="3.5" strokeLinecap="round" />
+      <circle cx={40 + 31 * Math.cos(rad(ma))} cy={40 + 31 * Math.sin(rad(ma))} r="4" fill="var(--pc)" />
       <circle cx="40" cy="40" r="3.5" fill="var(--ink)" />
     </svg>
   );

@@ -25,6 +25,15 @@ export function useToggleTask() {
   };
 }
 
+/** The days a plan task can be due: from today (or its current day) up to the plan's day, at most 60. */
+function dueDays(today: string, due: string, planDay: string): string[] {
+  const from = due < today ? due : today;
+  const to = due > planDay ? due : planDay;
+  const out: string[] = [];
+  for (let d = from; d <= to && out.length < 60; d = addDays(d, 1)) out.push(d);
+  return out;
+}
+
 export function TaskRow({ task, plan, showPlan }: { task: PlanTask; plan: Plan; showPlan?: boolean }) {
   const f = useFamily();
   const act = useAction();
@@ -57,17 +66,16 @@ export function TaskRow({ task, plan, showPlan }: { task: PlanTask; plan: Plan; 
       {!showPlan && editing && (
         <div className="task-edit">
           <label className="field">Due
-          <input
-            type="date"
-            className="inline-select"
-            style={{ width: 'auto' }}
+          <select
             aria-label={`When “${task.text}” is due`}
             value={task.due}
             onChange={(e) => {
               const due = e.target.value;
               if (due) act(() => api(`/tasks/${task.id}`, { method: 'PATCH', body: { due } }), `“${task.text}” is now due ${relDay(today, due)}`);
             }}
-          />
+          >
+            {dueDays(today, task.due, plan.start.slice(0, 10)).map((d) => <option key={d} value={d}>{dayWithDate(today, d)}</option>)}
+          </select>
           </label>
           <label className="field">Who
           <select

@@ -139,13 +139,6 @@ export function Today() {
       items: [`${look.text}, ${wxDay.rainChance}% chance of rain, high of ${wxDay.hi}°. Grab raincoats on the way out.`],
     });
   }
-  const pack = prep.filter((p) => !p.done && p.date === addDays(today, 1));
-  if (pack.length) {
-    alerts.push({
-      cls: '', icon: '🎒', title: 'Pack for tomorrow',
-      items: pack.map((p) => `${p.text}${p.memberIds.length ? ` (${namesOf(f, p.memberIds)})` : ''}`),
-    });
-  }
 
   const urgent = alerts.filter((a) => a.cls === 'bad');
   const later = alerts.filter((a) => a.cls !== 'bad');
@@ -265,7 +258,7 @@ export function Today() {
                         <b>{o.title}</b>
                         <div className="note">
                           {isNow ? `Until ${fmtTime(minutesOf(o.end))}` : `${t} – ${fmtTime(minutesOf(o.end))}`}
-                          {o.location && ` · 📍 ${o.location}`}
+                          {o.location && <> · <span className="nowrap">📍 {o.location}</span></>}
                         </div>
                         <div className="row" style={{ gap: 6 }}>
                           {o.driverId && (() => {

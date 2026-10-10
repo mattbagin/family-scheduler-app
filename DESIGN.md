@@ -23,9 +23,9 @@ colors:
   night-line: "#2E3549"
   night-focus: "#6AA6F5"
   night-warn: "#F5C06A"
-  night-warn-bg: "#3A2C12"
+  night-warn-bg: "#2D2517"
   night-bad: "#FF8599"
-  night-bad-bg: "#3D1A22"
+  night-bad-bg: "#321C22"
   night-good: "#62D8A0"
   night-good-bg: "#143325"
   person-rose: "#D9487A"
@@ -135,18 +135,18 @@ components:
   pill-warn:
     backgroundColor: "{colors.amber-warn-bg}"
     textColor: "{colors.amber-warn}"
-    rounded: "{rounded.pill}"
-    padding: "2px 8px"
+    rounded: "{rounded.sm}"
+    padding: "4px 9px"
   pill-bad:
     backgroundColor: "{colors.berry-bad-bg}"
     textColor: "{colors.berry-bad}"
-    rounded: "{rounded.pill}"
-    padding: "2px 8px"
+    rounded: "{rounded.sm}"
+    padding: "4px 9px"
   pill-good:
     backgroundColor: "{colors.pine-good-bg}"
     textColor: "{colors.pine-good}"
-    rounded: "{rounded.pill}"
-    padding: "2px 8px"
+    rounded: "{rounded.sm}"
+    padding: "4px 9px"
   input-field:
     backgroundColor: "{colors.cloud-surface}"
     textColor: "{colors.ink-navy}"
@@ -218,7 +218,7 @@ When the hub's night mode is on, anything still awake on the hub goes amber on b
 
 **The Mixed, Not Painted Rule.** Person colors reach surfaces only through `color-mix` with the surface (7 to 22%). Full-strength person color is kept for rings, dots, borders and the "done" star.
 
-**The Solo Tint Rule.** An event row takes its person's tint (11 to 12%) only when exactly one person goes. A shared event stays neutral Cloud and its faces say who. Who and kind are never shown with a colored side stripe. This holds for the Today timeline, the Month agenda and the Tomorrow board.
+**The Solo Tint Rule.** An event row takes its person's tint (11 to 12%; 20% in dark mode, so it separates from the panel) only when exactly one person goes. A shared event stays neutral Cloud and its faces say who. Who and kind are never shown with a colored side stripe. This holds for the Today timeline, the Month agenda and the Tomorrow board.
 
 **The Bedside Rule.** After night mode starts, nothing on the hub glows: amber on black, no person colors, no solid fills and no shadows. Actions (the active tab, the + button, "Got it") become amber outlines (`inset 0 0 0 1.5px`, amber at 60%) instead of solid pills.
 
@@ -269,7 +269,7 @@ Mostly flat, with one soft lift. Panels, tabs, the week grid, the month view, ki
 ### Shadow Vocabulary
 - **Board lift** (`0 1px 2px rgba(24,32,58,.06), 0 6px 20px rgba(24,32,58,.07)`; dark mode uses black at .3/.25): panels, tabs, kid cards, profile buttons.
 - **Floating** (`0 10px 30px rgba(0,0,0,.25)` to `0 12px 36px rgba(0,0,0,.28)`): the + button, toasts and nudge banners. Phones soften it for stacked nudges (`0 6px 18px rgba(0,0,0,.22)`).
-- **Frosted** (`rgba(10,14,24,.45)` with `blur(10px)` for weather and person pills; `.55` with `blur(14px)` for nudges): weather, person pills and nudge banners over ambient photos.
+- **Frosted** (`rgba(10,14,24,.45)` with `blur(10px)` for weather and person pills; `.55` with `blur(14px)` and `0 8px 30px rgba(0,0,0,.3)` for nudges): weather, person pills and nudge banners over ambient photos.
 - **None at night:** in the bedside night look every shadow is off. Lines and outlines in amber do the separating.
 - **Sheet** (`0 30px 80px rgba(0,0,0,.3)` over a 45% navy scrim): dialogs.
 - **State ring** (`inset 0 0 0 2px <color>`): "now" on timeline cards and chips, conflict and warning outlines on events, today in the month view. It's a border drawn as a shadow so the layout doesn't shift.
@@ -290,7 +290,7 @@ Friendly but tidy: one strong button per area, the rest quiet.
 - **Shape:** full pill (999px).
 - **Primary:** Ink Navy with white text, 12px 22px, weight 800, 1rem. Used once per sheet or panel for the main action.
 - **Icon / secondary:** Paper White with a Soft Line border, 8px 14px, weight 600, emoji plus a word.
-- **Mini:** Cloud with a border, 4px 10px, 0.78rem, weight 700, for inline row actions.
+- **Mini:** Cloud with a border, 4px 10px, Label size (0.75rem), weight 700, for inline row actions.
 - **Danger:** a secondary button with Berry Bad text and a border tinted 40% berry. Destructive actions confirm in a pale berry panel first.
 - **Link button:** Focus Blue, underlined, no box.
 - **Floating +:** a 64px Ink Navy circle at the bottom right with a floating shadow. It scales to 1.06 on hover.

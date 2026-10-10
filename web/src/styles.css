@@ -137,7 +137,9 @@ h3 { font-size: var(--fs-title-sm); }
 .tick { display: inline-flex; align-items: center; gap: 6px; border: 0; border-radius: 999px; padding: 8px 14px; min-height: 40px; background: var(--surface); box-shadow: var(--shadow); font-weight: 700; font-size: var(--fs-small); white-space: nowrap; }
 .tick.warn { background: var(--warn-bg); color: var(--warn); }
 .tick[aria-expanded="true"] { box-shadow: inset 0 0 0 2px var(--focus); }
-@media (max-width: 520px) { .ticker { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin-inline: -16px; padding: 2px 16px 6px; } }
+@media (max-width: 520px) { .ticker { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin-inline: -16px; padding: 2px 16px 6px; mask-image: linear-gradient(to right, #000 calc(100% - 40px), transparent); } }
+.nowrap { white-space: nowrap; }
+.chip-title { font-family: var(--display); font-weight: 600; }
 .alert .act { border: 0; background: var(--btn); color: var(--btn-ink); border-radius: 999px; padding: 6px 12px; font-weight: 700; font-size: var(--fs-small); white-space: nowrap; }
 
 /* ---------- panels ---------- */
@@ -326,7 +328,7 @@ body:has(.ambient) .nudges { bottom: calc(110px + env(safe-area-inset-bottom, 0p
 @media (prefers-reduced-motion: reduce) { .celebrate, .celebrate span { animation: none; } }
 /* Sleeps to go: a big number, then moons in groups of five so 9 and 10 look different at a glance. */
 .sleeps { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-.sleeps b { font-family: var(--display); font-weight: 700; font-size: 1.6rem; line-height: 1; color: color-mix(in srgb, var(--pc) 80%, var(--tint-ink)); }
+.sleeps b { font-family: var(--display); font-weight: 700; font-size: 1.6rem; line-height: 1; color: color-mix(in srgb, var(--pc) 66%, var(--tint-ink)); }
 .moons { display: inline-flex; flex-wrap: wrap; gap: 4px 10px; font-size: 1rem; }
 .moons > span { white-space: nowrap; letter-spacing: 1px; }
 .tile .sleeps { justify-content: center; gap: 6px; }
@@ -400,6 +402,12 @@ body:has(.ambient) .nudges { bottom: calc(110px + env(safe-area-inset-bottom, 0p
 .kid-top { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; }
 .kid-top .grownups { margin-left: auto; }
 .kid-top .nudge-chip + .grownups { margin-left: 0; }
+/* Phones: the way out stays on the faces row; the grown-ups note goes underneath. */
+@media (max-width: 520px) {
+  .kid-top { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; }
+  .kid-top .nudge-chip { grid-column: 1 / -1; grid-row: 2; justify-self: start; margin: 0; }
+  .kid-top .grownups { grid-column: 2; grid-row: 1; }
+}
 .kidpick { display: flex; gap: 14px; flex-wrap: wrap; }
 /* The way out of kid mode: hold it and the house fills up. */
 .grownups { flex: none; width: 64px; height: 64px; border: 0; border-radius: 50%; display: grid; place-items: center; align-content: center; font-size: 1.6rem; line-height: 1; color: var(--muted); background: var(--surface) linear-gradient(color-mix(in srgb, var(--btn) 22%, var(--surface)), color-mix(in srgb, var(--btn) 22%, var(--surface))) bottom / 100% 0 no-repeat; box-shadow: var(--shadow); touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
@@ -576,6 +584,8 @@ body:has(.ambient) .nudges { bottom: calc(110px + env(safe-area-inset-bottom, 0p
 .tb { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); gap: 18px; align-items: start; }
 .tb-left, .tb-right { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
 .tb-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 14px; flex-wrap: wrap; }
+.tb-hero.unsorted { background: var(--warn-bg); }
+.tb-hero.unsorted .tb-time { color: var(--warn); }
 .tb-hero { display: flex; flex-direction: column; gap: 10px; padding: 22px 24px; border-radius: 24px; background: color-mix(in srgb, var(--pc, var(--btn)) 14%, var(--surface)); box-shadow: var(--shadow); }
 .tb-time { font-family: var(--display); font-weight: 600; font-size: clamp(3.4rem, 9vw, 5.6rem); line-height: .9; letter-spacing: -.02em; color: color-mix(in srgb, var(--pc, var(--ink)) 70%, var(--tint-ink)); }
 .tb-hero p { margin: 0; display: flex; flex-direction: column; gap: 4px; }

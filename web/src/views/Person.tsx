@@ -1,5 +1,5 @@
 import { Link, Navigate, useParams } from 'react-router-dom';
-import { addDays, dayLabel, dayWithDate, fmtTime, type ChoreForDay } from '@shared';
+import { addDays, dayDiff, dayLabel, dayWithDate, fmtShortDate, fmtTime, weekdayMon, WEEKDAYS, type ChoreForDay } from '@shared';
 import { api } from '../api.ts';
 import { namesOf, useAction, useFamily, useNow } from '../context.tsx';
 import { mainRange, money, occDate, personItems, type PersonItem, relDay } from '../lib.ts';
@@ -77,7 +77,7 @@ export function Person() {
       <button key={`${i.occ.key}:${i.drive}`} className={`chip ${i.drive ? 'drive' : ''} ${past ? 'past' : ''} ${now ? 'now' : ''}`} onClick={() => sheets.open(<EventSheet occ={i.occ} />)}>
         <span className="t num">{i.occ.allDay ? 'All day' : fmtTime(i.s)}</span>
         <span>{i.drive ? '🚗' : i.occ.icon}</span>
-        <span>{label(i)} {now && <span className="pill good">Now</span>}</span>
+        <span><b className="chip-title">{label(i)}</b> {now && <span className="pill good">Now</span>}</span>
       </button>
     );
   };
@@ -113,7 +113,7 @@ export function Person() {
             <h2>Next 7 days</h2>
             {nextDays.length ? nextDays.map(({ d, list }) => (
               <div key={d} className="agenda-day">
-                <div className="label">{dayWithDate(today, d)}</div>
+                <div className="label">{dayDiff(today, d) === 1 ? dayWithDate(today, d) : `${WEEKDAYS[weekdayMon(d)]}, ${fmtShortDate(d)}`}</div>
                 {list.map((i) => chip(i, false))}
               </div>
             )) : <p className="note">Nothing else this week.</p>}

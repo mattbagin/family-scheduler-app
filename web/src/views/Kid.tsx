@@ -110,7 +110,7 @@ export function Kid() {
             {cur ? (
               <>
                 <div className="row"><span className="big" aria-hidden="true">{cur.icon}</span><div className="word">{cur.kidTitle ?? cur.title}</div></div>
-                <div className="face-clock"><ClockFace min={minutesOf(cur.end)} color={color} /><span>Finishes when the clock looks like this</span></div>
+                <div className="face-clock"><ClockFace min={minutesOf(cur.end)} color={color} /><span>Finishes when the clock looks like this<span className="sr-only">: {fmtTime(minutesOf(cur.end))}</span></span></div>
               </>
             ) : (
               <div className="row"><span className="big" aria-hidden="true">{late ? '😴' : '🎈'}</span><div className="word">{late ? 'Sleepy time' : 'Free time!'}</div></div>
@@ -126,7 +126,7 @@ export function Kid() {
                   {next.driverId && <div className="face-clock"><Face m={f.byId(next.driverId)} size={36} />{f.byId(next.driverId)?.name} takes you</div>}
                 </div>
               </div>
-              <div className="face-clock"><ClockFace min={minutesOf(next.start)} color={color} /><span>Starts when the clock looks like this</span></div>
+              <div className="face-clock"><ClockFace min={minutesOf(next.start)} color={color} /><span>Starts when the clock looks like this<span className="sr-only">: {fmtTime(minutesOf(next.start))}</span></span></div>
             </section>
           )}
           {later.length > 0 && (
