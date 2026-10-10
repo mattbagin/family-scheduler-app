@@ -171,7 +171,7 @@ export function Kid() {
                     return (
                       <button key={t.id} className={`tile ${t.doneAt ? 'is-done' : ''}`} aria-pressed={!!t.doneAt} onClick={(e) => toggleTask(t, p, e.currentTarget)}>
                         <span className="e" aria-hidden="true">{t.icon}</span>{t.text}
-                        {n > 0 ? <Sleeps n={n} max={10} /> : <span className="note"><span aria-hidden="true">☀️</span> Today!</span>}
+                        <span className="note"><span aria-hidden="true">{n <= 0 ? '☀️' : n === 1 ? '🌙' : '📅'}</span> {n <= 0 ? 'Today!' : dayLabel(today, t.due)}</span>
                       </button>
                     );
                   })}

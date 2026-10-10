@@ -1,10 +1,10 @@
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import { leaveByTitle, type Nudge, type NudgeKind } from '@shared';
+import { isSameDayReminder, leaveByTitle, startsInTitle, type Nudge, type NudgeKind } from '@shared';
 import { api } from './api.ts';
 import { useAction, useFamily, useNow } from './context.tsx';
-import { ago, leaveBy, mainRange, occDate } from './lib.ts';
+import { ago, leaveBy, mainRange, occDate, startAbs } from './lib.ts';
 import { useOccurrences } from './queries.ts';
 import { useNight } from './hub.tsx';
 import { chime, Face } from './ui.tsx';
@@ -92,7 +92,10 @@ export function NudgeBanners({ ambient = false, night = false }: { ambient?: boo
         const [icon, written] = splitTitle(n);
         const ride = rideOf(n);
         const mins = ride ? leaveBy(ride) - nowMin : null;
-        const text = ride && mins !== null ? leaveByTitle(mins, ride.title) : written;
+        // A same-day reminder ("… in 15 min") keeps counting down too, instead of freezing when it fired.
+        const soon = n.kind === 'reminder' && isSameDayReminder(n.title)
+          ? occs.find((o) => !o.allDay && occDate(o) === today && n.title.startsWith(`${o.icon} ${o.title} `)) : undefined;
+        const text = ride && mins !== null ? leaveByTitle(mins, ride.title) : soon ? startsInTitle(startAbs(today, soon) - nowMin, soon.title) : written;
         // Same steps as the timeline pill: amber for the first five minutes late, then red.
         const late = mins === null ? '' : Math.round(mins) <= -5 ? ' late' : Math.round(mins) < 0 ? ' late-soon' : '';
         const expanded = open === n.id;
