@@ -92,7 +92,7 @@ export function Today() {
     if (mins > -5 && mins <= 90) {
       alerts.push({
         cls: mins <= 15 ? 'bad' : 'warn', icon: '🚗',
-        title: `Leave ${mins <= 0 ? 'now' : `in ${fmtDur(mins)}`} for ${o.title}`,
+        title: mins < 0 ? `Leave now for ${o.title}: ${-mins} min late` : `Leave ${mins === 0 ? 'now' : `in ${fmtDur(mins)}`} for ${o.title}`,
         items: [`${f.byId(o.driverId)?.name} is driving ${namesOf(f, o.memberIds)} · leave by ${fmtTime(leaveBy(o))}`],
         action: { label: 'Details', run: () => openOcc(o) },
       });

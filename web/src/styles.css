@@ -18,7 +18,7 @@
     color-scheme: dark;
     --bg: #10141F; --surface: #1A1F2E; --surface-2: #222839; --ink: #EEF1F8; --muted: #9AA3BD; --line: #2E3549;
     --focus: #6AA6F5;
-    --warn: #F5C06A; --warn-bg: #2D2517; --bad: #FF8599; --bad-bg: #3D1A22; --good: #62D8A0; --good-bg: #143325;
+    --warn: #F5C06A; --warn-bg: #2D2517; --bad: #FF8599; --bad-bg: #321C22; --good: #62D8A0; --good-bg: #143325;
     --btn: #EEF1F8; --btn-ink: #10141F; --on-bad: #10141F;
     --tint-ink: #FFFFFF;
     --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 8px 24px rgba(0, 0, 0, .25);
@@ -78,7 +78,7 @@ h3 { font-size: var(--fs-title-sm); }
 }
 .hub-tag { display: inline-flex; align-items: center; gap: 6px; padding: 8px 12px; border-radius: 999px; background: var(--surface-2); color: var(--muted); font-weight: 600; }
 .hint-touch { display: none; }
-@media (hover: none) { .hint-pointer { display: none; } .hint-touch { display: inline; } }
+@media (hover: none) { .hint-pointer { display: none; } .hint-touch { display: revert; } }
 .jump { display: flex; gap: 6px; flex-wrap: wrap; }
 .jump a { text-decoration: none; color: var(--ink); }
 .panel[id] { scroll-margin-top: 16px; }
@@ -97,7 +97,7 @@ h3 { font-size: var(--fs-title-sm); }
 .mem-btn:hover { transform: translateY(-2px); }
 .mem-btn .avatar { width: 64px; height: 64px; font-size: 36px; background: color-mix(in srgb, var(--pc) 14%, var(--surface)); }
 .members.small .mem-btn .avatar { width: 42px; height: 42px; font-size: 22px; border-width: 2px; }
-.badge { position: absolute; top: -4px; right: -6px; min-width: 22px; height: 22px; padding: 0 6px; border-radius: 999px; background: var(--bad); color: var(--on-bad); font-style: normal; font-size: var(--fs-label); font-weight: 800; display: grid; place-items: center; border: 2px solid var(--bg); font-family: var(--body); }
+.badge { position: absolute; top: -4px; right: -6px; min-width: 22px; height: 22px; padding: 0 6px; border-radius: 999px; background: var(--btn); color: var(--btn-ink); font-style: normal; font-size: var(--fs-label); font-weight: 800; display: grid; place-items: center; border: 2px solid var(--bg); font-family: var(--body); }
 .toggles { display: flex; gap: 8px; flex-wrap: wrap; }
 .tog { display: flex; align-items: center; gap: 6px; border: 2px solid var(--line); background: var(--surface); border-radius: 999px; padding: 4px 12px 4px 4px; font-weight: 700; }
 .tog.plain { padding: 6px 12px; }
@@ -394,13 +394,13 @@ body:has(.ambient) .nudges { bottom: calc(110px + env(safe-area-inset-bottom, 0p
 .now-dot { display: inline-block; width: 14px; height: 14px; margin-right: 10px; border-radius: 50%; background: var(--pc); vertical-align: 1px; animation: pulse 2s infinite; }
 .face-clock { display: flex; align-items: center; gap: 12px; font-family: var(--display); font-size: var(--fs-title); font-weight: 600; }
 .pics { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 12px; }
-.pic { background: var(--surface); border-radius: 22px; padding: 14px; display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; font-family: var(--display); font-weight: 600; font-size: var(--fs-title-sm); box-shadow: var(--shadow); }
+.pic { background: var(--surface); border-radius: 24px; padding: 14px; display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; font-family: var(--display); font-weight: 600; font-size: var(--fs-title-sm); box-shadow: var(--shadow); }
 .pic .e { font-size: 3rem; line-height: 1; }
 .pic .tag { font-size: var(--fs-small); color: color-mix(in srgb, var(--pc) 72%, var(--tint-ink)); font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
 .kid .tiles { grid-template-columns: repeat(2, 1fr); }
 .kid .tile { padding: 18px 8px; font-size: var(--fs-title-sm); font-family: var(--display); }
 .kid .tile .e { font-size: 3.2rem; }
-.sleep { background: var(--surface); border-radius: 22px; padding: 14px 16px; display: flex; align-items: center; gap: 14px; box-shadow: var(--shadow); }
+.sleep { background: var(--surface); border-radius: 24px; padding: 14px 16px; display: flex; align-items: center; gap: 14px; box-shadow: var(--shadow); }
 .sleep .e { font-size: 2.6rem; }
 .sleep b { font-family: var(--display); font-weight: 600; font-size: var(--fs-title-sm); display: block; }
 
@@ -440,7 +440,7 @@ body:has(.ambient) .nudges { bottom: calc(110px + env(safe-area-inset-bottom, 0p
 .wx-temp { font-family: var(--display); font-size: 2rem; font-weight: 600; line-height: 1; }
 .wx-text { display: flex; flex-direction: column; font-weight: 600; line-height: 1.2; }
 .wx-text small { font-weight: 500; font-size: var(--fs-small); color: var(--muted); }
-.amb-weather { background: rgba(10, 14, 24, .45); backdrop-filter: blur(10px); border-radius: 22px; padding: 10px 18px; }
+.amb-weather { background: rgba(10, 14, 24, .45); backdrop-filter: blur(10px); border-radius: 24px; padding: 10px 18px; }
 .amb-weather .wx-ic { font-size: 3rem; }
 .amb-weather .wx-temp { font-size: 3rem; }
 .amb-weather .wx-text { font-size: var(--fs-title-sm); }
@@ -492,7 +492,6 @@ body:has(.ambient) .nudges { bottom: calc(110px + env(safe-area-inset-bottom, 0p
 /* ---------- sign in & setup ---------- */
 .center-page { min-height: calc(100dvh - 120px); display: grid; place-items: center; }
 .welcome { width: min(760px, 100%); display: flex; flex-direction: column; gap: 22px; align-items: center; text-align: center; }
-.welcome h1 { font-size: clamp(2rem, 6vw, 3rem); }
 .profile-grid { display: flex; gap: 18px; flex-wrap: wrap; justify-content: center; }
 .profile { border: 0; background: var(--surface); border-radius: 26px; padding: 18px 22px; box-shadow: var(--shadow); display: flex; flex-direction: column; align-items: center; gap: 8px; font-family: var(--display); font-size: var(--fs-title); font-weight: 600; min-width: 130px; }
 .profile .avatar { width: 84px; height: 84px; font-size: 48px; background: color-mix(in srgb, var(--pc) 14%, var(--surface)); }
@@ -502,7 +501,7 @@ body:has(.ambient) .nudges { bottom: calc(110px + env(safe-area-inset-bottom, 0p
 .pin-dots i { width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--muted); }
 .pin-dots i.on { background: var(--ink); border-color: var(--ink); }
 .keys { display: grid; grid-template-columns: repeat(3, 72px); gap: 10px; }
-.keys button { height: 64px; border-radius: 20px; border: 0; background: var(--surface-2); font-family: var(--display); font-size: 1.6rem; font-weight: 600; }
+.keys button { height: 64px; border-radius: 18px; border: 0; background: var(--surface-2); font-family: var(--display); font-size: 1.6rem; font-weight: 600; }
 .keys button:active { background: var(--line); }
 .shake { animation: shake .4s; }
 @keyframes shake { 20%, 60% { transform: translateX(-8px); } 40%, 80% { transform: translateX(8px); } }
@@ -541,7 +540,6 @@ body:has(.ambient) .nudges { bottom: calc(110px + env(safe-area-inset-bottom, 0p
 .tb { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); gap: 18px; align-items: start; }
 .tb-left, .tb-right { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
 .tb-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 14px; flex-wrap: wrap; }
-.tb-head h1 { font-size: clamp(2rem, 5vw, 3rem); }
 .tb-hero { display: flex; flex-direction: column; gap: 10px; padding: 22px 24px; border-radius: 24px; background: color-mix(in srgb, var(--pc, var(--btn)) 14%, var(--surface)); box-shadow: var(--shadow); }
 .tb-time { font-family: var(--display); font-weight: 600; font-size: clamp(3.4rem, 9vw, 5.6rem); line-height: .9; letter-spacing: -.02em; color: color-mix(in srgb, var(--pc, var(--ink)) 70%, var(--tint-ink)); }
 .tb-hero p { margin: 0; display: flex; flex-direction: column; gap: 4px; }
@@ -579,16 +577,16 @@ body:has(.ambient) .nudges { bottom: calc(110px + env(safe-area-inset-bottom, 0p
   .tb-ride:empty { display: none; }
 }
 /* After night mode starts on the hub, the whole screen swaps to the bedside amber on black. */
-body:has(.tb.night) {
+body:has(.tb.night, .kid-space.night) {
   color-scheme: dark;
   --bg: #000; --surface: #0d0a07; --surface-2: #16110c; --ink: var(--bedside); --muted: #9C7A55; --line: rgba(185, 143, 99, .2);
   --btn: var(--bedside); --btn-ink: #000; --focus: #C9A27A; --tint-ink: #000; --shadow: none;
   --warn: #D6A35F; --warn-bg: #1F160B; --bad: #E08A6E; --bad-bg: #22100C; --good: #B5B87A; --good-bg: #12160C;
 }
-body:has(.tb.night) :is(.face, .avatar, .e, .wx-ic), body:has(.tb.night) .tb [aria-hidden="true"] { filter: grayscale(.6) brightness(.8); }
-body:has(.tb.night) .tb-hero { background: var(--surface); }
+body:has(.tb.night, .kid-space.night) :is(.face, .avatar, .e, .wx-ic), body:has(.tb.night, .kid-space.night) :is(.tb, .kid-space) [aria-hidden="true"] { filter: grayscale(.6) brightness(.8); }
+body:has(.tb.night, .kid-space.night) .tb-hero { background: var(--surface); }
 /* No person colors at night: every ring and tint goes amber (inline --pc needs the !important). */
-body:has(.tb.night) [style*="--pc"] { --pc: var(--bedside) !important; }
+body:has(.tb.night, .kid-space.night) [style*="--pc"] { --pc: var(--bedside) !important; }
 /* And no solid amber fills to glow in a dark kitchen: actions are outlines, like night nudges. */
-body:has(.tb.night) :is(.tabs a.active, .fab) { background: #000; color: var(--bedside); box-shadow: inset 0 0 0 1.5px rgba(185, 143, 99, .6); }
-body:has(.tb.night) .tb-time { color: var(--ink); }
+body:has(.tb.night, .kid-space.night) :is(.tabs a.active, .fab) { background: #000; color: var(--bedside); box-shadow: inset 0 0 0 1.5px rgba(185, 143, 99, .6); }
+body:has(.tb.night, .kid-space.night) .tb-time { color: var(--ink); }

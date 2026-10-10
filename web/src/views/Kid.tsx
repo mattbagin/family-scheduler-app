@@ -3,6 +3,7 @@ import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
 import { addDays, dayDiff, dayLabel, fmtTime, minutesOf } from '@shared';
 import { useFamily, useNow } from '../context.tsx';
 import { endAbs, mainRange, occDate, sleepsWord, startAbs } from '../lib.ts';
+import { useNight } from '../hub.tsx';
 import { GrownUpsNote } from '../nudges.tsx';
 import { useChores, useOccurrences, usePlans, usePrep, useTodos } from '../queries.ts';
 import { useToggleTask } from '../sheets/PlanSheet.tsx';
@@ -64,6 +65,7 @@ export function Kid() {
   const { data: prep = [] } = usePrep(today, addDays(today, 2), nowMin);
   const { data: todos = [] } = useTodos();
   const toggleTask = useToggleTask();
+  const night = useNight() && f.session.kind === 'hub';
   const toggleTodo = useToggleTodo();
   const kids = f.members.filter((m) => m.role === 'kid');
   const fallback = f.me?.role === 'kid' ? f.me : kids[0];
@@ -89,7 +91,7 @@ export function Kid() {
     .slice(0, 3);
 
   return (
-    <div className="stack">
+    <div className={`stack kid-space${night ? ' night' : ''}`}>
       <div className="kid-top">
         <div className="kidpick">
           {kids.map((m) => (

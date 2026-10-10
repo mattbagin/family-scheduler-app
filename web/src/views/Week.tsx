@@ -128,7 +128,7 @@ export function Week() {
           ))}
         </div>
       </div>
-      <p className="note">On a touch screen, tap an event and use Edit to move it.</p>
+      <p className="note hint-touch">On a touch screen, tap an event and use Edit to move it.</p>
     </>
   );
 }

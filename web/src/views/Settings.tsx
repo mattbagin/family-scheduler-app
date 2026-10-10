@@ -27,12 +27,14 @@ export function Settings() {
   const sheets = useSheets();
   if (!f.canEdit) {
     return (
-      <section className="panel" style={{ alignItems: 'flex-start' }}>
+      <div className="stack">
         <h1>Settings</h1>
-        <p>Only a parent can change settings.</p>
-        <button className="primary" onClick={() => sheets.open(<UnlockSheet onDone={() => sheets.close()} />)}>Unlock with a parent PIN</button>
+        <section className="panel" style={{ alignItems: 'flex-start' }}>
+          <p style={{ margin: 0 }}>Only a parent can change settings.</p>
+          <button className="primary" onClick={() => sheets.open(<UnlockSheet onDone={() => sheets.close()} />)}>Unlock with a parent PIN</button>
+        </section>
         <DeviceSection />
-      </section>
+      </div>
     );
   }
   return (
@@ -376,10 +378,10 @@ function NudgesSection() {
               <input id="nd-evening" type="time" value={s.eveningAt} onChange={(e) => e.target.value && save({ eveningAt: e.target.value })} />
             </label>
           </div>
-          <label className="field">If nobody taps “Got it” on a time-to-leave nudge
+          <label className="field">If nobody taps “Got it” on a time-to-leave nudge, repeat it and then tell the other parent
             <select id="nd-escalate" value={s.escalateMin} onChange={(e) => save({ escalateMin: Number(e.target.value) })}>
-              <option value={0}>Leave it at one nudge</option>
-              {[5, 10, 15].map((n) => <option key={n} value={n}>Repeat after {n} min, then tell the other parent</option>)}
+              <option value={0}>Don’t repeat it</option>
+              {[5, 10, 15].map((n) => <option key={n} value={n}>After {n} min</option>)}
             </select>
           </label>
           <div>
