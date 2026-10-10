@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  addDays, chipLabel, computeFlags, leaveByTitle, rideStatus, dayDiff, dayLabel, fmtDur, dayWithDate, fmtTime, minutesOf, weatherLook, type Occurrence, type Plan,
+  addDays, chipLabel, computeFlags, rideHeadsUp, rideStatus, dayDiff, dayLabel, fmtDur, dayWithDate, fmtTime, minutesOf, weatherLook, type Occurrence, type Plan,
 } from '@shared';
 import { api } from '../api.ts';
 import { namesOf, useAction, useFamily, useNow } from '../context.tsx';
@@ -89,11 +89,13 @@ export function Today() {
     if (occDate(o) !== today || !o.travelMin || !o.driverId) continue;
     if (nudges.some((n) => n.kind === 'leave_by' && n.title.endsWith(`for ${o.title}`))) continue;
     const mins = leaveBy(o) - nowMin;
-    if (mins > -5 && mins <= 90) {
+    // From 90 minutes ahead until it starts, in the timeline pill's words and colours (one clock).
+    if (mins <= 90 && startAbs(today, o) > nowMin) {
+      const ride = rideHeadsUp(leaveBy(o), nowMin, f.byId(o.driverId)?.name ?? 'Someone', o.title);
       alerts.push({
-        cls: mins <= 15 ? 'bad' : 'warn', icon: '🚗',
-        title: leaveByTitle(mins, o.title),
-        items: [`${f.byId(o.driverId)?.name} is driving ${namesOf(f, o.memberIds)} · leave by ${fmtTime(leaveBy(o))}`],
+        cls: ride.cls, icon: '🚗',
+        title: ride.text,
+        items: [`Driving ${namesOf(f, o.memberIds)} · starts ${fmtTime(minutesOf(o.start))}`],
         action: { label: 'Details', run: () => openOcc(o) },
       });
     }

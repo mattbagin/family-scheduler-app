@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { chipLabel, computeFlags, leaveByTitle, rideStatus } from '../src/flags.ts';
+import { chipLabel, computeFlags, isSameDayReminder, leaveByTitle, rideHeadsUp, rideStatus, startsInTitle } from '../src/flags.ts';
 import { guessTodoKind, parseQuickAdd } from '../src/quickadd.ts';
 import type { Member, Occurrence } from '../src/types.ts';
 
@@ -177,5 +177,26 @@ describe('rideStatus', () => {
   });
   it('is calm again once the event has started', () => {
     expect(rideStatus(leave, start + 1, start).cls).toBe('good');
+  });
+});
+
+describe('one clock', () => {
+  it('keeps a same-day reminder current', () => {
+    expect(startsInTitle(13.4, 'Dentist')).toBe('Dentist in 13 min');
+    expect(startsInTitle(0.2, 'Dentist')).toBe('Dentist is starting');
+  });
+  it('words a ride heads-up like the timeline pill, and colours it the same way', () => {
+    const leave = 15 * 60 + 10; // 3:10 PM
+    expect(rideHeadsUp(leave, leave - 47, 'Mom', 'Playdate')).toEqual({ cls: '', text: 'Mom leaves 3:10 PM for Playdate' });
+    expect(rideHeadsUp(leave, leave + 2, 'Mom', 'Playdate')).toEqual({ cls: 'warn', text: 'Leave now for Playdate: 2 min late' });
+    expect(rideHeadsUp(leave, leave + 6, 'Mom', 'Playdate')).toEqual({ cls: 'bad', text: 'Leave now for Playdate: 6 min late' });
+  });
+  it('spots reminders for later today, not tomorrow or another day', () => {
+    expect(isSameDayReminder('👵 Call Grandma in 15 min')).toBe(true);
+    expect(isSameDayReminder('🦷 Dentist in 1h 30m')).toBe(true);
+    expect(isSameDayReminder('⚽ Soccer is starting')).toBe(true);
+    expect(isSameDayReminder('⚽ Soccer tomorrow at 4:30 PM')).toBe(false);
+    expect(isSameDayReminder('🎂 Party on Saturday')).toBe(false);
+    expect(isSameDayReminder('🏊 Swim in the lake tomorrow')).toBe(false);
   });
 });

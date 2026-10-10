@@ -70,3 +70,25 @@ export function rideStatus(leaveMin: number, nowMin: number, startMin: number): 
   if (m > -5) return { cls: 'warn', text: m === 0 ? 'leave now' : `${fmtDur(-m)} late` };
   return { cls: 'bad', text: `${fmtDur(-m)} late` };
 }
+
+/** A same-day reminder kept current: "Dentist in 13 min", then "Dentist is starting". */
+export function startsInTitle(minsUntil: number, title: string): string {
+  const m = Math.round(minsUntil);
+  return m > 0 ? `${title} in ${fmtDur(m)}` : `${title} is starting`;
+}
+
+/**
+ * A ride's heads-up line before and after leave time, in the timeline pill's words: "Mom leaves
+ * 3:10 PM for Playdate" while there's time, then leaveByTitle's "Leave now…" / "… min late".
+ * `cls` follows rideStatus's steps: plain until leave time, amber for five minutes, then urgent.
+ */
+export function rideHeadsUp(leaveMin: number, nowMin: number, driver: string, title: string): { cls: '' | 'warn' | 'bad'; text: string } {
+  const m = Math.round(leaveMin - nowMin);
+  if (m > 0) return { cls: '', text: `${driver} leaves ${fmtTime(leaveMin)} for ${title}` };
+  return { cls: m > -5 ? 'warn' : 'bad', text: leaveByTitle(m, title) };
+}
+
+/** A reminder titled for later today ("… in 15 min", "… is starting"), which the hub keeps current. */
+export function isSameDayReminder(title: string): boolean {
+  return /\s(in \d|is starting)/.test(title);
+}
