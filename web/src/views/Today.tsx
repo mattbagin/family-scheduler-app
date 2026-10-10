@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  addDays, computeFlags, dayDiff, dayLabel, fmtDur, fmtShortDate, fmtTime, minutesOf, weatherLook, type Occurrence, type Plan,
+  addDays, chipLabel, computeFlags, leaveByTitle, dayDiff, dayLabel, fmtDur, fmtShortDate, fmtTime, minutesOf, weatherLook, type Occurrence, type Plan,
 } from '@shared';
 import { api } from '../api.ts';
 import { namesOf, useAction, useFamily, useNow } from '../context.tsx';
@@ -92,7 +92,7 @@ export function Today() {
     if (mins > -5 && mins <= 90) {
       alerts.push({
         cls: mins <= 15 ? 'bad' : 'warn', icon: '🚗',
-        title: mins < 0 ? `Leave now for ${o.title}: ${-mins} min late` : `Leave ${mins === 0 ? 'now' : `in ${fmtDur(mins)}`} for ${o.title}`,
+        title: leaveByTitle(mins, o.title),
         items: [`${f.byId(o.driverId)?.name} is driving ${namesOf(f, o.memberIds)} · leave by ${fmtTime(leaveBy(o))}`],
         action: { label: 'Details', run: () => openOcc(o) },
       });
@@ -194,7 +194,7 @@ export function Today() {
             {later.map((a) => (
               <button key={a.title} className={`tick ${a.cls}`} aria-expanded={openAlert === a.title} aria-controls="tick-open"
                 onClick={() => setOpenAlert(openAlert === a.title ? null : a.title)}>
-                <span aria-hidden="true">{a.icon}</span>{a.title}{a.items.length > 1 && !/d/.test(a.title) ? ` · ${a.items.length}` : ''}
+                <span aria-hidden="true">{a.icon}</span>{chipLabel(a.title, a.items.length)}
               </button>
             ))}
           </div>

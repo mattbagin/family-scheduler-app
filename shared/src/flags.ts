@@ -1,3 +1,4 @@
+import { fmtDur } from './time.ts';
 import type { Member, Occurrence } from './types.ts';
 
 export interface Flag {
@@ -42,4 +43,19 @@ export function computeFlags(occs: Occurrence[], members: Member[]): Map<string,
 /** When the driver should head out: start minus travel minus a 10-minute buffer. */
 export function leaveByMin(startMin: number, travelMin: number): number {
   return startMin - travelMin - 10;
+}
+
+/**
+ * The heads-up line for a ride: "Leave in 25 min for Swim", "Leave now for Swim", "Leave now for
+ * Swim: 3 min late". `minsUntil` may carry seconds; it's rounded to whole minutes first.
+ */
+export function leaveByTitle(minsUntil: number, title: string): string {
+  const m = Math.round(minsUntil);
+  if (m < 0) return `Leave now for ${title}: ${fmtDur(-m)} late`;
+  return m === 0 ? `Leave now for ${title}` : `Leave in ${fmtDur(m)} for ${title}`;
+}
+
+/** A heads-up chip's label: the count goes on only when the title doesn't already say it. */
+export function chipLabel(title: string, count: number): string {
+  return count > 1 && !/\d/.test(title) ? `${title} · ${count}` : title;
 }

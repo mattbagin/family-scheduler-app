@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { computeFlags } from '../src/flags.ts';
+import { chipLabel, computeFlags, leaveByTitle } from '../src/flags.ts';
 import { guessTodoKind, parseQuickAdd } from '../src/quickadd.ts';
 import type { Member, Occurrence } from '../src/types.ts';
 
@@ -133,5 +133,23 @@ describe('computeFlags', () => {
       occ('2', '2026-09-29T09:00', '2026-09-29T10:00', { memberIds: [3] }),
     ], members);
     expect(flags.size).toBe(0);
+  });
+});
+
+describe('heads-up wording', () => {
+  it('says leave-by times in whole minutes, even mid-minute', () => {
+    expect(leaveByTitle(25.4, 'Swim')).toBe('Leave in 25 min for Swim');
+    expect(leaveByTitle(0.3, 'Swim')).toBe('Leave now for Swim');
+    // From the critique: this read "1.1166666666666742 min late".
+    expect(leaveByTitle(-1.1166666666666742, 'Swim lesson')).toBe('Leave now for Swim lesson: 1 min late');
+    expect(leaveByTitle(-3.6, 'Swim')).toBe('Leave now for Swim: 4 min late');
+  });
+
+  it('adds a count to a chip only when the title has no number of its own', () => {
+    expect(chipLabel('Pack for tomorrow', 5)).toBe('Pack for tomorrow · 5');
+    // Titles with a "d" used to lose their count.
+    expect(chipLabel('Hydro bill due Sunday', 2)).toBe('Hydro bill due Sunday · 2');
+    expect(chipLabel('3 rides still need a driver', 3)).toBe('3 rides still need a driver');
+    expect(chipLabel('Umbrella tomorrow', 1)).toBe('Umbrella tomorrow');
   });
 });
