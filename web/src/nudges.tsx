@@ -48,8 +48,9 @@ export function NudgeBanners({ ambient = false, night = false }: { ambient?: boo
   }, [isHub]);
 
   if (!show || !nudges.length) return null;
-  // On a locked hub, answering takes a parent's PIN (the server asks; the PIN pad opens).
-  const needsPin = isHub && !f.session.canEdit;
+  // On a locked hub, answering a time-to-leave nudge takes a parent's PIN (it stops escalation;
+  // the server asks and the PIN pad opens). Anything else, anyone can clear.
+  const needsPin = (n: Nudge) => n.kind === 'leave_by' && isHub && !f.session.canEdit;
   const answer = (id: number) => act(
     () => api<Nudge>(`/nudges/${id}/ack`, { method: 'POST' }),
     (n) => (f.byId(n.ackedBy) ? `${f.byId(n.ackedBy)!.name}’s got it` : 'Got it'),
@@ -83,8 +84,8 @@ export function NudgeBanners({ ambient = false, night = false }: { ambient?: boo
                 {n.audience.map((id) => <Face key={id} m={f.byId(id)} size={24} />)}
               </span>
             </button>
-            <button className="act" onClick={() => answer(n.id)} title={needsPin ? 'A parent answers this with their PIN' : undefined}>
-              {needsPin && <span aria-hidden="true">🔒 </span>}Got it{needsPin && <span className="sr-only"> (needs a parent’s PIN)</span>}
+            <button className="act" onClick={() => answer(n.id)} title={needsPin(n) ? 'A parent answers this with their PIN' : undefined}>
+              {needsPin(n) && <span aria-hidden="true">🔒 </span>}Got it{needsPin(n) && <span className="sr-only"> (needs a parent’s PIN)</span>}
             </button>
           </div>
         );

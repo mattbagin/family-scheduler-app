@@ -133,6 +133,18 @@ describe('nudges', () => {
     expect((await app.inject({ url: '/api/nudges/active', cookies: adult })).json()).toEqual([]);
   });
 
+  it('lets anyone at the hub clear a briefing, which never escalates', async () => {
+    const { adult, alex, kit } = await family();
+    // The briefing only goes out when something's on.
+    await app.inject({ method: 'POST', url: '/api/events', cookies: adult, payload: { title: 'Dentist', start: `${DAY}T13:00`, end: `${DAY}T14:00`, memberIds: [kit.id] } });
+    const briefing = (await app.nudger.tick(at('07:00'))).find((x) => x.kind === 'morning');
+    expect(briefing).toBeTruthy();
+    const hub = sessionFrom(await app.inject({ method: 'POST', url: '/api/login', payload: { memberId: alex.id, pin: '2468', asHub: true } }));
+    const ack = await app.inject({ method: 'POST', url: `/api/nudges/${briefing!.id}/ack`, cookies: hub });
+    expect(ack.statusCode).toBe(200);
+    expect(ack.json<Nudge>()).toMatchObject({ ackedBy: null });
+  });
+
   it('needs a parent’s PIN to answer a nudge on the hub, and remembers which parent', async () => {
     const { adult, alex, robin, kit } = await family();
     await app.inject({
