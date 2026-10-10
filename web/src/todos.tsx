@@ -172,7 +172,7 @@ export function AddTodo({ assigneeId, placeholder = 'Add a to-do, e.g. Call the 
 
 /** Reads a to-do out of plain words: who, which day, and whether it's something to pack. */
 export function todoFromText(text: string, members: Parameters<typeof parseQuickAdd>[1], today: Ymd, fallbackWho: number | null) {
-  const parsed = parseQuickAdd(text, members, today);
+  const parsed = parseQuickAdd(text, members, today, { event: false });
   if (!parsed) return null;
   const kind = guessTodoKind(text);
   // To-dos don't have a place; "Call Bob at the bank" keeps its words.

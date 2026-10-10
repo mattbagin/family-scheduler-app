@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import {
-  addDays, computeFlags, dayLabel, describeRRule, fmtShortDate, fmtTime, minutesOf, reminderLabel, type EventRecord, type Occurrence, type Plan,
+  addDays, computeFlags, dayWithDate, describeRRule, fmtShortDate, fmtTime, minutesOf, reminderLabel, type EventRecord, type Occurrence, type Plan,
 } from '@shared';
 import { api } from '../api.ts';
 import { namesOf, useAction, useFamily, useNow } from '../context.tsx';
@@ -52,8 +52,8 @@ export function EventSheet({ occ: initial }: { occ: Occurrence }) {
   };
 
   const when = occ.allDay
-    ? `${dayLabel(today, day)}, ${fmtShortDate(day)} · all day`
-    : `${dayLabel(today, day)}, ${fmtShortDate(day)} · ${fmtTime(minutesOf(occ.start))} – ${fmtTime(minutesOf(occ.end))}`;
+    ? `${dayWithDate(today, day)} · all day`
+    : `${dayWithDate(today, day)} · ${fmtTime(minutesOf(occ.start))} – ${fmtTime(minutesOf(occ.end))}`;
 
   return (
     <Sheet title={occ.title} icon={occ.icon} sub={when}>
@@ -61,7 +61,7 @@ export function EventSheet({ occ: initial }: { occ: Occurrence }) {
         <div className="toggles">
           {occ.memberIds.map((id) => {
             const m = f.byId(id);
-            return m && <span key={id} className="tog" aria-pressed="true" style={pc(m.color)}><Face m={m} />{m.name}</span>;
+            return m && <span key={id} className="who-chip"><Face m={m} />{m.name}</span>;
           })}
         </div>
       )}
@@ -99,18 +99,20 @@ export function EventSheet({ occ: initial }: { occ: Occurrence }) {
         </div>
       )}
 
-      <button className="proj" onClick={openPlan}>
+      {/* No plan yet: a quiet offer, not the biggest thing on the sheet. */}
+      {!plan && <button className="link-btn plan-offer" onClick={openPlan}><span aria-hidden="true">📋</span> Break into tasks</button>}
+      {plan && <button className="proj" onClick={openPlan}>
         <div className="proj-top">
           <span className="e" aria-hidden="true">📋</span>
           <div>
-            <b>{plan ? 'Open the plan' : 'Break into tasks'}</b>
+            <b>Open the plan</b>
             <div className="note">
-              {plan ? `${plan.tasks.filter((t) => t.doneAt).length} of ${plan.tasks.length} tasks done` : 'Split it into jobs with a person and a due date for each'}
+              {plan.tasks.filter((t) => t.doneAt).length} of {plan.tasks.length} tasks done
             </div>
           </div>
         </div>
-        {plan && plan.tasks.length > 0 && <div className="bar"><i style={{ width: `${(plan.tasks.filter((t) => t.doneAt).length / plan.tasks.length) * 100}%` }} /></div>}
-      </button>
+        {plan.tasks.length > 0 && <div className="bar"><i style={{ transform: `scaleX(${plan.tasks.filter((t) => t.doneAt).length / plan.tasks.length})` }} /></div>}
+      </button>}
 
       <div className="row">
         <button className="icon-btn" onClick={edit}>{feed ? '✏️ Who’s going & rides' : `✏️ Edit${recurring ? ' every time' : ''}`}</button>
@@ -121,6 +123,7 @@ export function EventSheet({ occ: initial }: { occ: Occurrence }) {
         )}
         <span className="spacer" />
         {!feed && <ConfirmButton
+          className="mini-btn danger"
           label={recurring ? 'Delete every time' : 'Delete'}
           confirmText={recurring ? `Delete “${occ.title}” and every repeat?` : `Delete “${occ.title}”?`}
           onConfirm={async () => {

@@ -3,6 +3,7 @@ import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
 import { addDays, dayDiff, dayLabel, fmtTime, minutesOf } from '@shared';
 import { useFamily, useNow } from '../context.tsx';
 import { endAbs, mainRange, occDate, sleepsWord, startAbs } from '../lib.ts';
+import { useBedtime, useNight } from '../hub.tsx';
 import { GrownUpsNote } from '../nudges.tsx';
 import { useChores, useOccurrences, usePlans, usePrep, useTodos } from '../queries.ts';
 import { useToggleTask } from '../sheets/PlanSheet.tsx';
@@ -64,6 +65,7 @@ export function Kid() {
   const { data: prep = [] } = usePrep(today, addDays(today, 2), nowMin);
   const { data: todos = [] } = useTodos();
   const toggleTask = useToggleTask();
+  const night = useNight() && f.session.kind === 'hub';
   const toggleTodo = useToggleTodo();
   const kids = f.members.filter((m) => m.role === 'kid');
   const fallback = f.me?.role === 'kid' ? f.me : kids[0];
@@ -77,7 +79,7 @@ export function Kid() {
   const up = mine.filter((o) => startAbs(today, o) > nowMin);
   const next = up[0];
   const later = up.slice(1);
-  const late = nowMin > 19.5 * 60;
+  const late = useBedtime();
   const myChores = chores.filter((c) => c.assigneeId === k.id && c.scheduled);
   const myPrep = prep.filter((p) => p.memberIds.includes(k.id));
   // A kid's tiles skip the next round of a repeating job until its day comes.
@@ -89,7 +91,7 @@ export function Kid() {
     .slice(0, 3);
 
   return (
-    <div className="stack">
+    <div className={`stack kid-space${night ? ' night' : ''}`}>
       <div className="kid-top">
         <div className="kidpick">
           {kids.map((m) => (
@@ -132,7 +134,7 @@ export function Kid() {
               <div className="tagbig" style={{ marginBottom: 8 }}><span aria-hidden="true">🕓</span> Later today</div>
               <div className="pics">
                 {later.map((o) => (
-                  <div key={o.key} className="pic"><span className="tag">{fmtTime(minutesOf(o.start)).replace(':00', '')}</span><span className="e" aria-hidden="true">{o.icon}</span>{o.kidTitle ?? o.title}</div>
+                  <div key={o.key} className="pic"><ClockFace min={minutesOf(o.start)} color={color} size={44} /><span className="sr-only">{fmtTime(minutesOf(o.start))}</span><span className="e" aria-hidden="true">{o.icon}</span>{o.kidTitle ?? o.title}</div>
                 ))}
               </div>
             </div>

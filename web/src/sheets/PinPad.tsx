@@ -42,7 +42,7 @@ export function PinPad({ member, onSubmit }: { member: Member; onSubmit: (pin: s
   return (
     <div className={`pinpad ${shake ? 'shake' : ''}`} style={pc(member.color)}>
       <Avatar m={member} className="xl" />
-      <b style={{ fontFamily: 'var(--display)', fontSize: '1.3rem' }}>{member.name}, enter your PIN</b>
+      <b style={{ fontFamily: 'var(--display)', fontSize: 'var(--fs-title)' }}>{member.name}, enter your PIN</b>
       <div className="pin-dots" role="status" aria-label={`${pin.length} digits entered`}>
         {Array.from({ length: Math.max(4, pin.length) }, (_, i) => <i key={i} className={i < pin.length ? 'on' : ''} />)}
       </div>

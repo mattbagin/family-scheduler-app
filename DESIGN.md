@@ -51,19 +51,34 @@ typography:
     fontSize: "clamp(1.5rem, 4vw, 2.2rem)"
     fontWeight: 600
     lineHeight: 1.1
+  title-lg:
+    fontFamily: "Fredoka, Nunito, Trebuchet MS, system-ui, sans-serif"
+    fontSize: "1.5rem"
+    fontWeight: 600
+    lineHeight: 1.1
   title:
     fontFamily: "Fredoka, Nunito, Trebuchet MS, system-ui, sans-serif"
-    fontSize: "1.2rem"
+    fontSize: "1.25rem"
+    fontWeight: 600
+    lineHeight: 1.2
+  title-sm:
+    fontFamily: "Fredoka, Nunito, Trebuchet MS, system-ui, sans-serif"
+    fontSize: "1.125rem"
     fontWeight: 600
     lineHeight: 1.2
   body:
     fontFamily: "Figtree, Segoe UI, system-ui, -apple-system, sans-serif"
-    fontSize: "15px"
+    fontSize: "1rem"
     fontWeight: 400
     lineHeight: 1.45
+  small:
+    fontFamily: "Figtree, Segoe UI, system-ui, -apple-system, sans-serif"
+    fontSize: "0.875rem"
+    fontWeight: 400
+    lineHeight: 1.4
   label:
     fontFamily: "Figtree, Segoe UI, system-ui, -apple-system, sans-serif"
-    fontSize: "0.72rem"
+    fontSize: "0.75rem"
     fontWeight: 700
     letterSpacing: "0.08em"
 rounded:
@@ -196,7 +211,7 @@ A cool, quiet neutral board that the family's own colors and three status colors
 Follows the system (`prefers-color-scheme`). The `night-*` tokens replace their light twins one for one. The person palette stays the same. The ambient screen ignores both themes: white type over photos, and at night pure black with **Bedside Amber** (`bedside-amber`) type at 55% opacity.
 
 ### Bedside night
-When the hub's night mode is on, anything still awake on the hub goes amber on black instead of the dark theme: the ambient clock, nudge banners, the kid-mode nudge chip and the Tomorrow board. On the Tomorrow board the whole screen swaps its tokens: near-black surfaces (#0d0a07, #16110c) on pure black, **Bedside Amber** as ink and as the action color, **Bedside Muted** (`bedside-muted`) for secondary text, and amber hairlines (`rgba(185,143,99,.2)`). Person colors are all forced to Bedside Amber, decorative emoji and faces are filtered (`grayscale(.6) brightness(.8)`), and shadows are off. Status keeps its meaning through dimmed warm pairs (warn #D6A35F on #1F160B, bad #E08A6E on #22100C, good #B5B87A on #12160C).
+When the hub's night mode is on, anything still awake on the hub goes amber on black instead of the dark theme: the ambient clock, nudge banners, kid mode and the Tomorrow board. On the Tomorrow board and in kid mode the whole screen swaps its tokens: near-black surfaces (#0d0a07, #16110c) on pure black, **Bedside Amber** as ink and as the action color, **Bedside Muted** (`bedside-muted`) for secondary text, and amber hairlines (`rgba(185,143,99,.2)`). Person colors are all forced to Bedside Amber, decorative emoji and faces are filtered (`grayscale(.6) brightness(.8)`), and shadows are off. Status keeps its meaning through dimmed warm pairs (warn #D6A35F on #1F160B, bad #E08A6E on #22100C, good #B5B87A on #12160C).
 
 ### Named Rules
 **The People Own the Color Rule.** Saturated hues on screen belong to a person or a status. Never add a brand accent, decorative gradient or category color to the app shell. Categories show as emoji, not color.
@@ -217,14 +232,21 @@ When the hub's night mode is on, anything still awake on the hub goes amber on b
 ### Hierarchy
 - **Display** (Fredoka 600, clamp 3.2 to 5.6rem, line-height 0.9, tabular numbers): the Today clock and the Tomorrow board's leave-by time (which starts slightly larger, at 3.4rem). The ambient clock scales it up to 10rem, and kid-mode "now" emoji and words sit at a similar size.
 - **Headline** (Fredoka 600, clamp 1.5 to 2.2rem, 1.1): page titles (h1), with balanced wrapping.
-- **Title** (Fredoka 600, 1.05 to 1.25rem): panel headings (h2), event titles in the timeline, plan names, nudge titles, people's names.
-- **Body** (Figtree 400/500, 15px, 1.45): everything else. Secondary text drops to 0.82 to 0.92rem in Slate Muted.
-- **Label** (Figtree 700, 0.72rem, 0.08em tracking, uppercase, Slate Muted): small section labels, month weekday headers, countdown units.
+- **Large title** (Fredoka 600, 1.5rem, `--fs-title-lg`): the wordmark, day numbers in the week grid, timeline times, the Tomorrow hero sentence.
+- **Title** (Fredoka 600, 1.25rem, `--fs-title`): panel headings (h2), timeline event titles, kid-mode labels, the PIN prompt.
+- **Small title** (Fredoka 600, 1.125rem, `--fs-title-sm`): card and row titles (plans, countdowns, nudges, agenda and Tomorrow rows), h3, quick add's box.
+- **Body** (Figtree 400/500, 1rem / 16px, 1.45, `--fs-body`): everything else, and every form field.
+- **Small** (Figtree, 0.875rem, `--fs-small`): secondary lines in Slate Muted: notes, field labels, chips, the dense week grid, legends.
+- **Label** (Figtree 700, 0.75rem, 0.08em tracking, uppercase, Slate Muted, `--fs-label`): section labels, weekday headers, pills, badges, countdown units. Nothing on screen is smaller.
+
+Big numbers (counts, sleeps, the PIN keys, weather) and display sizes keep their own sizes on their elements; emoji and avatars are pictures and sit outside the type scale.
 
 ### Named Rules
 **The Across-the-Room Rule.** Anything meant to be glanced at (times, names, titles, counts, the clock, kid-mode words) is set in Fredoka. Anything meant to be read up close (notes, form labels, settings copy) is Figtree.
 
 **The Tabular Time Rule.** Clocks and counts use tabular numbers so they don't jitter as they tick.
+
+**The Six Sizes Rule.** Text takes one of six role sizes (label, small, body, small title, title, large title) through the `--fs-*` variables; a new screen picks a role, never a new number. Body and form fields never go below 16px, so phones don't zoom into a field when it's tapped.
 
 ## Layout
 
@@ -279,13 +301,14 @@ Friendly but tidy: one strong button per area, the rest quiet.
 ### Chips and pills
 - **Agenda row (Month):** a Cloud row (14px radius) with the time, a big emoji, the title and faces. It follows the Solo Tint Rule: 12% person tint when one person goes, neutral with faces when it's shared.
 - **Event chip:** a Cloud row (12px radius) with a muted time column, tinted 10% person color when that person is driving, and a 2px person ring when it's happening now. Past chips fade to 50%.
-- **Status pill:** a small pill in the warn, bad, good or muted pair.
+- **Status pill:** a small pill in the warn, bad, good or muted pair (Label size, 4px 9px, 12px corners: a capsule on one line, a neat rounded block when it wraps on a phone).
+- **Who chip:** someone shown, not chosen (attendees on the event sheet, per-person progress in a plan): face plus name with no toggle ring and no pressed state. Toggles are only for choices.
 - **Person toggle:** a pill with a 2px border holding a face and a name. When pressed, the border becomes the person color and the fill a 16% tint.
 
 ### Cards / Containers
 - **Panel:** Paper White, 24px corners, the board lift, 18px padding, and a Fredoka heading row.
 - **Timeline card:** Cloud (or a 11% person tint when it's one person's), 18px corners, a big emoji, a Fredoka title and stacked faces at the end. A person-colored dot on a hairline spine sits beside it, and it pulses while the event is happening.
-- **Alert (heads-up):** a white or status-tinted card, 16px corners, with an emoji, a bold line and a small Ink Navy action pill.
+- **Heads-up:** Today leads with the day, not with alerts. Only urgent alerts (leave within 15 minutes, overdue) are cards above it: berry-tinted, 18px corners, an emoji, a bold line, the first item with "+N more", and the one Ink Navy action. Everything else waits in one row of chips (pill, 40px tall, warn-tinted when it needs a decision, white for information); a chip opens its card underneath with a quiet outlined action. On phones the row scrolls sideways. A leave-by the nudge banner is already showing isn't repeated as a card. Leaving time keeps one clock everywhere: the ride pill on the timeline and the leave-by banner both read green ("leave 4:05 PM") until it's time, amber for the first five minutes ("leave now", "2 min late"), then red ("7 min late"). Only the words and their color change; nothing grows or flashes.
 
 ### Inputs / Fields
 - **Style:** Cloud fill, 2px Soft Line border, 12px corners, 9px 12px padding. The label sits above in small bold Slate Muted.
@@ -300,7 +323,7 @@ The top bar is the Homebase wordmark (Fredoka 700, 1.5rem) with a muted subtitle
 The sticker chart itself. A tile has a big emoji (2 to 3.2rem) over a short label, a 7% person-tinted fill, a dashed person-colored border and 18px corners. Pressing it scales it to 0.95. When done, the border goes solid, the fill deepens to 20%, and a ★ badge in a darkened person color stamps onto the corner (a 0.35s overshoot rotate-in). Finishing the last job brings up a full-screen celebration: a 9rem emoji spins in, a white pill caption appears, and confetti falls.
 
 ### Faces
-A circle with an emoji avatar, a person-colored ring and a pale person tint inside. They come in sizes from 24px (in rows) up to 84px (sign-in). Overlapping stacks of faces show who's going. A berry count badge marks unfinished things.
+A circle with an emoji avatar, a person-colored ring and a pale person tint inside. They come in sizes from 24px (in rows) up to 84px (sign-in). Overlapping stacks of faces show who's going. An Ink Navy count badge marks unfinished things. It is a count, not a problem, so it never uses the berry status color, which would read as a telling-off on a kid's face.
 
 ### Nudge banner
 A white card with an 18px radius, pinned to the bottom center above the ambient screen, kept to one line: a 40px icon tile (12px radius) whose background shows the kind (pale berry for leave-by, pale amber for bills, pale green for briefings, Cloud for anything else), a Fredoka title that truncates (tap it to expand), faces, and a "Got it" pill. It pops in over 0.25s. Over ambient photos it's frosted with white text and a white pill. At night it's black with Bedside Amber text and a 1px amber border, with no shadow and no pop, and the pill becomes an amber outline. On phones the banners sit above the + button, wrap titles to two lines and scroll if they stack up.

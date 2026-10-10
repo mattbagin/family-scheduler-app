@@ -1,5 +1,5 @@
 import { Link, Navigate, useParams } from 'react-router-dom';
-import { addDays, dayLabel, fmtShortDate, fmtTime, type ChoreForDay } from '@shared';
+import { addDays, dayLabel, dayWithDate, fmtTime, type ChoreForDay } from '@shared';
 import { api } from '../api.ts';
 import { namesOf, useAction, useFamily, useNow } from '../context.tsx';
 import { mainRange, money, occDate, personItems, type PersonItem, relDay } from '../lib.ts';
@@ -59,7 +59,7 @@ export function Person() {
 
   const items = personItems(today, occs, m.id);
   const todays = items.filter((i) => occDate(i.occ) === today || (i.s < 1440 && i.e > 0));
-  const label = (i: PersonItem) => (i.drive ? `Drive ${namesOf(f, i.occ.memberIds)} to ${i.occ.title.toLowerCase()}` : i.occ.title);
+  const label = (i: PersonItem) => (i.drive ? `Drive ${namesOf(f, i.occ.memberIds)} to ${i.occ.title}` : i.occ.title);
   const isKid = m.role === 'kid';
   const myChores = chores.filter((c) => c.assigneeId === m.id && c.scheduled);
   const myPrep = prep.filter((p) => p.memberIds.includes(m.id));
@@ -93,7 +93,7 @@ export function Person() {
         <Avatar m={m} className="xl" />
         <div>
           <h1>{m.name}’s schedule</h1>
-          <div className="note">{dayLabel(today, today)}, {fmtShortDate(today)}</div>
+          <div className="note">{dayWithDate(today, today)}</div>
         </div>
         <nav className="members small" aria-label="Switch person">
           {f.members.filter((x) => x.id !== m.id).map((x) => (
@@ -113,7 +113,7 @@ export function Person() {
             <h2>Next 7 days</h2>
             {nextDays.length ? nextDays.map(({ d, list }) => (
               <div key={d} className="agenda-day">
-                <div className="label">{dayLabel(today, d)} · {fmtShortDate(d)}</div>
+                <div className="label">{dayWithDate(today, d)}</div>
                 {list.map((i) => chip(i, false))}
               </div>
             )) : <p className="note">Nothing else this week.</p>}
@@ -149,7 +149,7 @@ export function Person() {
             </section>
           )}
           <section className="panel">
-            <div className="panel-head"><h2>{isKid ? 'My tasks' : 'Plan tasks'}</h2><span className="note">{tasks.filter((x) => !x.t.doneAt).length + (isKid ? myTodos.filter((t) => !t.doneAt).length : 0)} to do</span></div>
+            <div className="panel-head"><h2>{isKid ? (f.me?.id === m.id ? 'My tasks' : `${m.name}’s tasks`) : 'Plan tasks'}</h2><span className="note">{tasks.filter((x) => !x.t.doneAt).length + (isKid ? myTodos.filter((t) => !t.doneAt).length : 0)} to do</span></div>
             {!tasks.length && !(isKid && myTodos.length) ? <p className="note">No tasks assigned.</p> : isKid ? (
               <div className="tiles">
                 {myTodos.map((t) => (

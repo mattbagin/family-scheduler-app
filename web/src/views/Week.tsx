@@ -1,4 +1,4 @@
-import { Fragment, useState } from 'react';
+import { Fragment, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   addDays, computeFlags, dayDiff, fmtShortDate, fmtTime, minutesOf, startOfWeek, weekdayMon, WEEKDAYS, withMinutes, type Occurrence,
@@ -23,6 +23,16 @@ export function Week() {
   const [over, setOver] = useState<string | null>(null);
   const first = addDays(startOfWeek(today), offset * 7);
   const days = Array.from({ length: 7 }, (_, i) => addDays(first, i));
+  // When the grid is wider than the screen (phones), open on today rather than Monday.
+  const scrollRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = scrollRef.current;
+    const col = el?.querySelector<HTMLElement>('.gh.today');
+    const label = el?.querySelector<HTMLElement>('.gh.corner');
+    if (el && col && label && el.scrollWidth > el.clientWidth) {
+      el.scrollLeft += col.getBoundingClientRect().left - el.getBoundingClientRect().left - label.offsetWidth;
+    }
+  }, [offset]);
   const { data: occs = [], isFetching } = useOccurrences(first, addDays(first, 7));
   const flags = computeFlags(occs, f.members);
 
@@ -59,14 +69,15 @@ export function Week() {
         <div className="legend">
           <span><span className="pill bad">⚠ Overlap</span> kid in two places</span>
           <span><span className="pill warn">🚗 Needs a ride</span> no driver yet</span>
-          <span>Drag to move · double-click a day to add</span>
+          <span className="hint-pointer">Drag to move · double-click a day to add</span>
+          <span className="hint-touch">Tap an event for details · + adds one</span>
         </div>
       </div>
-      <div className="scroll">
+      <div className="scroll" ref={scrollRef}>
         <div className="grid">
-          <div className="gh" />
+          <div className="gh corner" />
           {days.map((d) => (
-            <div key={d} className={`gh ${d === today ? 'today' : ''}`}>
+            <div key={d} className={`gh ${d === today ? 'today' : d < today ? 'past' : ''}`}>
               {WEEKDAYS[weekdayMon(d)].slice(0, 3)}<span className="d num">{Number(d.slice(8))}</span>
             </div>
           ))}
@@ -79,7 +90,7 @@ export function Week() {
                 return (
                   <div
                     key={d}
-                    className={`cell ${d === today ? 'today' : ''} ${over === cellKey ? 'over' : ''}`}
+                    className={`cell ${d === today ? 'today' : d < today ? 'past' : ''} ${over === cellKey ? 'over' : ''}`}
                     style={pc(m.color)}
                     onDragOver={(e) => { if (dragKey) { e.preventDefault(); setOver(cellKey); } }}
                     onDragLeave={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setOver(null); }}
@@ -117,7 +128,7 @@ export function Week() {
           ))}
         </div>
       </div>
-      <p className="note">On a touch screen, tap an event and use Edit to move it.</p>
+      <p className="note hint-touch">On a touch screen, tap an event and use Edit to move it.</p>
     </>
   );
 }

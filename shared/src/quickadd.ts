@@ -13,6 +13,10 @@ export interface QuickAddResult {
   allDay: boolean;
   rrule: string | null;
   location: string | null;
+  /** A parent named as the driver ("Dad drives"); they aren't counted as going. */
+  driverId: number | null;
+  /** What to bring ("…, bring goggles"), for the event's packing note. */
+  bring: string | null;
   icon: string;
   category: Category;
 }
@@ -59,7 +63,9 @@ const RANGE = /\b(from\s+)?(\d{1,2})(?::(\d{2}))?\s*(am|pm)?\s*(?:-|–|—|to|u
  * how often and where, with what's left over as the title. Times without am/pm before 8 are
  * read as afternoon (family events rarely start at 5 AM).
  */
-export function parseQuickAdd(text: string, members: Member[], today: Ymd): QuickAddResult | null {
+export function parseQuickAdd(text: string, members: Member[], today: Ymd, opts: { event?: boolean; nowMin?: number } = {}): QuickAddResult | null {
+  // A driver and a packing note belong to events; a to-do keeps those words as written.
+  const event = opts.event ?? true;
   const raw = text.trim();
   if (!raw) return null;
   let rest = ` ${raw} `;
@@ -70,6 +76,17 @@ export function parseQuickAdd(text: string, members: Member[], today: Ymd): Quic
     return m;
   };
   let m: RegExpMatchArray | null;
+
+  /* ---- who's driving: "Dad drives", "Mom is driving", "driven by Dad", "Dad takes her" ---- */
+  // Read before who's going, so the driver isn't counted as a passenger.
+  let driverId: number | null = null;
+  const adults = members.filter((x) => x.role === 'adult');
+  if (event && adults.length) {
+    const names = adults.map((x) => escapeRe(x.name)).join('|');
+    const d = take(new RegExp(`\\b(${names})\\s+(?:is\\s+|will\\s+)?(?:driv(?:es|ing|e)|tak(?:es|ing)\\s+(?:them|her|him|us|everyone|the kids))\\b`, 'i'))
+      ?? take(new RegExp(`\\bdriven\\s+by\\s+(${names})\\b`, 'i'));
+    if (d) driverId = adults.find((x) => x.name.toLowerCase() === d[1].toLowerCase())!.id;
+  }
 
   /* ---- who ---- */
   const memberIds: number[] = [];
@@ -100,6 +117,8 @@ export function parseQuickAdd(text: string, members: Member[], today: Ymd): Quic
 
   /* ---- which day ---- */
   let date: Ymd | null = null;
+  // Set when the day came from a weekday name ("Saturday"), which can mean next week once its time has passed.
+  let byWeekday = false;
   if (take(/\b(today|tonight)\b/i)) date = today;
   else if (take(/\btomorrow\b/i)) date = addDays(today, 1);
   else if ((m = take(/\bin\s+(\d{1,2}|a|one|two|three)\s+(days?|weeks?)\b/i))) {
@@ -118,9 +137,11 @@ export function parseQuickAdd(text: string, members: Member[], today: Ymd): Quic
     date = here && here >= today ? here : ymdOf(mo === 12 ? y + 1 : y, (mo % 12) + 1, Number(m[1]));
   } else if ((m = take(new RegExp(`\\b(next\\s+)?(${DAY})\\b`, 'i')))) {
     date = nextWeekday(today, dayIndex(m[2]), !!m[1]);
+    byWeekday = true;
   }
   if (!date && repeat?.freq === 'WEEKLY' && repeat.byDay?.length) {
     date = repeat.byDay.map((d) => nextWeekday(today, d)).sort()[0];
+    byWeekday = true;
   }
 
   /* ---- what time ---- */
@@ -146,6 +167,9 @@ export function parseQuickAdd(text: string, members: Member[], today: Ymd): Quic
     const ampm = m[3]?.toLowerCase();
     if (h <= 23 && min < 60) startMin = toMin(h, min, ampm) + (!ampm && h < 8 ? 720 : 0);
   }
+  // "Saturday 10am" typed on Saturday afternoon means next Saturday, not four hours ago.
+  if (byWeekday && date === today && startMin !== null && opts.nowMin !== undefined && startMin < opts.nowMin) date = addDays(today, 7);
+
   const dur = take(/\bfor\s+(an?|one|half an|\d+(?:\.\d+)?)\s*(hours?|hrs?|h|minutes?|mins?)\b/i);
   if (dur && startMin !== null && endMin === null) {
     const n = ({ a: 1, an: 1, one: 1, 'half an': 0.5 } as Record<string, number>)[dur[1].toLowerCase()] ?? Number(dur[1]);
@@ -160,9 +184,25 @@ export function parseQuickAdd(text: string, members: Member[], today: Ymd): Quic
     rest = rest.replace(lm[0], ' ');
   }
 
-  const words = rest.replace(/\s+/g, ' ').trim().split(' ').filter(Boolean);
-  while (words.length && CONNECTOR.test(words[words.length - 1])) words.pop();
-  while (words.length && CONNECTOR.test(words[0])) words.shift();
+  /* ---- what to bring: "…, bring goggles and a towel" ---- */
+  // "Pack gym shoes" on its own is a packing to-do, so only take it when something comes first.
+  let bring: string | null = null;
+  const bm = rest.match(/\s(?:bring|bringing|pack|packing)\s+([^,;]+)/i);
+  if (event && bm && /[a-z0-9]/i.test(rest.slice(0, bm.index)) && bm[1].trim()) {
+    const b = bm[1].trim();
+    bring = b[0].toUpperCase() + b.slice(1);
+    rest = rest.replace(bm[0], ' ');
+  }
+
+  // What's left is the title, without the commas that separated the parts already taken out.
+  const words = rest.replace(/\s+/g, ' ').trim().split(' ').filter((w) => w && !/^[,;:.!?–—-]+$/.test(w));
+  const tidy = () => {
+    if (words.length) words[words.length - 1] = words[words.length - 1].replace(/[,;:]+$/, '');
+    if (words.length) words[0] = words[0].replace(/^[,;:]+/, '');
+  };
+  tidy();
+  while (words.length && CONNECTOR.test(words[words.length - 1])) { words.pop(); tidy(); }
+  while (words.length && CONNECTOR.test(words[0])) { words.shift(); tidy(); }
   const joined = words.join(' ');
   const title = joined ? joined[0].toUpperCase() + joined.slice(1) : 'New event';
 
@@ -172,7 +212,7 @@ export function parseQuickAdd(text: string, members: Member[], today: Ymd): Quic
     if (repeat.freq !== 'WEEKLY' || repeat.byDay?.length) rrule = formatRRule(repeat);
   }
   const { icon, category } = guessEventStyle(raw);
-  return { title, memberIds, date, startMin, endMin: allDay ? null : endMin, allDay, rrule, location, icon, category };
+  return { title, memberIds, date, startMin, endMin: allDay ? null : endMin, allDay, rrule, location, driverId, bring, icon, category };
 }
 
 /** "Pack gym shoes", "bring a snack" and "take library books" are prep; anything else is a to-do. */

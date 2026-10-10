@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { computeFlags } from '../src/flags.ts';
+import { chipLabel, computeFlags, leaveByTitle, rideStatus } from '../src/flags.ts';
 import { guessTodoKind, parseQuickAdd } from '../src/quickadd.ts';
 import type { Member, Occurrence } from '../src/types.ts';
 
@@ -78,6 +78,48 @@ describe('parseQuickAdd', () => {
     expect(guessTodoKind('bring a snack to share')).toBe('prep');
     expect(guessTodoKind('Call the plumber')).toBe('todo');
   });
+
+  it('reads who drives as the driver, not someone going', () => {
+    // From the critique: this used to come out as "Dentist , drives" with Dad going and nobody driving.
+    expect(parseQuickAdd('Emma dentist Tuesday 3:30pm, Dad drives', members, MONDAY)).toMatchObject({
+      title: 'Dentist', memberIds: [3], driverId: 2, date: '2026-09-29', startMin: 15 * 60 + 30,
+    });
+    expect(parseQuickAdd('Soccer Sat 10am Leo, Mom is driving', members, MONDAY)).toMatchObject({ title: 'Soccer', memberIds: [4], driverId: 1 });
+    expect(parseQuickAdd('Party Friday 4pm Emma driven by Dad', members, MONDAY)).toMatchObject({ title: 'Party', memberIds: [3], driverId: 2 });
+    expect(parseQuickAdd('Swim Thursday 5pm Emma, Dad takes her', members, MONDAY)).toMatchObject({ title: 'Swim', driverId: 2 });
+    // A kid isn't a driver, and an adult who is simply named is going.
+    expect(parseQuickAdd('Dentist Tuesday 3pm Mom', members, MONDAY)).toMatchObject({ memberIds: [1], driverId: null });
+  });
+
+  it('puts "bring …" in the packing note, but leaves a to-do that starts with it alone', () => {
+    expect(parseQuickAdd('Leo swim Saturday 10am bring goggles', members, MONDAY)).toMatchObject({ title: 'Swim', bring: 'Goggles', memberIds: [4] });
+    expect(parseQuickAdd('Swim Sat 10am Emma, bring goggles and a towel, at Aquatic Centre', members, MONDAY))
+      .toMatchObject({ title: 'Swim', bring: 'Goggles and a towel', location: 'Aquatic Centre' });
+    expect(parseQuickAdd('Pack gym shoes Thursday Emma', members, MONDAY)).toMatchObject({ title: 'Pack gym shoes', bring: null });
+  });
+
+  it('rolls a weekday that is today to next week once its time has passed', () => {
+    // From the critique: "Saturday 10am" typed on Saturday at 2:17 PM was booked four hours ago.
+    const SATURDAY = '2026-10-03';
+    const at = (h: number, m = 0) => ({ nowMin: h * 60 + m });
+    expect(parseQuickAdd('Leo swim Saturday 10am', members, SATURDAY, at(14, 17))!.date).toBe('2026-10-10');
+    expect(parseQuickAdd('Leo swim Saturday 4pm', members, SATURDAY, at(14, 17))!.date).toBe(SATURDAY);
+    expect(parseQuickAdd('Swim every Saturday 10am Leo', members, SATURDAY, at(14, 17))!.date).toBe('2026-10-10');
+    // Said outright, today stays today; no time given stays today too.
+    expect(parseQuickAdd('Swim today 10am Leo', members, SATURDAY, at(14, 17))!.date).toBe(SATURDAY);
+    expect(parseQuickAdd('Swim Saturday Leo', members, SATURDAY, at(14, 17))!.date).toBe(SATURDAY);
+  });
+
+  it('leaves drivers and bring notes in a to-do as written', () => {
+    expect(parseQuickAdd('Dad drives Leo to practice Friday', members, MONDAY, { event: false }))
+      .toMatchObject({ title: 'Drives to practice', memberIds: [2, 4], driverId: null });
+    expect(parseQuickAdd('Call school Friday, bring forms', members, MONDAY, { event: false })!.bring).toBeNull();
+  });
+
+  it('tidies stray punctuation out of the title', () => {
+    expect(parseQuickAdd('Piano, Tuesday 4pm, Leo', members, MONDAY)!.title).toBe('Piano');
+    expect(parseQuickAdd('Lunch with Grandma, Sunday noon, family', members, MONDAY)!.title).toBe('Lunch with Grandma');
+  });
 });
 
 describe('computeFlags', () => {
@@ -103,5 +145,37 @@ describe('computeFlags', () => {
       occ('2', '2026-09-29T09:00', '2026-09-29T10:00', { memberIds: [3] }),
     ], members);
     expect(flags.size).toBe(0);
+  });
+});
+
+describe('heads-up wording', () => {
+  it('says leave-by times in whole minutes, even mid-minute', () => {
+    expect(leaveByTitle(25.4, 'Swim')).toBe('Leave in 25 min for Swim');
+    expect(leaveByTitle(0.3, 'Swim')).toBe('Leave now for Swim');
+    // From the critique: this read "1.1166666666666742 min late".
+    expect(leaveByTitle(-1.1166666666666742, 'Swim lesson')).toBe('Leave now for Swim lesson: 1 min late');
+    expect(leaveByTitle(-3.6, 'Swim')).toBe('Leave now for Swim: 4 min late');
+  });
+
+  it('adds a count to a chip only when the title has no number of its own', () => {
+    expect(chipLabel('Pack for tomorrow', 5)).toBe('Pack for tomorrow · 5');
+    // Titles with a "d" used to lose their count.
+    expect(chipLabel('Hydro bill due Sunday', 2)).toBe('Hydro bill due Sunday · 2');
+    expect(chipLabel('3 rides still need a driver', 3)).toBe('3 rides still need a driver');
+    expect(chipLabel('Umbrella tomorrow', 1)).toBe('Umbrella tomorrow');
+  });
+});
+
+describe('rideStatus', () => {
+  const leave = 16 * 60 + 5; // 4:05 PM
+  const start = 16 * 60 + 30;
+  it('stays calm until it is time to go, then says now, then late', () => {
+    expect(rideStatus(leave, leave - 20, start)).toEqual({ cls: 'good', text: 'leave 4:05 PM' });
+    expect(rideStatus(leave, leave + 0.4, start)).toEqual({ cls: 'warn', text: 'leave now' });
+    expect(rideStatus(leave, leave + 4, start)).toEqual({ cls: 'warn', text: '4 min late' });
+    expect(rideStatus(leave, leave + 7.2, start)).toEqual({ cls: 'bad', text: '7 min late' });
+  });
+  it('is calm again once the event has started', () => {
+    expect(rideStatus(leave, start + 1, start).cls).toBe('good');
   });
 });

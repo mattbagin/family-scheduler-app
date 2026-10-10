@@ -39,7 +39,7 @@ export function Tomorrow({ day: shown }: { day?: Ymd }) {
   const look = wx && weatherLook(wx.code);
   const name = day === today ? 'Today' : dayDiff(today, day) === 1 ? 'Tomorrow' : parseYmd(day).toLocaleDateString(undefined, { weekday: 'long' });
   const open = (o: Occurrence) => sheets.open(<EventSheet occ={o} />);
-  const who = useWho();
+  const who = (ids: number[]) => namesOf(f, ids);
 
   return (
     <div className={`tb${night ? ' night' : ''}`}>
@@ -149,16 +149,10 @@ export function Tomorrow({ day: shown }: { day?: Ymd }) {
   );
 }
 
-/** Who's going, in words: "Everyone" when it's the whole family. */
-function useWho() {
-  const f = useFamily();
-  return (ids: number[]) => (ids.length > 1 && ids.length === f.members.length ? 'everyone' : namesOf(f, ids));
-}
-
 /** The thesis of the board: the first moment someone has to be out the door, at clock size. */
 function FirstOut({ o, first }: { o?: Occurrence; first?: Occurrence }) {
   const f = useFamily();
-  const who = useWho();
+  const who = (ids: number[]) => namesOf(f, ids);
   const cap = (s: string) => s[0].toUpperCase() + s.slice(1);
   if (!o && !first) return null;
   if (!o) {
@@ -174,7 +168,7 @@ function FirstOut({ o, first }: { o?: Occurrence; first?: Occurrence }) {
     <section className="tb-hero" style={pc(driver?.color)}>
       <span className="tb-time num">{fmtTime(leaveBy(o))}</span>
       <p>
-        <b>{driver ? <><Face m={driver} size={44} /> {driver.name} leaves</> : 'Someone leaves'} for {o.title}</b>
+        <b>{driver ? <><Face m={driver} size={44} /> {driver.name} leaves for {o.title}</> : <>Leave for {o.title}: no driver yet</>}</b>
         <span className="note"><span aria-hidden="true">{o.icon}</span> {cap(who(o.memberIds))} · starts {fmtTime(minutesOf(o.start))} · {o.travelMin} min drive</span>
       </p>
     </section>

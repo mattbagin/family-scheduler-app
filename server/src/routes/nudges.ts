@@ -81,12 +81,14 @@ export function nudgeRoutes(app: FastifyInstance, { db, changed }: Ctx, nudger: 
     return all<NudgeRow>(db, 'SELECT * FROM nudges WHERE created_at >= ? ORDER BY created_at DESC LIMIT 50', since).map(toNudge);
   });
 
-  // Answering a nudge stops it repeating and going to the other parent, so on the shared hub it
-  // takes a parent's PIN: a kid tapping the big button mustn't switch that off.
+  // Answering a time-to-leave nudge stops it repeating and going to the other parent, so on the
+  // shared hub that one takes a parent's PIN: a kid tapping the big button mustn't switch it off.
+  // Briefings, packing, reminders and bills don't escalate, so anyone at the hub can clear them.
   app.post('/api/nudges/:id/ack', async (req) => {
-    const a = requireEditor(req);
     const id = idParam(req.params);
-    if (!get(db, 'SELECT 1 FROM nudges WHERE id = ?', id)) throw new HttpError(404, 'not_found', 'Nudge not found');
+    const row = get<{ kind: string }>(db, 'SELECT kind FROM nudges WHERE id = ?', id);
+    if (!row) throw new HttpError(404, 'not_found', 'Nudge not found');
+    const a = row.kind === 'leave_by' ? requireEditor(req) : requireAuth(req);
     ackNudge(db, id, a.member?.id ?? a.elevatedBy);
     changed('nudges');
     return toNudge(get<NudgeRow>(db, 'SELECT * FROM nudges WHERE id = ?', id)!);

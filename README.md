@@ -44,7 +44,7 @@ Every change is pushed live to every open screen.
 
 Homebase nudges the parents so things don't slip:
 
-- **Time to leave:** the start time minus the drive time minus 10 minutes, sent to whoever is driving. If nobody taps **Got it**, it repeats after 10 minutes and then goes to the other parent.
+- **Time to leave:** the start time minus the drive time minus 10 minutes, sent to whoever is driving. If nobody taps **Got it**, it repeats after 10 minutes and then goes to the other parent. On the family hub, answering this one takes a parent's PIN, so a child tapping the button can't stop it; anyone at the hub can clear the other nudges.
 - **Reminders** set on an event ("15 min before", "the day before").
 - **Morning briefing** (7:00 AM): what's on today and what to bring.
 - **Evening packing** (7:30 PM): what's on tomorrow and what to pack tonight.

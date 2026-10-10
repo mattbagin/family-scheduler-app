@@ -1,10 +1,11 @@
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import type { Nudge, NudgeKind } from '@shared';
+import { leaveByTitle, type Nudge, type NudgeKind } from '@shared';
 import { api } from './api.ts';
-import { useAction, useFamily } from './context.tsx';
-import { ago } from './lib.ts';
+import { useAction, useFamily, useNow } from './context.tsx';
+import { ago, leaveBy, mainRange, occDate } from './lib.ts';
+import { useOccurrences } from './queries.ts';
 import { useNight } from './hub.tsx';
 import { chime, Face } from './ui.tsx';
 
@@ -33,6 +34,10 @@ export function NudgeBanners({ ambient = false, night = false }: { ambient?: boo
   const show = isHub || f.me?.role === 'adult';
   const { data: nudges = [] } = useActiveNudges(show);
   const [open, setOpen] = useState<number | null>(null);
+  // A leave-by banner keeps time: it reads its ride's leave time and says how late it's getting.
+  const { today, nowMin } = useNow();
+  const range = mainRange(today);
+  const { data: occs = [] } = useOccurrences(range.from, range.to, show);
   const kidScreen = useLocation().pathname.startsWith('/kid') && !ambient;
 
   useEffect(() => {
@@ -43,8 +48,9 @@ export function NudgeBanners({ ambient = false, night = false }: { ambient?: boo
   }, [isHub]);
 
   if (!show || !nudges.length) return null;
-  // On a locked hub, answering takes a parent's PIN (the server asks; the PIN pad opens).
-  const needsPin = isHub && !f.session.canEdit;
+  // On a locked hub, answering a time-to-leave nudge takes a parent's PIN (it stops escalation;
+  // the server asks and the PIN pad opens). Anything else, anyone can clear.
+  const needsPin = (n: Nudge) => n.kind === 'leave_by' && isHub && !f.session.canEdit;
   const answer = (id: number) => act(
     () => api<Nudge>(`/nudges/${id}/ack`, { method: 'POST' }),
     (n) => (f.byId(n.ackedBy) ? `${f.byId(n.ackedBy)!.name}’s got it` : 'Got it'),
@@ -59,22 +65,27 @@ export function NudgeBanners({ ambient = false, night = false }: { ambient?: boo
     <section className={`nudges${look}`} aria-label="Nudges">
       {announce}
       {nudges.map((n) => {
-        const [icon, text] = splitTitle(n);
+        const [icon, written] = splitTitle(n);
+        const ride = n.kind === 'leave_by' ? occs.find((o) => o.driverId && occDate(o) === today && n.title.endsWith(`for ${o.title}`)) : undefined;
+        const mins = ride ? leaveBy(ride) - nowMin : null;
+        const text = ride && mins !== null ? leaveByTitle(mins, ride.title) : written;
+        // Same steps as the timeline pill: amber for the first five minutes late, then red.
+        const late = mins === null ? '' : Math.round(mins) <= -5 ? ' late' : Math.round(mins) < 0 ? ' late-soon' : '';
         const expanded = open === n.id;
         return (
-          <div key={n.id} className={`nudge ${n.kind}`}>
+          <div key={n.id} className={`nudge ${n.kind}${late}`}>
             <button className="nudge-main" aria-expanded={expanded} onClick={() => setOpen(expanded ? null : n.id)}>
               <span className="nudge-ic" aria-hidden="true">{icon}</span>
               <span className="nudge-text">
                 <b>{text}</b>
-                {expanded && <span className="nudge-body">{n.body}<small>{ago(n.createdAt)}</small></span>}
+                {expanded && <span className="nudge-body">{n.body}<small>{ago(n.createdAt)}{n.kind === 'leave_by' ? ' · Got it stops the repeats, so it isn’t passed to the other parent.' : ''}</small></span>}
               </span>
               <span className="faces" aria-label={`For ${n.audience.map((id) => f.byId(id)?.name).filter(Boolean).join(' and ')}`}>
                 {n.audience.map((id) => <Face key={id} m={f.byId(id)} size={24} />)}
               </span>
             </button>
-            <button className="act" onClick={() => answer(n.id)} title={needsPin ? 'A parent answers this with their PIN' : undefined}>
-              {needsPin && <span aria-hidden="true">🔒 </span>}Got it{needsPin && <span className="sr-only"> (needs a parent’s PIN)</span>}
+            <button className="act" onClick={() => answer(n.id)} title={needsPin(n) ? 'A parent answers this with their PIN' : undefined}>
+              {needsPin(n) && <span aria-hidden="true">🔒 </span>}Got it{needsPin(n) && <span className="sr-only"> (needs a parent’s PIN)</span>}
             </button>
           </div>
         );

@@ -17,22 +17,32 @@ const DAY_SHORT = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const daysText = (days: number[]) =>
   days.length === 7 ? 'Every day' : days.join() === '0,1,2,3,4' ? 'Weekdays' : days.join() === '5,6' ? 'Weekends' : days.map((d) => DAY_SHORT[d]).join(', ');
 
+const SECTIONS = [
+  ['set-family', 'Family'], ['set-jobs', 'Daily jobs'], ['set-calendars', 'Calendars'], ['set-nudges', 'Nudges'],
+  ['set-hub', 'Family hub'], ['set-bills', 'Bills'], ['set-backups', 'Backups'], ['set-device', 'This device'],
+] as const;
+
 export function Settings() {
   const f = useFamily();
   const sheets = useSheets();
   if (!f.canEdit) {
     return (
-      <section className="panel" style={{ alignItems: 'flex-start' }}>
+      <div className="stack">
         <h1>Settings</h1>
-        <p>Only a parent can change settings.</p>
-        <button className="primary" onClick={() => sheets.open(<UnlockSheet onDone={() => sheets.close()} />)}>Unlock with a parent PIN</button>
+        <section className="panel" style={{ alignItems: 'flex-start' }}>
+          <p style={{ margin: 0 }}>Only a parent can change settings.</p>
+          <button className="primary" onClick={() => sheets.open(<UnlockSheet onDone={() => sheets.close()} />)}>Unlock with a parent PIN</button>
+        </section>
         <DeviceSection />
-      </section>
+      </div>
     );
   }
   return (
     <div className="stack">
       <h1>Settings</h1>
+      <nav className="jump" aria-label="Settings sections">
+        {SECTIONS.map(([id, label]) => <a key={id} href={`#${id}`} className="mini-btn">{label}</a>)}
+      </nav>
       <div className="two-col">
         <div className="col">
           <FamilySection />
@@ -57,7 +67,7 @@ function FamilySection() {
   const [name, setName] = useState(f.familyName);
   const [editing, setEditing] = useState<number | 'new' | null>(null);
   return (
-    <section className="panel">
+    <section className="panel" id="set-family">
       <h2>Family</h2>
       <form className="row" onSubmit={(e) => { e.preventDefault(); act(() => api('/settings', { method: 'PATCH', body: { familyName: name.trim() } }), 'Family name saved'); }}>
         <label className="field" style={{ flex: 1 }}>Family name<input id="set-family" value={name} onChange={(e) => setName(e.target.value)} maxLength={60} required /></label>
@@ -146,7 +156,7 @@ function ChoresSection() {
   };
 
   return (
-    <section className="panel">
+    <section className="panel" id="set-jobs">
       <h2>Daily jobs</h2>
       <p className="note" style={{ margin: 0 }}>These show as sticker tiles on each kid’s page and in kid mode, and reset every day.</p>
       <div>
@@ -170,7 +180,7 @@ function ChoresSection() {
             <button type="button" key={d} className="tog plain" aria-pressed={days.includes(i)} onClick={() => setDays(days.includes(i) ? days.filter((x) => x !== i) : [...days, i].sort())}>{d}</button>
           ))}
         </div>
-        <div className="row-end"><button className="primary" disabled={!text.trim() || !days.length}>Add job</button></div>
+        <div className="row-end">{!days.length && <span className="note">Pick at least one day</span>}<button className="primary" disabled={!days.length}>Add job</button></div>
       </form>
     </section>
   );
@@ -186,7 +196,7 @@ function CalendarsSection() {
   const [editing, setEditing] = useState<number | 'new' | null>(null);
   const subs = cals.filter((c) => c.kind === 'ics');
   return (
-    <section className="panel">
+    <section className="panel" id="set-calendars">
       <h2>Subscribed calendars</h2>
       <p className="note" style={{ margin: 0 }}>
         School, team and work calendars flow in on their own and refresh every half hour. Their times come from the calendar,
@@ -351,7 +361,7 @@ function NudgesSection() {
   const save = (body: object) => act(() => api('/nudge-settings', { method: 'PATCH', body }), 'Saved');
   const adults = f.members.filter((m) => m.role === 'adult');
   return (
-    <section className="panel">
+    <section className="panel" id="set-nudges">
       <h2>Nudges</h2>
       <p className="note" style={{ margin: 0 }}>
         Homebase nudges parents when it’s time to leave, what to pack tonight, bills coming due, and reminders set on events.
@@ -368,10 +378,10 @@ function NudgesSection() {
               <input id="nd-evening" type="time" value={s.eveningAt} onChange={(e) => e.target.value && save({ eveningAt: e.target.value })} />
             </label>
           </div>
-          <label className="field">If nobody taps “Got it” on a time-to-leave nudge
+          <label className="field">If nobody taps “Got it” on a time-to-leave nudge, repeat it and then tell the other parent
             <select id="nd-escalate" value={s.escalateMin} onChange={(e) => save({ escalateMin: Number(e.target.value) })}>
-              <option value={0}>Leave it at one nudge</option>
-              {[5, 10, 15].map((n) => <option key={n} value={n}>Repeat after {n} min, then tell the other parent</option>)}
+              <option value={0}>Don’t repeat it</option>
+              {[5, 10, 15].map((n) => <option key={n} value={n}>After {n} min</option>)}
             </select>
           </label>
           <div>
@@ -502,7 +512,7 @@ function BillsSection() {
   };
 
   return (
-    <section className="panel">
+    <section className="panel" id="set-bills">
       <h2>Bills</h2>
       <div>
         {bills.map((b) => (
@@ -524,7 +534,7 @@ function BillsSection() {
           <label className="checkline"><input type="checkbox" checked={monthly} onChange={(e) => setMonthly(e.target.checked)} />Repeats monthly</label>
           <label className="checkline"><input type="checkbox" checked={autopay} onChange={(e) => setAutopay(e.target.checked)} />Autopay (no reminders)</label>
           <span className="spacer" />
-          <button className="primary" disabled={!name.trim() || !amount}>Add bill</button>
+          <button className="primary">Add bill</button>
         </div>
       </form>
     </section>
@@ -561,7 +571,7 @@ function HubSection() {
   };
 
   return (
-    <section className="panel">
+    <section className="panel" id="set-hub">
       <h2>Family hub</h2>
       <p className="note" style={{ margin: 0 }}>
         After two minutes without a touch, the shared screen shows a slideshow with the clock, the weather and everyone’s next thing.
@@ -626,8 +636,10 @@ function HubSection() {
           </div>
         </div>
         <form className="row" onSubmit={find}>
-          <input id="hub-place" style={{ flex: 1 }} aria-label="Town or city for the weather" value={q} onChange={(e) => { setQ(e.target.value); setPlaces(null); }}
-            placeholder={hub.place ? 'Change the town or city' : 'Your town or city'} autoComplete="off" />
+          <div className="field" style={{ flex: 1 }}>
+            <input id="hub-place" aria-label="Town or city for the weather" value={q} onChange={(e) => { setQ(e.target.value); setPlaces(null); }}
+              placeholder={hub.place ? 'Change the town or city' : 'Your town or city'} autoComplete="off" />
+          </div>
           <button className="icon-btn" disabled={!q.trim() || searching}>{searching ? 'Looking…' : 'Find'}</button>
         </form>
         {places && (places.length ? (
@@ -658,7 +670,7 @@ function BackupSection() {
     refetch();
   };
   return (
-    <section className="panel">
+    <section className="panel" id="set-backups">
       <h2>Backups</h2>
       <p className="note" style={{ margin: 0 }}>
         Each night the home computer copies everything to a backup file and keeps the last {info.keep}.{' '}
@@ -677,7 +689,7 @@ function DeviceSection() {
   const muted = useMuted();
   const who = f.session.kind === 'hub' ? 'the family hub' : f.me?.name ?? 'someone';
   return (
-    <section className="panel">
+    <section className="panel" id="set-device">
       <h2>This device</h2>
       <p style={{ margin: 0 }}>Signed in as <b>{who}</b>.</p>
       <label className="checkline">
