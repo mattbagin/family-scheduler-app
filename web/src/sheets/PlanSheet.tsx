@@ -41,6 +41,7 @@ export function TaskRow({ task, plan, showPlan }: { task: PlanTask; plan: Plan; 
   const toggle = useToggleTask();
   const who = f.byId(task.assigneeId);
   const late = !task.doneAt && task.due < today;
+  const when = task.doneAt ? 'Done' : dueLabel(today, task.due);
   // In the plan sheet a row is just the task; tapping it opens the day, the person and remove.
   const [editing, setEditing] = useState(false);
   const main = (
@@ -48,7 +49,7 @@ export function TaskRow({ task, plan, showPlan }: { task: PlanTask; plan: Plan; 
       <span className="e" aria-hidden="true">{task.icon}</span>
       <span className="task-main">
         <b>{task.text}</b>
-        <span className={`note ${late ? 'late' : ''}`}>{showPlan ? `${plan.icon} ${plan.title} · ` : ''}{dueLabel(today, task.due)}</span>
+        <span className={`note ${late ? 'late' : ''}`}>{showPlan ? `${plan.icon} ${plan.title} · ` : ''}{when}</span>
       </span>
       {who ? <Face m={who} /> : !showPlan && <span className="pill muted">Anyone</span>}
     </>
@@ -59,7 +60,7 @@ export function TaskRow({ task, plan, showPlan }: { task: PlanTask; plan: Plan; 
         {task.doneAt ? '✓' : ''}
       </button>
       {showPlan ? main : (
-        <button className="task-open" aria-expanded={editing} onClick={() => setEditing(!editing)} aria-label={`${task.text}, ${dueLabel(today, task.due)}${who ? `, ${who.name}` : ''}. Change it`}>
+        <button className="task-open" aria-expanded={editing} onClick={() => setEditing(!editing)} aria-label={`${task.text}, ${when}${who ? `, ${who.name}` : ''}. Change it`}>
           {main}
         </button>
       )}

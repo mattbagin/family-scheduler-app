@@ -90,7 +90,7 @@ export function TodoRow({ todo, showWho }: { todo: Todo; showWho?: boolean }) {
         <div className="task-main">
           <b>{todo.text}</b>
           <div className={`note ${late ? 'late' : ''}`}>
-            {todo.kind === 'prep' ? `Get ready for ${todo.due ? dayLabel(today, todo.due).toLowerCase() : 'later'}` : todo.due ? dueLabel(today, todo.due) : 'Someday'}
+            {todo.kind === 'prep' ? `Get ready for ${todo.due ? dayLabel(today, todo.due).toLowerCase() : 'later'}` : todo.doneAt ? 'Done' : todo.due ? dueLabel(today, todo.due) : 'Someday'}
             {todo.rrule && ` · 🔁 ${describeRRule(todo.rrule)}`}
             {showWho && ` · ${who?.name ?? 'Anyone'}`}
           </div>

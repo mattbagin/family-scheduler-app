@@ -152,9 +152,12 @@ describe('heads-up wording', () => {
   it('says leave-by times in whole minutes, even mid-minute', () => {
     expect(leaveByTitle(25.4, 'Swim')).toBe('Leave in 25 min for Swim');
     expect(leaveByTitle(0.3, 'Swim')).toBe('Leave now for Swim');
+    // The ten minutes to get out the door aren't late yet; lateness counts from start minus travel.
+    expect(leaveByTitle(-3.6, 'Swim')).toBe('Leave now for Swim');
+    expect(leaveByTitle(-10.4, 'Swim')).toBe('Leave now for Swim');
     // From the critique: this read "1.1166666666666742 min late".
-    expect(leaveByTitle(-1.1166666666666742, 'Swim lesson')).toBe('Leave now for Swim lesson: 1 min late');
-    expect(leaveByTitle(-3.6, 'Swim')).toBe('Leave now for Swim: 4 min late');
+    expect(leaveByTitle(-11.1166666666666742, 'Swim lesson')).toBe('Leave now for Swim lesson: 1 min late');
+    expect(leaveByTitle(-13.6, 'Swim')).toBe('Leave now for Swim: 4 min late');
   });
 
   it('adds a count to a chip only when the title has no number of its own', () => {
@@ -172,8 +175,9 @@ describe('rideStatus', () => {
   it('stays calm until it is time to go, then says now, then late', () => {
     expect(rideStatus(leave, leave - 20, start)).toEqual({ cls: 'good', text: 'leave 4:05 PM' });
     expect(rideStatus(leave, leave + 0.4, start)).toEqual({ cls: 'warn', text: 'leave now' });
-    expect(rideStatus(leave, leave + 4, start)).toEqual({ cls: 'warn', text: '4 min late' });
-    expect(rideStatus(leave, leave + 7.2, start)).toEqual({ cls: 'bad', text: '7 min late' });
+    expect(rideStatus(leave, leave + 9, start)).toEqual({ cls: 'warn', text: 'leave now' });
+    expect(rideStatus(leave, leave + 11, start)).toEqual({ cls: 'bad', text: '1 min late' });
+    expect(rideStatus(leave, leave + 17.2, start)).toEqual({ cls: 'bad', text: '7 min late' });
   });
   it('is calm again once the event has started', () => {
     expect(rideStatus(leave, start + 1, start).cls).toBe('good');
@@ -188,8 +192,8 @@ describe('one clock', () => {
   it('words a ride heads-up like the timeline pill, and colours it the same way', () => {
     const leave = 15 * 60 + 10; // 3:10 PM
     expect(rideHeadsUp(leave, leave - 47, 'Mom', 'Playdate')).toEqual({ cls: '', text: 'Mom leaves 3:10 PM for Playdate' });
-    expect(rideHeadsUp(leave, leave + 2, 'Mom', 'Playdate')).toEqual({ cls: 'warn', text: 'Leave now for Playdate: 2 min late' });
-    expect(rideHeadsUp(leave, leave + 6, 'Mom', 'Playdate')).toEqual({ cls: 'bad', text: 'Leave now for Playdate: 6 min late' });
+    expect(rideHeadsUp(leave, leave + 2, 'Mom', 'Playdate')).toEqual({ cls: 'warn', text: 'Leave now for Playdate' });
+    expect(rideHeadsUp(leave, leave + 16, 'Mom', 'Playdate')).toEqual({ cls: 'bad', text: 'Leave now for Playdate: 6 min late' });
   });
   it('spots reminders for later today, not tomorrow or another day', () => {
     expect(isSameDayReminder('👵 Call Grandma in 15 min')).toBe(true);

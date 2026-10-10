@@ -40,19 +40,31 @@ export function computeFlags(occs: Occurrence[], members: Member[]): Map<string,
   return flags;
 }
 
-/** When the driver should head out: start minus travel minus a 10-minute buffer. */
+/** Minutes between "time to leave" and the real departure, to get everyone out the door. */
+export const DOOR_MIN = 10;
+
+/** When the nudge says to head out: start minus travel minus the minutes to get out the door. */
 export function leaveByMin(startMin: number, travelMin: number): number {
-  return startMin - travelMin - 10;
+  return startMin - travelMin - DOOR_MIN;
 }
 
 /**
- * The heads-up line for a ride: "Leave in 25 min for Swim", "Leave now for Swim", "Leave now for
- * Swim: 3 min late". `minsUntil` may carry seconds; it's rounded to whole minutes first.
+ * Where a ride stands against its leave-by time (minsUntil = leave-by minus now, seconds allowed):
+ * "early" before it, "now" during the minutes to get out the door, "late" once the real departure
+ * (start minus travel) has passed, with lateness counted from that departure, not the padded time.
  */
-export function leaveByTitle(minsUntil: number, title: string): string {
+function leaveStage(minsUntil: number): { stage: 'early' | 'now' | 'late'; m: number; late: number } {
   const m = Math.round(minsUntil);
-  if (m < 0) return `Leave now for ${title}: ${fmtDur(-m)} late`;
-  return m === 0 ? `Leave now for ${title}` : `Leave in ${fmtDur(m)} for ${title}`;
+  if (m > 0) return { stage: 'early', m, late: 0 };
+  if (m >= -DOOR_MIN) return { stage: 'now', m, late: 0 };
+  return { stage: 'late', m, late: -m - DOOR_MIN };
+}
+
+/** The heads-up line for a ride: "Leave in 25 min for Swim", "Leave now for Swim", "Leave now for Swim: 3 min late". */
+export function leaveByTitle(minsUntil: number, title: string): string {
+  const { stage, m, late } = leaveStage(minsUntil);
+  if (stage === 'early') return `Leave in ${fmtDur(m)} for ${title}`;
+  return stage === 'now' ? `Leave now for ${title}` : `Leave now for ${title}: ${fmtDur(late)} late`;
 }
 
 /** A heads-up chip's label: the count goes on only when the title doesn't already say it. */
@@ -61,14 +73,13 @@ export function chipLabel(title: string, count: number): string {
 }
 
 /**
- * A ride's state on the timeline: calm until it's time to go, amber for the first five minutes
- * ("leave now", "2 min late"), then red. Once the event has started it's calm again (they're there, or it no longer helps).
+ * A ride's state on the timeline: green "leave 4:05 PM" until then, amber "leave now" while there's
+ * still time to make it, red "3 min late" past the real departure. Calm again once it has started.
  */
 export function rideStatus(leaveMin: number, nowMin: number, startMin: number): { cls: 'good' | 'warn' | 'bad'; text: string } {
-  const m = Math.round(leaveMin - nowMin);
-  if (m > 0 || nowMin >= startMin) return { cls: 'good', text: `leave ${fmtTime(leaveMin)}` };
-  if (m > -5) return { cls: 'warn', text: m === 0 ? 'leave now' : `${fmtDur(-m)} late` };
-  return { cls: 'bad', text: `${fmtDur(-m)} late` };
+  const { stage, late } = leaveStage(leaveMin - nowMin);
+  if (stage === 'early' || nowMin >= startMin) return { cls: 'good', text: `leave ${fmtTime(leaveMin)}` };
+  return stage === 'now' ? { cls: 'warn', text: 'leave now' } : { cls: 'bad', text: `${fmtDur(late)} late` };
 }
 
 /** A same-day reminder kept current: "Dentist in 13 min", then "Dentist is starting". */
@@ -78,14 +89,13 @@ export function startsInTitle(minsUntil: number, title: string): string {
 }
 
 /**
- * A ride's heads-up line before and after leave time, in the timeline pill's words: "Mom leaves
- * 3:10 PM for Playdate" while there's time, then leaveByTitle's "Leave now…" / "… min late".
- * `cls` follows rideStatus's steps: plain until leave time, amber for five minutes, then urgent.
+ * A ride's heads-up line, in the timeline pill's words and colours: "Mom leaves 3:10 PM for
+ * Playdate" while there's time, then leaveByTitle's "Leave now…" (amber) and "… min late" (urgent).
  */
 export function rideHeadsUp(leaveMin: number, nowMin: number, driver: string, title: string): { cls: '' | 'warn' | 'bad'; text: string } {
-  const m = Math.round(leaveMin - nowMin);
-  if (m > 0) return { cls: '', text: `${driver} leaves ${fmtTime(leaveMin)} for ${title}` };
-  return { cls: m > -5 ? 'warn' : 'bad', text: leaveByTitle(m, title) };
+  const { stage } = leaveStage(leaveMin - nowMin);
+  if (stage === 'early') return { cls: '', text: `${driver} leaves ${fmtTime(leaveMin)} for ${title}` };
+  return { cls: stage === 'now' ? 'warn' : 'bad', text: leaveByTitle(leaveMin - nowMin, title) };
 }
 
 /** A reminder titled for later today ("… in 15 min", "… is starting"), which the hub keeps current. */

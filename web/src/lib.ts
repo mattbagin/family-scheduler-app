@@ -1,5 +1,5 @@
 import {
-  absMin, addDays, dayDiff, dayLabel, leaveByMin, minutesOf, WEEKDAYS, weekdayMon,
+  absMin, addDays, dayDiff, dayLabel, DOOR_MIN, leaveByMin, minutesOf, WEEKDAYS, weekdayMon,
   type Occurrence, type Ymd,
 } from '@shared';
 
@@ -30,7 +30,7 @@ export function personItems(today: Ymd, occs: Occurrence[], memberId: number): P
       const drive = !occ.memberIds.includes(memberId);
       const s = startAbs(today, occ);
       return drive
-        ? { occ, drive, s: s - occ.travelMin - 10, e: s }
+        ? { occ, drive, s: s - occ.travelMin - DOOR_MIN, e: s }
         : { occ, drive, s, e: endAbs(today, occ) };
     })
     .sort((a, b) => a.s - b.s);
