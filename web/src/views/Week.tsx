@@ -35,6 +35,7 @@ export function Week() {
   }, [offset]);
   const { data: occs = [], isFetching } = useOccurrences(first, addDays(first, 7));
   const flags = computeFlags(occs, f.members);
+  const anyFlag = (kind: 'bad' | 'warn') => [...flags.values()].some((list) => list.some((x) => x.kind === kind));
 
   const move = (o: Occurrence, day: string, memberId: number) => {
     setDragKey(null);
@@ -67,8 +68,8 @@ export function Week() {
           {isFetching && <span className="note">Updating…</span>}
         </div>
         <div className="legend">
-          <span><span className="pill bad">⚠ Overlap</span> kid in two places</span>
-          <span><span className="pill warn">🚗 Needs a ride</span> no driver yet</span>
+          {anyFlag('bad') && <span><span className="pill bad">⚠ Overlap</span> kid in two places</span>}
+          {anyFlag('warn') && <span><span className="pill warn">🚗 Needs a ride</span> no driver yet</span>}
           <span className="hint-pointer">Drag to move · double-click a day to add</span>
           <span className="hint-touch">Tap an event for details · + adds one</span>
         </div>

@@ -73,7 +73,7 @@ export function NudgeBanners({ ambient = false, night = false }: { ambient?: boo
     (n) => (f.byId(n.ackedBy) ? `${f.byId(n.ackedBy)!.name}’s got it` : 'Got it'),
   );
   // Screen readers hear the newest title once, not every banner's details on every change.
-  const announce = <p className="sr-only" role="status">{splitTitle(nudges[0])[1]}</p>;
+  const announce = <p className="sr-only" role="status">{splitTitle(nudges[0])[1]}{nudges.length > 1 ? `, and ${nudges.length - 1} more` : ''}</p>;
 
   if (kidScreen) return null;
 

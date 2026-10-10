@@ -64,7 +64,7 @@ export function UnlockSheet({ onDone }: { onDone: (ok: boolean) => void }) {
   const adults = f.members.filter((m) => m.role === 'adult' && m.hasPin);
   const [who, setWho] = useState<Member | null>(adults.length === 1 ? adults[0] : null);
   return (
-    <Sheet title="A parent needs to unlock this" sub="Editing stays unlocked for 10 minutes." onClose={() => onDone(false)}>
+    <Sheet title="A parent’s PIN, please" sub="Then for 10 minutes a parent can change things and answer nudges here." onClose={() => onDone(false)}>
       {!who ? (
         <div className="toggles" style={{ justifyContent: 'center' }}>
           {adults.map((m) => (
