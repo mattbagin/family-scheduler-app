@@ -1,10 +1,11 @@
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import type { Nudge, NudgeKind } from '@shared';
+import { leaveByTitle, type Nudge, type NudgeKind } from '@shared';
 import { api } from './api.ts';
-import { useAction, useFamily } from './context.tsx';
-import { ago } from './lib.ts';
+import { useAction, useFamily, useNow } from './context.tsx';
+import { ago, leaveBy, mainRange, occDate } from './lib.ts';
+import { useOccurrences } from './queries.ts';
 import { useNight } from './hub.tsx';
 import { chime, Face } from './ui.tsx';
 
@@ -33,6 +34,10 @@ export function NudgeBanners({ ambient = false, night = false }: { ambient?: boo
   const show = isHub || f.me?.role === 'adult';
   const { data: nudges = [] } = useActiveNudges(show);
   const [open, setOpen] = useState<number | null>(null);
+  // A leave-by banner keeps time: it reads its ride's leave time and says how late it's getting.
+  const { today, nowMin } = useNow();
+  const range = mainRange(today);
+  const { data: occs = [] } = useOccurrences(range.from, range.to, show);
   const kidScreen = useLocation().pathname.startsWith('/kid') && !ambient;
 
   useEffect(() => {
@@ -59,10 +64,15 @@ export function NudgeBanners({ ambient = false, night = false }: { ambient?: boo
     <section className={`nudges${look}`} aria-label="Nudges">
       {announce}
       {nudges.map((n) => {
-        const [icon, text] = splitTitle(n);
+        const [icon, written] = splitTitle(n);
+        const ride = n.kind === 'leave_by' ? occs.find((o) => o.driverId && occDate(o) === today && n.title.endsWith(`for ${o.title}`)) : undefined;
+        const mins = ride ? leaveBy(ride) - nowMin : null;
+        const text = ride && mins !== null ? leaveByTitle(mins, ride.title) : written;
+        // Same steps as the timeline pill: amber for the first five minutes late, then red.
+        const late = mins === null ? '' : Math.round(mins) <= -5 ? ' late' : Math.round(mins) < 0 ? ' late-soon' : '';
         const expanded = open === n.id;
         return (
-          <div key={n.id} className={`nudge ${n.kind}`}>
+          <div key={n.id} className={`nudge ${n.kind}${late}`}>
             <button className="nudge-main" aria-expanded={expanded} onClick={() => setOpen(expanded ? null : n.id)}>
               <span className="nudge-ic" aria-hidden="true">{icon}</span>
               <span className="nudge-text">

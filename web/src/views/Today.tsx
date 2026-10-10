@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  addDays, chipLabel, computeFlags, leaveByTitle, dayDiff, dayLabel, fmtDur, fmtShortDate, fmtTime, minutesOf, weatherLook, type Occurrence, type Plan,
+  addDays, chipLabel, computeFlags, leaveByTitle, rideStatus, dayDiff, dayLabel, fmtDur, fmtShortDate, fmtTime, minutesOf, weatherLook, type Occurrence, type Plan,
 } from '@shared';
 import { api } from '../api.ts';
 import { namesOf, useAction, useFamily, useNow } from '../context.tsx';
@@ -241,7 +241,10 @@ export function Today() {
                           {o.location && ` · 📍 ${o.location}`}
                         </div>
                         <div className="row" style={{ gap: 6 }}>
-                          {o.driverId && <span className="pill good">🚗 {f.byId(o.driverId)?.name} driving · leave {fmtTime(leaveBy(o))}</span>}
+                          {o.driverId && (() => {
+                            const ride = rideStatus(leaveBy(o), nowMin, s);
+                            return <span className={`pill ${ride.cls}`}>🚗 {f.byId(o.driverId)?.name} driving · {ride.text}</span>;
+                          })()}
                           {fl.map((x) => <span key={x.text} className={`pill ${x.kind}`}>{x.kind === 'bad' ? '⚠' : '🚗'} {x.text}</span>)}
                         </div>
                       </div>

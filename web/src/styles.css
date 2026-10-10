@@ -250,6 +250,9 @@ body:has(.ambient) .nudges { bottom: calc(110px + env(safe-area-inset-bottom, 0p
 .nudge-main { flex: 1; min-width: 0; min-height: 44px; display: flex; align-items: center; gap: 12px; border: 0; background: none; padding: 0; color: inherit; text-align: left; border-radius: 12px; }
 .nudge-ic { width: 40px; height: 40px; flex: none; border-radius: 12px; display: grid; place-items: center; font-size: 1.35rem; background: var(--surface-2); }
 .nudge.leave_by .nudge-ic { background: var(--bad-bg); }
+/* Past its leave time, the title says how late: amber for five minutes, then the urgent color (calm everywhere else; not over photos or at night). */
+.nudges:not(.night):not(.over-photo) .nudge.late-soon .nudge-text b { color: var(--warn); }
+.nudges:not(.night):not(.over-photo) .nudge.late .nudge-text b { color: var(--bad); }
 .nudge.bill .nudge-ic { background: var(--warn-bg); }
 .nudge.morning .nudge-ic, .nudge.evening .nudge-ic { background: var(--good-bg); }
 .nudge-text { flex: 1; min-width: 0; display: flex; flex-direction: column; }

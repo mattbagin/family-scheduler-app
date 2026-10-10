@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { chipLabel, computeFlags, leaveByTitle } from '../src/flags.ts';
+import { chipLabel, computeFlags, leaveByTitle, rideStatus } from '../src/flags.ts';
 import { guessTodoKind, parseQuickAdd } from '../src/quickadd.ts';
 import type { Member, Occurrence } from '../src/types.ts';
 
@@ -151,5 +151,19 @@ describe('heads-up wording', () => {
     expect(chipLabel('Hydro bill due Sunday', 2)).toBe('Hydro bill due Sunday · 2');
     expect(chipLabel('3 rides still need a driver', 3)).toBe('3 rides still need a driver');
     expect(chipLabel('Umbrella tomorrow', 1)).toBe('Umbrella tomorrow');
+  });
+});
+
+describe('rideStatus', () => {
+  const leave = 16 * 60 + 5; // 4:05 PM
+  const start = 16 * 60 + 30;
+  it('stays calm until it is time to go, then says now, then late', () => {
+    expect(rideStatus(leave, leave - 20, start)).toEqual({ cls: 'good', text: 'leave 4:05 PM' });
+    expect(rideStatus(leave, leave + 0.4, start)).toEqual({ cls: 'warn', text: 'leave now' });
+    expect(rideStatus(leave, leave + 4, start)).toEqual({ cls: 'warn', text: '4 min late' });
+    expect(rideStatus(leave, leave + 7.2, start)).toEqual({ cls: 'bad', text: '7 min late' });
+  });
+  it('is calm again once the event has started', () => {
+    expect(rideStatus(leave, start + 1, start).cls).toBe('good');
   });
 });

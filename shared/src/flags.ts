@@ -1,4 +1,4 @@
-import { fmtDur } from './time.ts';
+import { fmtDur, fmtTime } from './time.ts';
 import type { Member, Occurrence } from './types.ts';
 
 export interface Flag {
@@ -58,4 +58,15 @@ export function leaveByTitle(minsUntil: number, title: string): string {
 /** A heads-up chip's label: the count goes on only when the title doesn't already say it. */
 export function chipLabel(title: string, count: number): string {
   return count > 1 && !/\d/.test(title) ? `${title} · ${count}` : title;
+}
+
+/**
+ * A ride's state on the timeline: calm until it's time to go, amber for the first five minutes
+ * ("leave now", "2 min late"), then red. Once the event has started it's calm again (they're there, or it no longer helps).
+ */
+export function rideStatus(leaveMin: number, nowMin: number, startMin: number): { cls: 'good' | 'warn' | 'bad'; text: string } {
+  const m = Math.round(leaveMin - nowMin);
+  if (m > 0 || nowMin >= startMin) return { cls: 'good', text: `leave ${fmtTime(leaveMin)}` };
+  if (m > -5) return { cls: 'warn', text: m === 0 ? 'leave now' : `${fmtDur(-m)} late` };
+  return { cls: 'bad', text: `${fmtDur(-m)} late` };
 }
