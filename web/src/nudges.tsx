@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import { isSameDayReminder, leaveByTitle, startsInTitle, type Nudge, type NudgeKind } from '@shared';
+import { isSameDayReminder, leaveByTitle, rideHeadsUp, startsInTitle, type Nudge, type NudgeKind } from '@shared';
 import { api } from './api.ts';
 import { useAction, useFamily, useNow } from './context.tsx';
 import { ago, leaveBy, mainRange, occDate, startAbs } from './lib.ts';
@@ -72,32 +72,36 @@ export function NudgeBanners({ ambient = false, night = false }: { ambient?: boo
     () => api<Nudge>(`/nudges/${id}/ack`, { method: 'POST' }),
     (n) => (f.byId(n.ackedBy) ? `${f.byId(n.ackedBy)!.name}’s got it` : 'Got it'),
   );
-  // Screen readers hear the newest title once, not every banner's details on every change.
-  const announce = <p className="sr-only" role="status">{splitTitle(nudges[0])[1]}{nudges.length > 1 ? `, and ${nudges.length - 1} more` : ''}</p>;
-
   if (kidScreen) return null;
 
   const look = night ? ' night' : ambient ? ' over-photo' : '';
   // A leave-by banner's ride, so it can keep time (and be ordered by when that ride has to go).
   const rideOf = (n: Nudge) => (n.kind === 'leave_by' ? occs.find((o) => o.driverId && occDate(o) === today && n.title.endsWith(`for ${o.title}`)) : undefined);
   const leaveAt = (n: Nudge) => { const o = rideOf(n); return o ? leaveBy(o) : Infinity; };
-  // Time-to-leave first, the earliest (most overdue) leading; everything else newest first.
-  const ordered = [...nudges].sort((a, b) => Number(b.kind === 'leave_by') - Number(a.kind === 'leave_by') || leaveAt(a) - leaveAt(b) || b.createdAt.localeCompare(a.createdAt));
+  // On a parent's own phone their own nudges lead; then time-to-leave, the earliest (most overdue)
+  // first; everything else newest first.
+  const mine = (n: Nudge) => Number(!isHub && !!f.me && n.audience.includes(f.me.id));
+  const ordered = [...nudges].sort((a, b) => mine(b) - mine(a) || Number(b.kind === 'leave_by') - Number(a.kind === 'leave_by') || leaveAt(a) - leaveAt(b) || b.createdAt.localeCompare(a.createdAt));
+  // A banner's words, kept current: a ride's leave time, a same-day reminder's countdown.
+  const live = (n: Nudge) => {
+    const ride = rideOf(n);
+    if (ride) return { cls: rideHeadsUp(leaveBy(ride), nowMin, '', ride.title).cls, text: leaveByTitle(leaveBy(ride) - nowMin, ride.title) };
+    const soon = n.kind === 'reminder' && isSameDayReminder(n.title)
+      ? occs.find((o) => !o.allDay && occDate(o) === today && n.title.startsWith(`${o.icon} ${o.title} `)) : undefined;
+    return { cls: '' as const, text: soon ? startsInTitle(startAbs(today, soon) - nowMin, soon.title) : splitTitle(n)[1] };
+  };
+  // Screen readers hear the first banner's words once, not every banner's details on every change.
+  const announce = <p className="sr-only" role="status">{live(ordered[0]).text}{ordered.length > 1 ? `, and ${ordered.length - 1} more` : ''}</p>;
   const rolled = narrow && !all && ordered.length > 1;
   const shown = rolled ? ordered.slice(0, 1) : ordered;
   return (
     <section ref={stack} className={`nudges${look}`} aria-label="Nudges">
       {announce}
       {shown.map((n) => {
-        const [icon, written] = splitTitle(n);
-        const ride = rideOf(n);
-        const mins = ride ? leaveBy(ride) - nowMin : null;
-        // A same-day reminder ("… in 15 min") keeps counting down too, instead of freezing when it fired.
-        const soon = n.kind === 'reminder' && isSameDayReminder(n.title)
-          ? occs.find((o) => !o.allDay && occDate(o) === today && n.title.startsWith(`${o.icon} ${o.title} `)) : undefined;
-        const text = ride && mins !== null ? leaveByTitle(mins, ride.title) : soon ? startsInTitle(startAbs(today, soon) - nowMin, soon.title) : written;
-        // Same steps as the timeline pill: amber for the first five minutes late, then red.
-        const late = mins === null ? '' : Math.round(mins) <= -5 ? ' late' : Math.round(mins) < 0 ? ' late-soon' : '';
+        const icon = splitTitle(n)[0];
+        // Same steps as the timeline pill: amber while there's still time to make it, red once late.
+        const { cls, text } = live(n);
+        const late = cls === 'bad' ? ' late' : cls === 'warn' ? ' late-soon' : '';
         const expanded = open === n.id;
         return (
           <div key={n.id} className={`nudge ${n.kind}${late}`}>
