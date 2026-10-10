@@ -149,7 +149,7 @@ export function Person() {
             </section>
           )}
           <section className="panel">
-            <div className="panel-head"><h2>{isKid ? 'My tasks' : 'Plan tasks'}</h2><span className="note">{tasks.filter((x) => !x.t.doneAt).length + (isKid ? myTodos.filter((t) => !t.doneAt).length : 0)} to do</span></div>
+            <div className="panel-head"><h2>{isKid ? (f.me?.id === m.id ? 'My tasks' : `${m.name}’s tasks`) : 'Plan tasks'}</h2><span className="note">{tasks.filter((x) => !x.t.doneAt).length + (isKid ? myTodos.filter((t) => !t.doneAt).length : 0)} to do</span></div>
             {!tasks.length && !(isKid && myTodos.length) ? <p className="note">No tasks assigned.</p> : isKid ? (
               <div className="tiles">
                 {myTodos.map((t) => (

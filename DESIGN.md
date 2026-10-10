@@ -301,7 +301,8 @@ Friendly but tidy: one strong button per area, the rest quiet.
 ### Chips and pills
 - **Agenda row (Month):** a Cloud row (14px radius) with the time, a big emoji, the title and faces. It follows the Solo Tint Rule: 12% person tint when one person goes, neutral with faces when it's shared.
 - **Event chip:** a Cloud row (12px radius) with a muted time column, tinted 10% person color when that person is driving, and a 2px person ring when it's happening now. Past chips fade to 50%.
-- **Status pill:** a small pill in the warn, bad, good or muted pair.
+- **Status pill:** a small pill in the warn, bad, good or muted pair (Label size, 4px 9px, 12px corners: a capsule on one line, a neat rounded block when it wraps on a phone).
+- **Who chip:** someone shown, not chosen (attendees on the event sheet, per-person progress in a plan): face plus name with no toggle ring and no pressed state. Toggles are only for choices.
 - **Person toggle:** a pill with a 2px border holding a face and a name. When pressed, the border becomes the person color and the fill a 16% tint.
 
 ### Cards / Containers

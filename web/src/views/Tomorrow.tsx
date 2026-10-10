@@ -168,7 +168,7 @@ function FirstOut({ o, first }: { o?: Occurrence; first?: Occurrence }) {
     <section className="tb-hero" style={pc(driver?.color)}>
       <span className="tb-time num">{fmtTime(leaveBy(o))}</span>
       <p>
-        <b>{driver ? <><Face m={driver} size={44} /> {driver.name} leaves</> : 'Someone leaves'} for {o.title}</b>
+        <b>{driver ? <><Face m={driver} size={44} /> {driver.name} leaves for {o.title}</> : <>Leave for {o.title}: no driver yet</>}</b>
         <span className="note"><span aria-hidden="true">{o.icon}</span> {cap(who(o.memberIds))} · starts {fmtTime(minutesOf(o.start))} · {o.travelMin} min drive</span>
       </p>
     </section>

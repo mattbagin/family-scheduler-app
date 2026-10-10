@@ -61,7 +61,7 @@ export function EventSheet({ occ: initial }: { occ: Occurrence }) {
         <div className="toggles">
           {occ.memberIds.map((id) => {
             const m = f.byId(id);
-            return m && <span key={id} className="tog" aria-pressed="true" style={pc(m.color)}><Face m={m} />{m.name}</span>;
+            return m && <span key={id} className="who-chip"><Face m={m} />{m.name}</span>;
           })}
         </div>
       )}
@@ -123,6 +123,7 @@ export function EventSheet({ occ: initial }: { occ: Occurrence }) {
         )}
         <span className="spacer" />
         {!feed && <ConfirmButton
+          className="mini-btn danger"
           label={recurring ? 'Delete every time' : 'Delete'}
           confirmText={recurring ? `Delete “${occ.title}” and every repeat?` : `Delete “${occ.title}”?`}
           onConfirm={async () => {

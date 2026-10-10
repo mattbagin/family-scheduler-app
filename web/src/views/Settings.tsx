@@ -180,7 +180,7 @@ function ChoresSection() {
             <button type="button" key={d} className="tog plain" aria-pressed={days.includes(i)} onClick={() => setDays(days.includes(i) ? days.filter((x) => x !== i) : [...days, i].sort())}>{d}</button>
           ))}
         </div>
-        <div className="row-end"><button className="primary" disabled={!text.trim() || !days.length}>Add job</button></div>
+        <div className="row-end">{!days.length && <span className="note">Pick at least one day</span>}<button className="primary" disabled={!days.length}>Add job</button></div>
       </form>
     </section>
   );
@@ -534,7 +534,7 @@ function BillsSection() {
           <label className="checkline"><input type="checkbox" checked={monthly} onChange={(e) => setMonthly(e.target.checked)} />Repeats monthly</label>
           <label className="checkline"><input type="checkbox" checked={autopay} onChange={(e) => setAutopay(e.target.checked)} />Autopay (no reminders)</label>
           <span className="spacer" />
-          <button className="primary" disabled={!name.trim() || !amount}>Add bill</button>
+          <button className="primary">Add bill</button>
         </div>
       </form>
     </section>

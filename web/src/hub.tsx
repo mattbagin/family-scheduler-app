@@ -9,6 +9,13 @@ export function useNight(): boolean {
   return !!hub?.night && inQuietHours({ quietStart: hub.nightStart, quietEnd: hub.nightEnd }, Math.floor(nowMin));
 }
 
+/** Bedtime by the hub's night hours, for kid mode's "Sleepy time" (it holds even with dimming off). */
+export function useBedtime(): boolean {
+  const { data: hub } = useHub();
+  const { nowMin } = useNow();
+  return hub ? inQuietHours({ quietStart: hub.nightStart, quietEnd: hub.nightEnd }, Math.floor(nowMin)) : nowMin > 19.5 * 60;
+}
+
 /** The day the hub's Tomorrow board shows right now, or null outside the evening (see eveningBoardDay). */
 export function useBoardDay(): Ymd | null {
   const { data: hub } = useHub();

@@ -142,7 +142,7 @@ export function PlanSheet({ planId }: { planId: number }) {
       {perPerson.length > 0 && (
         <div className="toggles">
           {perPerson.map(({ m, n, d }) => (
-            <span key={m.id} className="tog" aria-pressed={d === n} style={pc(m.color)}><Face m={m} />{m.name} {d}/{n}</span>
+            <span key={m.id} className="who-chip"><Face m={m} />{m.name} <span className="note num">{d === n ? '✓ all done' : `${d} of ${n}`}</span></span>
           ))}
         </div>
       )}
