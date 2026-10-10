@@ -32,18 +32,31 @@ export function TaskRow({ task, plan, showPlan }: { task: PlanTask; plan: Plan; 
   const toggle = useToggleTask();
   const who = f.byId(task.assigneeId);
   const late = !task.doneAt && task.due < today;
+  // In the plan sheet a row is just the task; tapping it opens the day, the person and remove.
+  const [editing, setEditing] = useState(false);
+  const main = (
+    <>
+      <span className="e" aria-hidden="true">{task.icon}</span>
+      <span className="task-main">
+        <b>{task.text}</b>
+        <span className={`note ${late ? 'late' : ''}`}>{showPlan ? `${plan.icon} ${plan.title} · ` : ''}{dueLabel(today, task.due)}</span>
+      </span>
+      {who ? <Face m={who} /> : !showPlan && <span className="pill muted">Anyone</span>}
+    </>
+  );
   return (
     <div className={`task ${task.doneAt ? 'is-done' : ''}`} style={pc(who?.color)}>
       <button className="check" aria-pressed={!!task.doneAt} aria-label={`Mark “${task.text}” ${task.doneAt ? 'not done' : 'done'}`} onClick={(e) => toggle(task, plan, e.currentTarget)}>
         {task.doneAt ? '✓' : ''}
       </button>
-      <span className="e" aria-hidden="true">{task.icon}</span>
-      <div className="task-main">
-        <b>{task.text}</b>
-        <div className={`note ${late ? 'late' : ''}`}>{showPlan ? `${plan.icon} ${plan.title} · ` : ''}{dueLabel(today, task.due)}</div>
-      </div>
-      {showPlan ? (who && <Face m={who} />) : (
-        <>
+      {showPlan ? main : (
+        <button className="task-open" aria-expanded={editing} onClick={() => setEditing(!editing)} aria-label={`${task.text}, ${dueLabel(today, task.due)}${who ? `, ${who.name}` : ''}. Change it`}>
+          {main}
+        </button>
+      )}
+      {!showPlan && editing && (
+        <div className="task-edit">
+          <label className="field">Due
           <input
             type="date"
             className="inline-select"
@@ -55,6 +68,8 @@ export function TaskRow({ task, plan, showPlan }: { task: PlanTask; plan: Plan; 
               if (due) act(() => api(`/tasks/${task.id}`, { method: 'PATCH', body: { due } }), `“${task.text}” is now due ${relDay(today, due)}`);
             }}
           />
+          </label>
+          <label className="field">Who
           <select
             id={`assign-${task.id}`}
             className="inline-select"
@@ -68,8 +83,10 @@ export function TaskRow({ task, plan, showPlan }: { task: PlanTask; plan: Plan; 
             <option value="">Anyone</option>
             {f.members.map((m) => <option key={m.id} value={m.id}>{m.avatar} {m.name}</option>)}
           </select>
-          <button className="x-btn" aria-label={`Remove “${task.text}”`} onClick={() => act(() => api(`/tasks/${task.id}`, { method: 'DELETE' }), `Removed “${task.text}”`)}>✕</button>
-        </>
+          </label>
+          <ConfirmButton label="Remove" className="mini-btn danger" confirmText={`Remove “${task.text}” from the plan?`}
+            onConfirm={() => act(() => api(`/tasks/${task.id}`, { method: 'DELETE' }), `Removed “${task.text}”`)} />
+        </div>
       )}
     </div>
   );

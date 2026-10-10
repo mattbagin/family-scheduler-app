@@ -99,18 +99,20 @@ export function EventSheet({ occ: initial }: { occ: Occurrence }) {
         </div>
       )}
 
-      <button className="proj" onClick={openPlan}>
+      {/* No plan yet: a quiet offer, not the biggest thing on the sheet. */}
+      {!plan && <button className="link-btn plan-offer" onClick={openPlan}><span aria-hidden="true">📋</span> Break into tasks</button>}
+      {plan && <button className="proj" onClick={openPlan}>
         <div className="proj-top">
           <span className="e" aria-hidden="true">📋</span>
           <div>
-            <b>{plan ? 'Open the plan' : 'Break into tasks'}</b>
+            <b>Open the plan</b>
             <div className="note">
-              {plan ? `${plan.tasks.filter((t) => t.doneAt).length} of ${plan.tasks.length} tasks done` : 'Split it into jobs with a person and a due date for each'}
+              {plan.tasks.filter((t) => t.doneAt).length} of {plan.tasks.length} tasks done
             </div>
           </div>
         </div>
-        {plan && plan.tasks.length > 0 && <div className="bar"><i style={{ transform: `scaleX(${plan.tasks.filter((t) => t.doneAt).length / plan.tasks.length})` }} /></div>}
-      </button>
+        {plan.tasks.length > 0 && <div className="bar"><i style={{ transform: `scaleX(${plan.tasks.filter((t) => t.doneAt).length / plan.tasks.length})` }} /></div>}
+      </button>}
 
       <div className="row">
         <button className="icon-btn" onClick={edit}>{feed ? '✏️ Who’s going & rides' : `✏️ Edit${recurring ? ' every time' : ''}`}</button>
