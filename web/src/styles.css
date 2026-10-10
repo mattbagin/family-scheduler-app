@@ -529,6 +529,15 @@ body:has(.ambient) .nudges { bottom: calc(110px + env(safe-area-inset-bottom, 0p
   .today-main, .two-col, .kid { grid-template-columns: 1fr; }
   .person-head .members { margin-left: 0; }
 }
+/* Phones: the phone already shows the time, so Today starts with the date, a strip of faces and the day. */
+@media (max-width: 520px) {
+  .hero { gap: 10px; }
+  .hero .clock { display: none; }
+  .hero .dateline { margin-top: 0; }
+  .hero .members { justify-self: stretch; justify-content: space-between; flex-wrap: nowrap; gap: 4px; }
+  .hero .mem-btn { font-size: var(--fs-label); padding: 2px; }
+  .hero .mem-btn .avatar { width: 44px; height: 44px; font-size: 24px; border-width: 2px; }
+}
 @media (max-width: 520px) {
   .tl { grid-template-columns: 62px 18px 1fr; }
   .tl-card .faces { display: none; }
