@@ -548,6 +548,8 @@ body:has(.ambient) .nudges { bottom: calc(110px + env(safe-area-inset-bottom, 0p
 .feed-preview li .num { color: var(--muted); font-weight: 700; margin-right: 6px; }
 .help summary { cursor: pointer; font-weight: 700; color: var(--muted); font-size: var(--fs-small); }
 .help ul { margin: 6px 0 0; padding-left: 18px; font-size: var(--fs-small); display: grid; gap: 4px; }
+.qa-look summary { padding: 10px 0; }
+.qa-look > .stack { margin-top: 12px; }
 
 /* ---------- feedback ---------- */
 /* Toasts sit above any nudge banners, never on top of the one just answered. */

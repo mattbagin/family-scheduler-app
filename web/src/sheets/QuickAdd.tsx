@@ -1,7 +1,7 @@
 import { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {
-  addDays, addMinutes, CATEGORIES, dayLabel, describeRRule, EVENT_ICONS, dayWithDate, fmtTime, parseQuickAdd, parseRRule, presetToRRule,
-  REMINDER_CHOICES, REPEAT_PRESETS, rruleToPreset, weekdayMon, withMinutes, type Category, type Plan, type RepeatPreset, type TodoKind,
+  addDays, addMinutes, CATEGORIES, dayDiff, dayLabel, describeRRule, EVENT_ICONS, dayWithDate, fmtShortDate, fmtTime, parseQuickAdd, parseRRule, presetToRRule,
+  REMINDER_CHOICES, REPEAT_PRESETS, rruleToPreset, WEEKDAYS, weekdayMon, withMinutes, type Category, type Plan, type RepeatPreset, type TodoKind,
 } from '@shared';
 import { api } from '../api.ts';
 import { namesOf, useAction, useFamily, useNow } from '../context.tsx';
@@ -96,7 +96,10 @@ function EventQuick({ text, setText, toTodo }: { text: string; setText: (t: stri
   const timed = !!parsed && (parsed.allDay || parsed.startMin !== null);
   const ready = !!parsed && parsed.date !== null && timed && who.length > 0;
   const when = parsed && [
-    parsed.date === null ? null : dayWithDate(today, parsed.date),
+    // A weekday that has already gone by this week rolls on a week: say so, so it's no surprise.
+    parsed.date === null ? null
+      : dayDiff(today, parsed.date) >= 7 && dayDiff(today, parsed.date) < 14 ? `Next ${WEEKDAYS[weekdayMon(parsed.date)]}, ${fmtShortDate(parsed.date)}`
+        : dayWithDate(today, parsed.date),
     parsed.allDay ? 'all day'
       : parsed.startMin === null ? null
         : `${fmtTime(parsed.startMin)}${parsed.endMin !== null ? ` – ${fmtTime(parsed.endMin)}` : ''}`,
@@ -168,22 +171,26 @@ function EventQuick({ text, setText, toTodo }: { text: string; setText: (t: stri
               ))}
             </div>
           </div>
-          <div className="stack" style={{ gap: 8 }}>
-            <div className="label" id="qa-cat">Kind of event</div>
-            <div className="toggles" role="group" aria-labelledby="qa-cat">
-              {CATEGORIES.map((c) => (
-                <button key={c.id} className="tog plain" aria-pressed={category === c.id} onClick={() => setCatPick(c.id)}>{c.icon} {c.label}</button>
-              ))}
+          {/* Picture and kind are guessed from the words; most of the time there's nothing to change. */}
+          <details className="help qa-look">
+            <summary>Picture and kind: <span aria-hidden="true">{icon}</span> {CATEGORIES.find((c) => c.id === category)?.label}</summary>
+            <div className="stack" style={{ gap: 8 }}>
+              <div className="label" id="qa-cat">Kind of event</div>
+              <div className="toggles" role="group" aria-labelledby="qa-cat">
+                {CATEGORIES.map((c) => (
+                  <button key={c.id} className="tog plain" aria-pressed={category === c.id} onClick={() => setCatPick(c.id)}>{c.icon} {c.label}</button>
+                ))}
+              </div>
             </div>
-          </div>
-          <div className="stack" style={{ gap: 8 }}>
-            <div className="label">Picture</div>
-            <div className="emoji-grid" role="group" aria-label="Picture">
-              {[icon, ...EVENT_ICONS.filter((x) => x !== icon)].slice(0, 12).map((e) => (
-                <button key={e} aria-pressed={icon === e} onClick={() => setIconPick(e)}>{e}</button>
-              ))}
+            <div className="stack" style={{ gap: 8 }}>
+              <div className="label">Picture</div>
+              <div className="emoji-grid" role="group" aria-label="Picture">
+                {[icon, ...EVENT_ICONS.filter((x) => x !== icon)].slice(0, 12).map((e) => (
+                  <button key={e} aria-pressed={icon === e} onClick={() => setIconPick(e)}>{e}</button>
+                ))}
+              </div>
             </div>
-          </div>
+          </details>
         </>
       )}
       <div className="row-end">
