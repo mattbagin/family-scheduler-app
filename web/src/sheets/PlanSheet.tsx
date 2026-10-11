@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { addDays, dayDiff, dayLabel, dayWithDate, fmtShortDate, fmtTime, guessTaskIcon, minutesOf, type Plan, type PlanTask } from '@shared';
+import { addDays, dayDiff, dayWithDate, fmtTime, guessTaskIcon, minutesOf, type Plan, type PlanTask } from '@shared';
 import { api } from '../api.ts';
 import { useAction, useFamily, useNow } from '../context.tsx';
 import { dueLabel, relDay } from '../lib.ts';
@@ -170,8 +170,8 @@ export function PlanSheet({ planId }: { planId: number }) {
           </label>
           <label className="field" style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>Due
             <select id="nt-due" className="inline-select" value={due} onChange={(e) => setDue(e.target.value)}>
-              {!dueOptions.includes(due) && <option value={due}>{dayLabel(today, due)}</option>}
-              {dueOptions.map((d) => <option key={d} value={d}>{dayLabel(today, d)}{dayDiff(today, d) > 1 && dayDiff(today, d) < 7 ? ` ${fmtShortDate(d)}` : ''}</option>)}
+              {!dueOptions.includes(due) && <option value={due}>{dayWithDate(today, due)}</option>}
+              {dueOptions.map((d) => <option key={d} value={d}>{dayWithDate(today, d)}</option>)}
             </select>
           </label>
           <span className="spacer" />
