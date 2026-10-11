@@ -39,7 +39,7 @@ export function NudgeBanners({ ambient = false, night = false }: { ambient?: boo
   const range = mainRange(today);
   const { data: occs = [] } = useOccurrences(range.from, range.to, show);
   const kidScreen = useLocation().pathname.startsWith('/kid') && !ambient;
-  // Phones show the most urgent nudge and roll the rest into "2 more nudges ▾".
+  // Phones show the most urgent nudge and the hub the first two; the rest roll into "2 more nudges ▾".
   const narrow = useNarrow();
   const [all, setAll] = useState(false);
   // The stack reports how much of the screen bottom it covers, so the page can scroll out from
@@ -92,8 +92,8 @@ export function NudgeBanners({ ambient = false, night = false }: { ambient?: boo
   };
   // Screen readers hear the first banner's words once, not every banner's details on every change.
   const announce = <p className="sr-only" role="status">{live(ordered[0]).text}{ordered.length > 1 ? `, and ${ordered.length - 1} more` : ''}</p>;
-  const rolled = narrow && !all && ordered.length > 1;
-  const shown = rolled ? ordered.slice(0, 1) : ordered;
+  const cap = narrow ? 1 : isHub ? 2 : Infinity;
+  const shown = all ? ordered : ordered.slice(0, cap);
   return (
     <section ref={stack} className={`nudges${look}`} aria-label="Nudges">
       {announce}
@@ -121,9 +121,9 @@ export function NudgeBanners({ ambient = false, night = false }: { ambient?: boo
           </div>
         );
       })}
-      {narrow && ordered.length > 1 && (
+      {ordered.length > cap && (
         <button className="nudge-more" aria-expanded={all} onClick={() => setAll(!all)}>
-          {all ? 'Show just the first' : `${ordered.length - 1} more nudge${ordered.length > 2 ? 's' : ''} ▾`}
+          {all ? (cap === 1 ? 'Show just the first' : 'Show fewer') : `${ordered.length - cap} more nudge${ordered.length - cap > 1 ? 's' : ''} ▾`}
         </button>
       )}
     </section>

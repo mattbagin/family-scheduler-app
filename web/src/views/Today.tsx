@@ -71,6 +71,8 @@ export function Today() {
   const { data: prep = [] } = usePrep(today, addDays(today, 2), nowMin);
   const { data: weather } = useWeather();
   const { data: nudges = [] } = useActiveNudges(true);
+  // A ride whose time-to-leave banner is up: the banner does the shouting, so the rest stays calm.
+  const bannered = (o: Occurrence) => nudges.some((n) => n.kind === 'leave_by' && n.title.endsWith(`for ${o.title}`));
   const [openAlert, setOpenAlert] = useState<string | null>(null);
   const flags = computeFlags(occs, f.members);
   // Person color first; an unassigned event from a subscribed calendar takes the calendar's color.
@@ -87,7 +89,7 @@ export function Today() {
   const alerts: Alert[] = [];
   for (const o of occs) {
     if (occDate(o) !== today || !o.travelMin || !o.driverId) continue;
-    if (nudges.some((n) => n.kind === 'leave_by' && n.title.endsWith(`for ${o.title}`))) continue;
+    if (bannered(o)) continue;
     const mins = leaveBy(o) - nowMin;
     // From 90 minutes ahead until it starts, in the timeline pill's words and colours (one clock).
     if (mins <= 90 && startAbs(today, o) > nowMin) {
@@ -263,7 +265,7 @@ export function Today() {
                         <div className="row" style={{ gap: 6 }}>
                           {o.driverId && (() => {
                             const ride = rideStatus(leaveBy(o), nowMin, s);
-                            return <span className={`pill ${ride.cls}`}>🚗 {f.byId(o.driverId)?.name} driving · {ride.text}</span>;
+                            return <span className={`pill ${bannered(o) ? '' : ride.cls}`}>🚗 {f.byId(o.driverId)?.name} driving · {ride.text}</span>;
                           })()}
                           {fl.map((x) => <span key={x.text} className={`pill ${x.kind}`}>{x.kind === 'bad' ? '⚠' : '🚗'} {x.text}</span>)}
                         </div>
