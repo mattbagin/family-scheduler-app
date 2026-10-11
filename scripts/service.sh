@@ -25,8 +25,10 @@ fail() { echo "$1" >&2; exit 1; }
 # The port the service uses: from its saved settings, else this shell, else 8080.
 port=8080
 if [ -f "$plist" ]; then
-  saved="$(plutil -extract EnvironmentVariables.PORT raw -o - "$plist" 2>/dev/null || true)"
-  [ -n "$saved" ] && port="$saved"
+  # plutil prints "Could not extract value" on stdout when PORT wasn't saved, so trust only a success.
+  if saved="$(plutil -extract EnvironmentVariables.PORT raw -o - "$plist" 2>/dev/null)" && [ -n "$saved" ]; then
+    port="$saved"
+  fi
 fi
 if [ "$action" = install ] && [ -n "${PORT:-}" ]; then port="$PORT"; fi
 
