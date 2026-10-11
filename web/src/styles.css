@@ -358,7 +358,8 @@ body:has(.ambient) .nudges { bottom: calc(110px + env(safe-area-inset-bottom, 0p
 .ev b { display: block; font-size: var(--fs-small); }
 .ev .tm { color: var(--muted); font-weight: 600; font-size: var(--fs-label); }
 .ev.work { background: var(--surface-2); color: var(--muted); }
-.ev.flag-bad { box-shadow: inset 0 0 0 2px var(--bad); }
+/* Dashed, so a clash never reads as a person's solid "now" ring. */
+.ev.flag-bad { outline: 2px dashed var(--bad); outline-offset: -2px; }
 .ev.flag-warn { box-shadow: inset 0 0 0 2px var(--warn); }
 .cell-add { border: 1px dashed transparent; background: none; color: var(--muted); border-radius: 10px; padding: 4px; font-size: var(--fs-small); opacity: 0; }
 .cell:hover .cell-add, .cell-add:focus-visible { opacity: 1; border-color: var(--line); }
@@ -631,7 +632,9 @@ body:has(.tb.night, .kid-space.night) {
   --btn: var(--bedside); --btn-ink: #000; --focus: #C9A27A; --tint-ink: #000; --shadow: none;
   --warn: #D6A35F; --warn-bg: #1F160B; --bad: #E08A6E; --bad-bg: #22100C; --good: #B5B87A; --good-bg: #12160C;
 }
-body:has(.tb.night, .kid-space.night) :is(.face, .avatar, .e, .wx-ic), body:has(.tb.night, .kid-space.night) :is(.tb, .kid-space) [aria-hidden="true"] { filter: grayscale(.6) brightness(.8); }
+body:has(.tb.night, .kid-space.night) :is(.face, .avatar, .e, .wx-ic, .moons), body:has(.tb.night, .kid-space.night) :is(.tb, .kid-space) [aria-hidden="true"] { filter: grayscale(.6) brightness(.8); }
+/* White emoji (clouds, ghosts, moons) still glow at .8 next to a sleeping child: dim kid mode further. */
+body:has(.kid-space.night) .kid-space :is(.e, .big, .moons, .avatar, .face, [aria-hidden="true"]) { filter: grayscale(.7) brightness(.55); }
 body:has(.tb.night, .kid-space.night) .tb-hero { background: var(--surface); }
 /* No person colors at night: every ring and tint goes amber (inline --pc needs the !important). */
 body:has(.tb.night, .kid-space.night) [style*="--pc"] { --pc: var(--bedside) !important; }

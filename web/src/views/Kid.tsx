@@ -78,7 +78,9 @@ export function Kid() {
   const cur = mine.find((o) => startAbs(today, o) <= nowMin && nowMin < endAbs(today, o));
   const up = mine.filter((o) => startAbs(today, o) > nowMin);
   const next = up[0];
-  const later = up.slice(1);
+  // Things starting together share the Next card, so the same clock never shows twice.
+  const together = up.filter((o) => o.start === next?.start);
+  const later = up.filter((o) => o.start !== next?.start);
   const late = useBedtime();
   const myChores = chores.filter((c) => c.assigneeId === k.id && c.scheduled);
   const myPrep = prep.filter((p) => p.memberIds.includes(k.id));
@@ -120,9 +122,9 @@ export function Kid() {
             <section className="now-card next">
               <span className="tagbig"><span aria-hidden="true">🔜</span> Next</span>
               <div className="row">
-                <span className="big" aria-hidden="true">{next.icon}</span>
+                <span className="big" aria-hidden="true">{together.map((o) => o.icon).join('')}</span>
                 <div>
-                  <div className="word">{next.kidTitle ?? next.title}</div>
+                  <div className="word">{together.map((o) => o.kidTitle ?? o.title).join(' and ')}</div>
                   {next.driverId && <div className="face-clock"><Face m={f.byId(next.driverId)} size={36} />{f.byId(next.driverId)?.name} takes you</div>}
                 </div>
               </div>
@@ -164,14 +166,15 @@ export function Kid() {
             if (!ts.length) return null;
             return (
               <section key={p.id} className="panel">
-                <h2>{p.icon} Helping with {p.title.replace(/^Hosting /, '')}</h2>
+                <h2><span aria-hidden="true">{p.icon}</span> Helping with {p.title.replace(/^Hosting /, '')}</h2>
                 <div className="tiles">
                   {ts.map((t) => {
                     const n = dayDiff(today, t.due);
                     return (
                       <button key={t.id} className={`tile ${t.doneAt ? 'is-done' : ''}`} aria-pressed={!!t.doneAt} onClick={(e) => toggleTask(t, p, e.currentTarget)}>
                         <span className="e" aria-hidden="true">{t.icon}</span>{t.text}
-                        <span className="note"><span aria-hidden="true">{n <= 0 ? '☀️' : n === 1 ? '🌙' : '📅'}</span> {n <= 0 ? 'Today!' : dayLabel(today, t.due)}</span>
+                        {/* Pre-readers count sleeps, not dates. */}
+                        {n > 1 ? <Sleeps n={n} /> : <span className="note"><span aria-hidden="true">{n <= 0 ? '☀️' : '🌙'}</span> {n <= 0 ? 'Today!' : 'Tomorrow'}</span>}
                       </button>
                     );
                   })}

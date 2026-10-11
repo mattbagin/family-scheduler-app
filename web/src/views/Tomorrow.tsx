@@ -32,7 +32,9 @@ export function Tomorrow({ day: shown }: { day?: Ymd }) {
   const flags = computeFlags(items, f.members);
   const adults = f.members.filter((m) => m.role === 'adult');
   const firstOut = timed.filter((o) => o.travelMin > 0).sort((a, b) => leaveBy(a) - leaveBy(b))[0];
-  const gaps = timed.filter((o) => o.needsDriver && o.driverId === null);
+  // A first ride with no driver is sorted in the hero itself, so Needs sorting doesn't ask twice.
+  const heroGap = firstOut && firstOut.driverId === null ? firstOut : undefined;
+  const gaps = timed.filter((o) => o.needsDriver && o.driverId === null && o !== heroGap);
   const clashes = timed.filter((o) => flags.get(o.key)?.some((x) => x.kind === 'bad'));
   const packing = prep.filter((p) => p.date === day);
   const wx = weather?.days.find((d) => d.date === day);
@@ -57,9 +59,9 @@ export function Tomorrow({ day: shown }: { day?: Ymd }) {
           )}
         </header>
 
-        <FirstOut o={firstOut} first={timed[0]} />
+        <FirstOut o={firstOut} first={timed[0]} pick={(id) => setDriver(firstOut!, id)} />
 
-        {timed.length > 0 && (
+        {timed.length > 0 && !(heroGap && !gaps.length && !clashes.length) && (
           <section className={`panel tb-sort${gaps.length || clashes.length ? '' : ' all-set'}`} aria-label="Needs sorting">
             {gaps.length || clashes.length ? (
               <>
@@ -150,7 +152,7 @@ export function Tomorrow({ day: shown }: { day?: Ymd }) {
 }
 
 /** The thesis of the board: the first moment someone has to be out the door, at clock size. */
-function FirstOut({ o, first }: { o?: Occurrence; first?: Occurrence }) {
+function FirstOut({ o, first, pick }: { o?: Occurrence; first?: Occurrence; pick: (driverId: number) => void }) {
   const f = useFamily();
   const who = (ids: number[]) => namesOf(f, ids);
   const cap = (s: string) => s[0].toUpperCase() + s.slice(1);
@@ -168,9 +170,16 @@ function FirstOut({ o, first }: { o?: Occurrence; first?: Occurrence }) {
     <section className={`tb-hero${driver ? '' : ' unsorted'}`} style={pc(driver?.color)}>
       <span className="tb-time num">{fmtTime(leaveBy(o))}</span>
       <p>
-        <b>{driver ? <><Face m={driver} size={44} /> {driver.name} leaves for {o.title}</> : <>{o.title} needs a driver: pick one below</>}</b>
+        <b>{driver ? <><Face m={driver} size={44} /> {driver.name} leaves for {o.title}</> : <>Who’s driving {who(o.memberIds)} to {o.title}?</>}</b>
         <span className="note"><span aria-hidden="true">{o.icon}</span> {cap(who(o.memberIds))} · starts {fmtTime(minutesOf(o.start))} · {o.travelMin} min drive</span>
       </p>
+      {!driver && (
+        <div className="toggles" role="group" aria-label={`Driver for ${o.title}`}>
+          {f.members.filter((m) => m.role === 'adult').map((m) => (
+            <button key={m.id} className="tog" style={pc(m.color)} onClick={() => pick(m.id)}><Face m={m} />{m.name}</button>
+          ))}
+        </div>
+      )}
     </section>
   );
 }

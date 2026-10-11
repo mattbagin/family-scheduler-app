@@ -97,7 +97,7 @@ export function Person() {
         </div>
         <nav className="members small" aria-label="Switch person">
           {f.members.filter((x) => x.id !== m.id).map((x) => (
-            <Link key={x.id} to={`/person/${x.id}`} className="mem-btn" style={pc(x.color)} aria-label={x.name}><Avatar m={x} /></Link>
+            <Link key={x.id} to={`/person/${x.id}`} className="mem-btn" style={pc(x.color)}><Avatar m={x} />{x.name}</Link>
           ))}
         </nav>
         {isKid && <Link to={`/kid/${m.id}`} className="primary" style={{ textDecoration: 'none' }}>Open kid mode</Link>}

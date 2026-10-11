@@ -135,7 +135,7 @@ describe('computeFlags', () => {
       occ('2', '2026-09-29T17:30', '2026-09-29T18:00', { memberIds: [3, 4], driverId: 1 }),
       occ('3', '2026-09-29T19:00', '2026-09-29T20:00', { memberIds: [4], needsDriver: true }),
     ], members);
-    expect(flags.get('1')?.map((f) => f.text)).toEqual(['Overlap', 'Mom double-booked']);
+    expect(flags.get('1')?.map((f) => f.text)).toEqual(['Overlaps 2', 'Mom double-booked']);
     expect(flags.get('3')).toEqual([{ kind: 'warn', text: 'Needs a ride' }]);
   });
 
@@ -202,5 +202,8 @@ describe('one clock', () => {
     expect(isSameDayReminder('⚽ Soccer tomorrow at 4:30 PM')).toBe(false);
     expect(isSameDayReminder('🎂 Party on Saturday')).toBe(false);
     expect(isSameDayReminder('🏊 Swim in the lake tomorrow')).toBe(false);
+    // From the critique: a number after "in" isn't enough.
+    expect(isSameDayReminder('🎻 Recital in 2nd grade hall')).toBe(false);
+    expect(isSameDayReminder('🎻 Recital in 2nd grade hall in 2h')).toBe(true);
   });
 });
