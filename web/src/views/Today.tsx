@@ -265,7 +265,7 @@ export function Today() {
                         <div className="row" style={{ gap: 6 }}>
                           {o.driverId && (() => {
                             const ride = rideStatus(leaveBy(o), nowMin, s);
-                            return <span className={`pill ${bannered(o) ? '' : ride.cls}`}>🚗 {f.byId(o.driverId)?.name} driving · {ride.text}</span>;
+                            return <span className={`pill ${bannered(o) ? '' : ride.cls}`}><span className="nowrap">🚗 {f.byId(o.driverId)?.name} driving</span> · <span className="nowrap">{ride.text}</span></span>;
                           })()}
                           {fl.map((x) => <span key={x.text} className={`pill ${x.kind}`}>{x.kind === 'bad' ? '⚠' : '🚗'} {x.text}</span>)}
                         </div>
