@@ -10,7 +10,7 @@ export const pc = (color: string | undefined, extra?: CSSProperties): CSSPropert
 export function Face({ m, size }: { m: Member | undefined; size?: number }) {
   if (!m) return null;
   const style = size ? pc(m.color, { width: size, height: size, fontSize: size * 0.55 }) : pc(m.color);
-  return <span className="face" style={style} title={m.name} aria-label={m.name}>{m.avatar}</span>;
+  return <span className="face" style={style} title={m.name} role="img" aria-label={m.name}>{m.avatar}</span>;
 }
 
 export function Avatar({ m, className = '', badge }: { m: Member; className?: string; badge?: number }) {

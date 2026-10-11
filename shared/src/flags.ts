@@ -26,8 +26,8 @@ export function computeFlags(occs: Occurrence[], members: Member[]): Map<string,
       if (!(a.start < b.end && b.start < a.end)) continue;
       const kidInBoth = a.memberIds.some((id) => b.memberIds.includes(id) && byId.get(id)?.role === 'kid');
       if (kidInBoth) {
-        put(a.key, { kind: 'bad', text: 'Overlap' });
-        put(b.key, { kind: 'bad', text: 'Overlap' });
+        put(a.key, { kind: 'bad', text: `Overlaps ${b.title}` });
+        put(b.key, { kind: 'bad', text: `Overlaps ${a.title}` });
       }
       if (a.driverId !== null && a.driverId === b.driverId) {
         const text = `${byId.get(a.driverId)?.name ?? 'Driver'} double-booked`;
@@ -100,5 +100,5 @@ export function rideHeadsUp(leaveMin: number, nowMin: number, driver: string, ti
 
 /** A reminder titled for later today ("… in 15 min", "… is starting"), which the hub keeps current. */
 export function isSameDayReminder(title: string): boolean {
-  return /\s(in \d|is starting)/.test(title);
+  return /\s(in \d+( min|h( \d+m)?)|is starting)$/.test(title);
 }

@@ -702,7 +702,7 @@ function DeviceSection() {
           <button className="icon-btn" onClick={() => act(() => api('/lock', { method: 'POST' }), 'Locked')}>🔒 Lock editing now</button>
         )}
         <button className="icon-btn" onClick={async () => { await api('/logout', { method: 'POST' }); qc.clear(); qc.invalidateQueries(); }}>
-          Switch person or set up as the family hub
+          {f.session.kind === 'hub' ? 'Sign out of the hub' : 'Switch person or set up as the family hub'}
         </button>
       </div>
     </section>
