@@ -1,4 +1,4 @@
-import { fmtDur, fmtTime } from './time.ts';
+import { absMin, datePart, fmtDur, fmtTime } from './time.ts';
 import type { Member, Occurrence } from './types.ts';
 
 export interface Flag {
@@ -8,7 +8,8 @@ export interface Flag {
 
 /**
  * Scheduling problems worth a badge: a kid booked in two places at once, a driver
- * booked for two overlapping rides, or a ride nobody has claimed yet.
+ * booked for two overlapping rides, a ride nobody has claimed yet, or a tight turnaround
+ * (someone gets home from one outing after it's time to leave for the next).
  */
 export function computeFlags(occs: Occurrence[], members: Member[]): Map<string, Flag[]> {
   const byId = new Map(members.map((m) => [m.id, m]));
@@ -37,7 +38,37 @@ export function computeFlags(occs: Occurrence[], members: Member[]): Map<string,
     }
   }
   for (const o of occs) if (o.needsDriver && o.driverId === null) put(o.key, { kind: 'warn', text: 'Needs a ride' });
+  tightTurnarounds(timed, put);
   return flags;
+}
+
+/** Who has to be there: the people going, plus whoever drives. */
+function peopleOf(o: Occurrence): number[] {
+  return o.driverId === null ? o.memberIds : [...o.memberIds, o.driverId];
+}
+
+/**
+ * Travel time is from home, so an outing ends with the same trip back. When someone in it is also
+ * in the next outing, they need to be home by that one's leave-by time (which already holds the
+ * minutes to get out the door). Eating into those minutes is a warning; missing the real
+ * departure is a problem. Events with no travel time are taken to be at home and never checked.
+ */
+function tightTurnarounds(timed: Occurrence[], put: (key: string, f: Flag) => void) {
+  const away = timed.filter((o) => o.travelMin > 0).sort((a, b) => (a.start < b.start ? -1 : 1));
+  for (const a of away) {
+    const people = peopleOf(a);
+    // Only the next outing that shares someone: by the one after, they've had to be home anyway.
+    const b = away.find((x) => x.start >= a.end && peopleOf(x).some((id) => people.includes(id)));
+    if (!b) continue;
+    const day = datePart(a.start);
+    const home = absMin(day, a.end) + a.travelMin;
+    const leave = leaveByMin(absMin(day, b.start), b.travelMin);
+    if (home <= leave) continue;
+    const late = home > absMin(day, b.start) - b.travelMin;
+    const kind = late ? 'bad' : 'warn';
+    put(a.key, { kind, text: `Home ${fmtTime(home)}, ${late ? 'late' : 'tight'} for ${b.title}` });
+    put(b.key, { kind, text: `${late ? 'Late' : 'Tight'} after ${a.title}` });
+  }
 }
 
 /** Minutes between "time to leave" and the real departure, to get everyone out the door. */
