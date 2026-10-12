@@ -263,7 +263,8 @@ export function Today() {
                           {o.location && <> · <span className="nowrap">📍 {o.location}</span></>}
                         </div>
                         <div className="row" style={{ gap: 6 }}>
-                          {o.driverId && (() => {
+                          {/* Once it has started the ride is done; who's driving is old news. */}
+                          {o.driverId && !isNow && (() => {
                             const ride = rideStatus(leaveBy(o), nowMin, s);
                             return <span className={`pill ${bannered(o) ? '' : ride.cls}`}><span className="nowrap">🚗 {f.byId(o.driverId)?.name} driving ·</span> <span className="nowrap">{ride.text}</span></span>;
                           })()}
