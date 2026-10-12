@@ -161,7 +161,7 @@ h3 { font-size: var(--fs-title-sm); }
 .today-main { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); gap: 14px; align-items: start; }
 .allday { display: flex; gap: 8px; flex-wrap: wrap; }
 .timeline { display: flex; flex-direction: column; }
-.tl { display: grid; grid-template-columns: 78px 22px 1fr; align-items: stretch; border: 0; background: none; text-align: left; padding: 0; width: 100%; }
+.tl { display: grid; grid-template-columns: 78px 36px minmax(0, 1fr); align-items: stretch; border: 0; background: none; text-align: left; padding: 0; width: 100%; }
 .tl-time { padding: 12px 0; display: flex; flex-direction: column; align-items: flex-end; line-height: 1.1; }
 .tl-time b { font-family: var(--display); font-size: var(--fs-title-lg); font-weight: 600; }
 .tl-time span { font-size: var(--fs-label); font-weight: 700; color: var(--muted); }
@@ -180,6 +180,8 @@ h3 { font-size: var(--fs-title-sm); }
 @keyframes pulse { 50% { box-shadow: 0 0 0 6px color-mix(in srgb, var(--pc) 25%, transparent); } }
 .tl-card .e { font-size: 2rem; line-height: 1; }
 .tl-main { flex: 1; min-width: 0; }
+/* Pills wrap inside the card rather than spilling past its edge on a phone. */
+.tl-main .pill { flex-wrap: wrap; row-gap: 0; max-width: 100%; }
 .tl-main b { font-family: var(--display); font-size: var(--fs-title); font-weight: 600; display: block; line-height: 1.2; }
 .tl-card .faces { margin-left: auto; padding-right: 6px; }
 .count { display: flex; align-items: center; gap: 12px; padding: 8px 0; border: 0; border-top: 1px solid var(--line); background: none; width: 100%; text-align: left; }
@@ -576,7 +578,10 @@ body:has(.ambient) .nudges { bottom: calc(110px + env(safe-area-inset-bottom, 0p
   .hero .mem-btn .avatar { width: 44px; height: 44px; font-size: 24px; border-width: 2px; }
 }
 @media (max-width: 520px) {
-  .tl { grid-template-columns: 62px 18px 1fr; }
+  .tl { grid-template-columns: 58px 30px minmax(0, 1fr); }
+  .tl-time b { font-size: var(--fs-title); }
+  .tl-card { gap: 10px; padding: 12px; }
+  .tl-card .e { font-size: 1.6rem; }
   .tl-card .faces { display: none; }
   .keys { grid-template-columns: repeat(3, 64px); }
 }
