@@ -67,6 +67,9 @@ export function Kid() {
   const toggleTask = useToggleTask();
   const night = useNight() && f.session.kind === 'hub';
   const toggleTodo = useToggleTodo();
+  // Hooks stay above the early returns below: /kid renders once without an id, then redirects to
+  // /kid/:id on the same component, and a hook first called on that second render crashes React.
+  const late = useBedtime();
   const kids = f.members.filter((m) => m.role === 'kid');
   const fallback = f.me?.role === 'kid' ? f.me : kids[0];
   if (!id) return fallback ? <Navigate to={`/kid/${fallback.id}`} replace /> : <p className="empty">Add a kid in Settings to use kid mode.</p>;
@@ -81,7 +84,6 @@ export function Kid() {
   // Things starting together share the Next card, so the same clock never shows twice.
   const together = up.filter((o) => o.start === next?.start);
   const later = up.filter((o) => o.start !== next?.start);
-  const late = useBedtime();
   const myChores = chores.filter((c) => c.assigneeId === k.id && c.scheduled);
   const myPrep = prep.filter((p) => p.memberIds.includes(k.id));
   // A kid's tiles skip the next round of a repeating job until its day comes.
