@@ -146,6 +146,47 @@ describe('computeFlags', () => {
     ], members);
     expect(flags.size).toBe(0);
   });
+
+  it('flags getting home from one outing too late to leave for the next', () => {
+    const flags = computeFlags([
+      // Home 5:20 PM (5:00 end + 20 min). Swim needs leaving by 5:30 minus 15 travel minus 10 = 5:05.
+      occ('1', '2026-09-29T11:00', '2026-09-29T17:00', { title: 'Thanksgiving', memberIds: [3], driverId: 2, travelMin: 20 }),
+      occ('2', '2026-09-29T17:30', '2026-09-29T18:30', { title: 'Swim', memberIds: [3], driverId: 2, travelMin: 15 }),
+    ], members);
+    expect(flags.get('1')).toEqual([{ kind: 'bad', text: 'Home 5:20 PM, late for Swim' }]);
+    expect(flags.get('2')).toEqual([{ kind: 'bad', text: 'Late after Thanksgiving' }]);
+  });
+
+  it('warns when the trip home only eats the minutes to get out the door', () => {
+    // Home 5:20 PM; leave by 5:15 PM; the real departure is 5:25 PM.
+    const flags = computeFlags([
+      occ('1', '2026-09-29T16:00', '2026-09-29T17:00', { memberIds: [3], travelMin: 20 }),
+      occ('2', '2026-09-29T17:45', '2026-09-29T18:30', { memberIds: [4], driverId: 2, travelMin: 20 }),
+      occ('3', '2026-09-29T17:45', '2026-09-29T18:30', { title: 'Swim', memberIds: [3], travelMin: 20 }),
+    ], members);
+    expect(flags.get('1')).toEqual([{ kind: 'warn', text: 'Home 5:20 PM, tight for Swim' }]);
+    expect(flags.get('3')).toEqual([{ kind: 'warn', text: 'Tight after 1' }]);
+    expect(flags.has('2')).toBe(false); // nobody in common
+  });
+
+  it('counts the driver as someone who has to get back', () => {
+    const flags = computeFlags([
+      occ('1', '2026-09-29T16:00', '2026-09-29T17:00', { memberIds: [1], travelMin: 30 }),
+      occ('2', '2026-09-29T17:30', '2026-09-29T18:30', { memberIds: [4], driverId: 1, travelMin: 10 }),
+    ], members);
+    expect(flags.get('2')?.[0].kind).toBe('bad');
+  });
+
+  it('leaves plenty of time, home events and overlaps alone', () => {
+    const flags = computeFlags([
+      occ('1', '2026-09-29T15:00', '2026-09-29T16:00', { memberIds: [3], travelMin: 20 }),
+      occ('2', '2026-09-29T17:30', '2026-09-29T18:00', { memberIds: [3], travelMin: 20 }), // home 4:20, leave 5:00
+      occ('3', '2026-09-29T18:00', '2026-09-29T19:00', { memberIds: [3] }), // at home: no travel time
+      occ('4', '2026-09-29T10:00', '2026-09-29T12:00', { memberIds: [1], travelMin: 15 }),
+      occ('5', '2026-09-29T11:00', '2026-09-29T12:30', { memberIds: [1], travelMin: 15 }), // overlaps 4
+    ], members);
+    expect(flags.size).toBe(0);
+  });
 });
 
 describe('heads-up wording', () => {
