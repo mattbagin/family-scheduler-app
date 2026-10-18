@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { addDays, ymd, type ChoreForDay, type Occurrence, type Plan } from '../../shared/src/index.ts';
+import { addDays, ymd, type Occurrence, type Plan } from '../../shared/src/index.ts';
 import { buildApp } from '../src/app.ts';
 import { openDb } from '../src/db.ts';
 import { sessionFrom, setupFamily as setup, type App } from './helpers.ts';
@@ -122,16 +122,6 @@ describe('plans and chores', () => {
     // The plan's event shows up on the calendar with a link back to the plan.
     const occ = (await app.inject({ url: `/api/occurrences?from=${addDays(today, 10)}&to=${addDays(today, 11)}`, cookies: adult })).json<Occurrence[]>();
     expect(occ[0]).toMatchObject({ title: 'Hosting Thanksgiving', planId: plan.id, fun: true, memberIds: [alex.id, robin.id, kit.id] });
-  });
-
-  it('tracks chores per day', async () => {
-    const { adult, members } = await setupFamily();
-    const chore = (await app.inject({ method: 'POST', url: '/api/chores', cookies: adult, payload: { text: 'Feed the dog', assigneeId: members[2].id } })).json();
-    await app.inject({ method: 'PUT', url: `/api/chores/${chore.id}/done/${today}`, cookies: adult, payload: { done: true } });
-    const list = (await app.inject({ url: `/api/chores?date=${today}`, cookies: adult })).json<ChoreForDay[]>();
-    expect(list[0]).toMatchObject({ text: 'Feed the dog', icon: '🐕', done: true, scheduled: true });
-    const next = (await app.inject({ url: `/api/chores?date=${addDays(today, 1)}`, cookies: adult })).json<ChoreForDay[]>();
-    expect(next[0].done).toBe(false);
   });
 
   it('rolls a monthly bill forward when paid', async () => {

@@ -20,12 +20,12 @@ export function useToggleChore() {
       burstFrom(el);
       chime([784, 988, 1319]);
     }
-    const ok = await act(() => api(`/chores/${c.id}/done/${c.date}`, { method: 'PUT', body: { done } }));
+    const ok = await act(() => api(`/chores/${c.id}/done/${c.date}`, { method: 'PUT', body: { done, memberId: c.memberId } }));
     if (ok && done) {
-      const left = all.filter((x) => x.assigneeId === c.assigneeId && x.scheduled && !x.done && x.id !== c.id).length;
-      const name = f.byId(c.assigneeId)?.name ?? '';
-      if (left) toast(`Nice one, ${name}! ${left} to go.`);
-      else celebrate(`All jobs done, ${name}!`);
+      const left = all.filter((x) => x.memberId === c.memberId && x.date === c.date && !x.done && x.id !== c.id).length;
+      const name = c.memberId ? `, ${f.byId(c.memberId)?.name ?? ''}` : '';
+      if (left) toast(`Nice one${name}! ${left} to go.`);
+      else celebrate(`All jobs done${name}!`);
     }
   };
 }
@@ -61,10 +61,10 @@ export function Person() {
   const todays = items.filter((i) => occDate(i.occ) === today || (i.s < 1440 && i.e > 0));
   const label = (i: PersonItem) => (i.drive ? `Drive ${namesOf(f, i.occ.memberIds)} to ${i.occ.title}` : i.occ.title);
   const isKid = m.role === 'kid';
-  const myChores = chores.filter((c) => c.assigneeId === m.id && c.scheduled);
+  const myChores = chores.filter((c) => c.memberId === m.id);
   const myPrep = prep.filter((p) => p.memberIds.includes(m.id));
   // A kid's tiles skip the next round of a repeating job until its day comes.
-  const myTodos = todos.filter((t) => t.kind === 'todo' && t.assigneeId === m.id && !(isKid && t.rrule && t.due && t.due > today));
+  const myTodos = todos.filter((t) => t.kind === 'todo' && t.assigneeId === m.id);
   const anyones = isKid ? [] : todos.filter((t) => t.kind === 'todo' && t.assigneeId === null);
   const tasks = plans
     .flatMap((p) => p.tasks.filter((t) => t.assigneeId === m.id).map((t) => ({ t, p })))

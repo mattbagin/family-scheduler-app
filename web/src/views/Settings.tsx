@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import {
-  addDays, dayLabel, fmtTime, guessTaskIcon, hhmmToMin, MEMBER_AVATARS, MEMBER_COLORS, minutesOf,
+  addDays, dayLabel, describeRRule, fmtTime, formatRRule, guessTaskIcon, hhmmToMin, MEMBER_AVATARS, MEMBER_COLORS, minutesOf,
   type BackupInfo, type Calendar, type CalendarPreview, type Chore, type Member, type NotifyPrefs, type NudgeSettings, type Place, type Role,
   type SyncResult,
 } from '@shared';
@@ -9,13 +9,11 @@ import { api } from '../api.ts';
 import { useAction, useFamily, useNow } from '../context.tsx';
 import { ago, money, relDay } from '../lib.ts';
 import { canInstall, install, installHint, onInstallChange, pushState, turnOffPush, turnOnPush, type PushState } from '../push.ts';
-import { useBills, useCalendars, useChores, useHub, type HubInfo } from '../queries.ts';
+import { useBills, useCalendars, useChoreList, useHub, type HubInfo } from '../queries.ts';
 import { UnlockSheet } from '../sheets/PinPad.tsx';
 import { Avatar, ConfirmButton, Face, pc, setMuted, useMuted, useSheets, useToast } from '../ui.tsx';
 
 const DAY_SHORT = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-const daysText = (days: number[]) =>
-  days.length === 7 ? 'Every day' : days.join() === '0,1,2,3,4' ? 'Weekdays' : days.join() === '5,6' ? 'Weekends' : days.map((d) => DAY_SHORT[d]).join(', ');
 
 const SECTIONS = [
   ['set-family', 'Family'], ['set-jobs', 'Daily jobs'], ['set-calendars', 'Calendars'], ['set-nudges', 'Nudges'],
@@ -142,8 +140,7 @@ function MemberEditor({ member, onDone }: { member?: Member; onDone: () => void 
 function ChoresSection() {
   const f = useFamily();
   const act = useAction();
-  const { today } = useNow();
-  const { data: chores = [] } = useChores(today);
+  const { data: chores = [] } = useChoreList();
   const [text, setText] = useState('');
   const [who, setWho] = useState(String(f.members.find((m) => m.role === 'kid')?.id ?? f.members[0]?.id ?? ''));
   const [days, setDays] = useState([0, 1, 2, 3, 4, 5, 6]);
@@ -151,21 +148,23 @@ function ChoresSection() {
   const add = async (e: React.FormEvent) => {
     e.preventDefault();
     const t = text.trim();
-    const ok = await act(() => api<Chore>('/chores', { method: 'POST', body: { text: t, icon: guessTaskIcon(t), assigneeId: Number(who), days } }), `Added “${t}”`);
+    const rrule = days.length === 7 ? 'FREQ=DAILY' : formatRRule({ freq: 'WEEKLY', interval: 1, byDay: days });
+    const body = { text: t, icon: guessTaskIcon(t), memberIds: who ? [Number(who)] : [], rrule };
+    const ok = await act(() => api<Chore>('/chores', { method: 'POST', body }), `Added “${t}”`);
     if (ok) setText('');
   };
 
   return (
     <section className="panel" id="set-jobs">
-      <h2>Daily jobs</h2>
-      <p className="note" style={{ margin: 0 }}>These show as sticker tiles on each kid’s page and in kid mode, and reset every day.</p>
+      <h2>Jobs</h2>
+      <p className="note" style={{ margin: 0 }}>These show as sticker tiles on each person’s page and in kid mode on the days they’re due. Pick “Anyone” for a job the whole family shares.</p>
       <div>
         {chores.map((c) => (
           <div key={c.id} className="setting-row">
             <span style={{ fontSize: '1.5rem' }}>{c.icon}</span>
-            <div><b>{c.text}</b><div className="note">{daysText(c.days)}</div></div>
+            <div><b>{c.text}</b><div className="note">{describeRRule(c.rrule)}</div></div>
             <span className="spacer" />
-            <Face m={f.byId(c.assigneeId)} />
+            {c.memberIds.length ? c.memberIds.map((id) => <Face key={id} m={f.byId(id)} />) : <span className="note">Anyone</span>}
             <button className="x-btn" aria-label={`Remove ${c.text}`} onClick={() => act(() => api(`/chores/${c.id}`, { method: 'DELETE' }), `Removed “${c.text}”`)}>✕</button>
           </div>
         ))}
@@ -173,7 +172,7 @@ function ChoresSection() {
       <form className="form" onSubmit={add}>
         <div className="form-grid">
           <label className="field">Job<input id="ch-text" value={text} onChange={(e) => setText(e.target.value)} placeholder="Feed the dog" required maxLength={60} /></label>
-          <label className="field">Who<select id="ch-who" value={who} onChange={(e) => setWho(e.target.value)}>{f.members.map((m) => <option key={m.id} value={m.id}>{m.avatar} {m.name}</option>)}</select></label>
+          <label className="field">Who<select id="ch-who" value={who} onChange={(e) => setWho(e.target.value)}>{f.members.map((m) => <option key={m.id} value={m.id}>{m.avatar} {m.name}</option>)}<option value="">🏠 Anyone</option></select></label>
         </div>
         <div className="toggles">
           {DAY_SHORT.map((d, i) => (

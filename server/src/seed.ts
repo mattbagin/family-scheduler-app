@@ -69,14 +69,18 @@ export function seedSample(db: Db, today: Ymd): { adultIds: number[] } {
     for (const [text, icon, who, due] of tasks) addTask(db, plan, { text, icon, assigneeId: who, due: d(due) });
     run(db, "UPDATE plan_tasks SET done_at = ? WHERE plan_id = ? AND text = 'Plan the menu'", new Date().toISOString(), plan);
 
-    const chores: [string, string, number][] = [
-      ['Make bed', '🛏️', emma], ['Feed Goldie', '🐟', emma], ['Set the table', '🍽️', emma], ['Brush teeth', '🪥', emma],
-      ['Toys away', '🧸', leo], ['Water plant', '🪴', leo], ['Socks in hamper', '🧦', leo], ['Brush teeth', '🪥', leo],
+    const garbageDay = ['MO', 'TU', 'WE', 'TH', 'FR', 'SA', 'SU'][weekdayMon(d(1))];
+    const chores: [string, string, number[], string][] = [
+      ['Make bed', '🛏️', [emma], 'FREQ=DAILY'], ['Feed Goldie', '🐟', [emma], 'FREQ=DAILY'], ['Set the table', '🍽️', [emma], 'FREQ=DAILY'],
+      ['Toys away', '🧸', [leo], 'FREQ=DAILY'], ['Water plant', '🪴', [leo], 'FREQ=WEEKLY;BYDAY=MO,TH'], ['Socks in hamper', '🧦', [leo], 'FREQ=DAILY'],
+      ['Brush teeth', '🪥', [emma, leo], 'FREQ=DAILY'], ['Clean my room', '🧹', [emma, leo], 'FREQ=WEEKLY;BYDAY=SA'],
+      ['Take out the garbage', '🗑️', [], `FREQ=WEEKLY;BYDAY=${garbageDay}`],
     ];
-    chores.forEach(([text, icon, who], i) => {
-      const { id } = run(db, 'INSERT INTO chores (text, icon, assignee_id, sort) VALUES (?, ?, ?, ?)', text, icon, who, i);
+    chores.forEach(([text, icon, who, rrule], i) => {
+      const { id } = run(db, 'INSERT INTO chores (text, icon, rrule, start, sort) VALUES (?, ?, ?, ?, ?)', text, icon, rrule, today, i);
+      for (const m of who) run(db, 'INSERT INTO chore_members (chore_id, member_id) VALUES (?, ?)', id, m);
       if (text === 'Make bed' || text === 'Toys away') {
-        run(db, 'INSERT INTO chore_completions (chore_id, date, completed_at) VALUES (?, ?, ?)', id, today, new Date().toISOString());
+        run(db, 'INSERT INTO chore_completions (chore_id, member_id, date, completed_at) VALUES (?, ?, ?, ?)', id, who[0], today, new Date().toISOString());
       }
     });
 

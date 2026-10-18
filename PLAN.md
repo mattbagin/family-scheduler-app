@@ -114,7 +114,7 @@ This section is the current state of the build. Sections 1 to 8 are the original
 | 4 | `ba14bfd` | Nudges: leave-by with repeat and escalation to the other parent, per-event reminders, morning briefing, evening packing digest, bill alerts; per-parent quiet hours and switches; hub banners with a chime (also over ambient); hand-written Web Push (RFC 8291/8292); service worker, manifest, icons, install button; Tailscale guide in the README |
 | 5 | (this commit) | Ambient photo slideshow from a folder on the home computer (recursive, shuffled, preloaded, blurred fill for portrait photos); night mode with its own hours (dim warm clock, no photos, no chimes); weather from Open-Meteo on Today, ambient and a rainy-day heads-up; month view with a day agenda; category picker in quick add; per-device mute and a hub 🔔 switch; accessibility pass (sheet focus trap and return, skip link, labelled groups, hidden decorative emoji, AA contrast fixes, reduced motion); nightly database backups with **Back up now**; Windows background service script |
 
-Since then: repeating to-dos (`todos.rrule`; ticking one off adds the next as a new row, linked by `next_id` so unticking removes it).
+Since then: repeating to-dos (`todos.rrule`; ticking one off adds the next as a new row, linked by `next_id` so unticking removes it), later folded into chores (§10).
 
 Tests: 77 Vitest tests (shared logic, API, ICS, nudge timing, Web Push against the RFC example, end-to-end nudges through a fake push service, hub settings, photos, weather through a fake Open-Meteo, backups). Each milestone was also checked in a real browser with Playwright (see `CLAUDE.md`).
 
@@ -147,3 +147,42 @@ All planned milestones are built. Ideas for later: leave-by times that clash as 
 - ICS: extra dates (RDATE) are ignored with a warning. A repeating event whose start is in UTC keeps its local time across daylight-saving changes, where it should shift by an hour. BYWEEKNO and BYYEARDAY rules fall back to the first date.
 - Everything uses the home server's time zone; there's no setting for it.
 - Push subscriptions belong to a person; the hub itself doesn't get push (it shows banners instead).
+
+## 10. Next: chores on the calendar
+
+**Problem.** Chores are added only in Settings ("Daily jobs"), repeat only on chosen weekdays, have one person each, and show only for today, never on Week or Month. Repeating to-dos (`todos.rrule`) are a second, overlapping way to make things repeat.
+
+**Decided (2026-10-17):**
+- Chores stay their own table but repeat like events, with an RRULE. Weekday patterns and monthly patterns are both needed.
+- A chore can have several people, and **each does their own**: "Brush teeth" for both kids makes one tile per kid, ticked separately. A chore with nobody on it is a family job: one tick from anyone marks it done.
+- Repeating to-dos fold into chores, so to-dos become one-offs only. Repeating **prep** items stay as they are, because they feed Get ready lists and the evening packing digest.
+
+**Steps** (each its own branch from main; see `CLAUDE.md` § Git):
+
+1. ✅ **Server** (`feat/chore-repeats`). Migration `007_chores.sql`:
+   - Add `chores.rrule` and `chores.start` (`Ymd`, the anchor date for monthly rules), converting `days` to `FREQ=WEEKLY;BYDAY=…` (`FREQ=DAILY` when all seven days are set).
+   - Add `chore_members (chore_id, member_id)`, filled from `assignee_id`.
+   - Rebuild `chore_completions` keyed by `(chore_id, member_id, date)`, with `member_id = 0` for family jobs. Existing ticks go to the old assignee.
+   - Turn each undone repeating to-do (kind 'todo') into a chore and delete that to-do row. Done rows keep their history but lose their `rrule`.
+
+   API changes:
+   - `GET /api/chores?from&to` returns one row per chore, person and date (expand with `expandDates`). `?date=` keeps working.
+   - POST and PATCH take `rrule`, `start` and `memberIds`.
+   - `PUT /api/chores/:id/done/:date` takes `memberId`, and `requireCanComplete` checks it.
+   - `POST /api/todos` rejects `rrule` for kind 'todo'.
+
+   Tests: expansion, per-person ticks, the family-job tick, the migration of old `days` rows and repeating to-dos.
+2. **Adding and editing** (`feat/chore-sheet`):
+   - A chore sheet (text, icon, people, repeat preset from `REPEAT_PRESETS` plus monthly), opened from "+ Add a job" on the Today chore chart and person pages, and by tapping a job to edit it.
+   - Settings keeps the list but uses the same sheet.
+   - Quick add: a to-do with a repeat ("make bed every day for Sam") becomes a chore. The repeat picker leaves the to-do form (it stays for prep).
+3. **Calendar** (`feat/chores-on-calendar`): Week and Month show each day's jobs as small chips (icon + face) under the all-day row. Tapping one ticks it; the Month day sheet lists them. Jobs on later days are view-only, so nobody ticks next Tuesday's garbage early.
+
+**Step 1 as built** (differs from the plan above):
+- Reads are split: `GET /api/chores` lists the chores themselves (for Settings), and `GET /api/chores/due?date=` or `?from=&to=` (up to 62 days) returns one row per chore, person and date.
+- Ticking a job on a day it isn't due is refused.
+- Removing a person deletes the chores that were only theirs; shared ones stay with the others.
+- The web side got only what keeps it working: Settings shows each job's repeat and people and can add a family job; Today's chore chart has an **Anyone** row for family jobs; quick add saves a repeating to-do as a chore. The sample family now has a shared “Brush teeth”, a Saturday “Clean my room” and a weekly garbage family job.
+- `scripts/check-chores.py` drives the chore chart, kid ticks, quick add and Settings in a browser; extend it in steps 2 and 3.
+
+**Open:** whether nudges should mention undone family jobs (for example "Garbage goes out tonight" in the evening digest). Leave this out of the steps above; decide after step 3.

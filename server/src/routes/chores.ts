@@ -1,38 +1,52 @@
 import type { FastifyInstance } from 'fastify';
-import { addMonths, guessTaskIcon, isYmd, weekdayMon, ymd, type ChoreForDay } from '../../../shared/src/index.ts';
+import { addDays, addMonths, dayDiff, expandDates, guessTaskIcon, isYmd, ymd, type Chore, type ChoreForDay } from '../../../shared/src/index.ts';
 import { requireAuth, requireCanComplete, requireEditor } from '../auth.ts';
 import type { Ctx } from '../context.ts';
-import { all, get, run, tx } from '../db.ts';
+import { get, run, tx } from '../db.ts';
 import { badRequest, idParam, parseBody, parsePatch, v } from '../http.ts';
-import { getBill, getChore, listBills, toChore, type ChoreRow } from '../repo.ts';
+import { choresBetween, getBill, getChore, listBills, listChores } from '../repo.ts';
 
 export function choreRoutes(app: FastifyInstance, { db, changed }: Ctx) {
-  const checkAssignee = (id: number) => {
-    if (!get(db, 'SELECT 1 FROM members WHERE id = ?', id)) throw badRequest(`assigneeId: no family member with id ${id}`);
+  const checkMembers = (ids: number[]) => {
+    for (const id of ids) if (!get(db, 'SELECT 1 FROM members WHERE id = ?', id)) throw badRequest(`memberIds: no family member with id ${id}`);
+  };
+  const setMembers = (choreId: number, ids: number[]) => {
+    run(db, 'DELETE FROM chore_members WHERE chore_id = ?', choreId);
+    for (const id of ids) run(db, 'INSERT INTO chore_members (chore_id, member_id) VALUES (?, ?)', choreId, id);
   };
 
-  app.get('/api/chores', async (req): Promise<ChoreForDay[]> => {
+  app.get('/api/chores', async (req): Promise<Chore[]> => {
     requireAuth(req);
-    const date = (req.query as { date?: string }).date ?? ymd(new Date());
-    if (!isYmd(date)) throw badRequest('date: must be a date like 2026-10-05');
-    const done = new Set(all<{ chore_id: number }>(db, 'SELECT chore_id FROM chore_completions WHERE date = ?', date).map((r) => r.chore_id));
-    const wd = weekdayMon(date);
-    return all<ChoreRow>(db, 'SELECT * FROM chores ORDER BY assignee_id, sort, id').map((r) => {
-      const c = toChore(r);
-      return { ...c, date, scheduled: c.days.includes(wd), done: done.has(c.id) };
-    });
+    return listChores(db);
   });
 
-  const choreSchema = { text: v.text(60), icon: v.text(16), assigneeId: v.int(1), days: v.weekdays, sort: v.int(0, 1000) };
+  /** ?date= for one day, or ?from=&to= for a range (to is exclusive). */
+  app.get('/api/chores/due', async (req): Promise<ChoreForDay[]> => {
+    requireAuth(req);
+    const q = req.query as { date?: string; from?: string; to?: string };
+    const from = q.date ?? q.from;
+    const to = q.date && isYmd(q.date) ? addDays(q.date, 1) : q.to;
+    if (!isYmd(from) || !isYmd(to)) throw badRequest('date (or from and to) must be dates like 2026-10-05');
+    const span = dayDiff(from, to);
+    if (span <= 0 || span > 62) throw badRequest('to must be 1 to 62 days after from');
+    return choresBetween(db, from, to);
+  });
+
+  const choreSchema = { text: v.text(60), icon: v.text(16), memberIds: v.ids, rrule: v.rrule, start: v.ymd, sort: v.int(0, 1000) };
 
   app.post('/api/chores', async (req, reply) => {
     requireEditor(req);
-    const c = parseBody(choreSchema, req.body, ['icon', 'days', 'sort']);
-    checkAssignee(c.assigneeId);
-    const { id } = run(
-      db, 'INSERT INTO chores (text, icon, assignee_id, days, sort) VALUES (?, ?, ?, ?, ?)',
-      c.text, c.icon ?? guessTaskIcon(c.text), c.assigneeId, (c.days ?? [0, 1, 2, 3, 4, 5, 6]).join(','), c.sort ?? 0,
-    );
+    const c = parseBody(choreSchema, req.body, ['icon', 'memberIds', 'rrule', 'start', 'sort']);
+    const memberIds = c.memberIds ?? [];
+    checkMembers(memberIds);
+    const id = tx(db, () => {
+      const { id } = run(
+        db, 'INSERT INTO chores (text, icon, rrule, start, sort) VALUES (?, ?, ?, ?, ?)',
+        c.text, c.icon ?? guessTaskIcon(c.text), c.rrule ?? 'FREQ=DAILY', c.start ?? ymd(new Date()), c.sort ?? 0,
+      );
+      setMembers(id, memberIds);
+      return id;
+    });
     changed('chores');
     return reply.status(201).send(getChore(db, id));
   });
@@ -41,11 +55,14 @@ export function choreRoutes(app: FastifyInstance, { db, changed }: Ctx) {
     requireEditor(req);
     const c = getChore(db, idParam(req.params));
     const p = parsePatch(choreSchema, req.body);
-    if (p.assigneeId) checkAssignee(p.assigneeId);
-    run(
-      db, 'UPDATE chores SET text = ?, icon = ?, assignee_id = ?, days = ?, sort = ? WHERE id = ?',
-      p.text ?? c.text, p.icon ?? c.icon, p.assigneeId ?? c.assigneeId, (p.days ?? c.days).join(','), p.sort ?? c.sort, c.id,
-    );
+    if (p.memberIds) checkMembers(p.memberIds);
+    tx(db, () => {
+      run(
+        db, 'UPDATE chores SET text = ?, icon = ?, rrule = ?, start = ?, sort = ? WHERE id = ?',
+        p.text ?? c.text, p.icon ?? (p.text ? guessTaskIcon(p.text) : c.icon), p.rrule ?? c.rrule, p.start ?? c.start, p.sort ?? c.sort, c.id,
+      );
+      if (p.memberIds) setMembers(c.id, p.memberIds);
+    });
     changed('chores');
     return getChore(db, c.id);
   });
@@ -57,16 +74,27 @@ export function choreRoutes(app: FastifyInstance, { db, changed }: Ctx) {
     return reply.status(204).send();
   });
 
+  // memberId says whose tile it is; leave it out for a family job, which anyone can tick.
   app.put('/api/chores/:id/done/:date', async (req) => {
     const c = getChore(db, idParam(req.params));
-    requireCanComplete(req, c.assigneeId);
     const date = (req.params as { date: string }).date;
     if (!isYmd(date)) throw badRequest('date: must be a date like 2026-10-05');
-    const { done } = parseBody({ done: v.bool }, req.body);
-    if (done) {
-      run(db, 'INSERT OR IGNORE INTO chore_completions (chore_id, date, completed_at) VALUES (?, ?, ?)', c.id, date, new Date().toISOString());
+    const { done, memberId } = parseBody({ done: v.bool, memberId: v.optId }, req.body, ['memberId']);
+    if (c.memberIds.length) {
+      if (!memberId || !c.memberIds.includes(memberId)) throw badRequest('memberId: say whose job this is');
+      requireCanComplete(req, memberId);
     } else {
-      run(db, 'DELETE FROM chore_completions WHERE chore_id = ? AND date = ?', c.id, date);
+      if (memberId) throw badRequest('memberId: this is a family job, so leave it out');
+      requireAuth(req);
+    }
+    if (!expandDates(c.start, c.rrule, date, addDays(date, 1)).length) throw badRequest('date: this job isn’t due that day');
+    if (done) {
+      run(
+        db, 'INSERT OR IGNORE INTO chore_completions (chore_id, member_id, date, completed_at) VALUES (?, ?, ?, ?)',
+        c.id, memberId ?? 0, date, new Date().toISOString(),
+      );
+    } else {
+      run(db, 'DELETE FROM chore_completions WHERE chore_id = ? AND member_id = ? AND date = ?', c.id, memberId ?? 0, date);
     }
     changed('chores');
     return { ok: true };

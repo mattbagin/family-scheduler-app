@@ -1,6 +1,6 @@
 import {
-  addDays, datePart, expandEvent, minutesOf,
-  type Bill, type Calendar, type Category, type Chore, type EventRecord, type Member, type Occurrence, type OccurrencePatch, type Plan,
+  addDays, datePart, expandDates, expandEvent, minutesOf,
+  type Bill, type Calendar, type Category, type Chore, type ChoreForDay, type EventRecord, type Member, type Occurrence, type OccurrencePatch, type Plan,
   type PlanTask, type PrepItem, type Todo, type TodoKind, type Ymd,
 } from '../../shared/src/index.ts';
 import { all, get, type Db } from './db.ts';
@@ -168,23 +168,47 @@ export function getPlan(db: Db, id: number): Plan {
 
 /* ---------- chores & bills ---------- */
 
-export interface ChoreRow {
+interface ChoreRow {
   id: number;
   text: string;
   icon: string;
-  assignee_id: number;
-  days: string;
+  rrule: string;
+  start: string;
   sort: number;
+  member_ids: string | null;
 }
 
-export const toChore = (r: ChoreRow): Chore => ({
-  id: r.id, text: r.text, icon: r.icon, assigneeId: r.assignee_id, days: r.days.split(',').filter(Boolean).map(Number), sort: r.sort,
+// Members in family order, so a shared chore's tiles line up the same way everywhere.
+const CHORE_SELECT = `SELECT c.*, (SELECT group_concat(member_id) FROM (
+  SELECT cm.member_id FROM chore_members cm JOIN members m ON m.id = cm.member_id WHERE cm.chore_id = c.id ORDER BY m.sort, m.id
+)) AS member_ids FROM chores c`;
+
+const toChore = (r: ChoreRow): Chore => ({
+  id: r.id, text: r.text, icon: r.icon, memberIds: r.member_ids ? r.member_ids.split(',').map(Number) : [], rrule: r.rrule, start: r.start, sort: r.sort,
 });
 
+export const listChores = (db: Db): Chore[] => all<ChoreRow>(db, `${CHORE_SELECT} ORDER BY c.sort, c.id`).map(toChore);
+
 export function getChore(db: Db, id: number): Chore {
-  const row = get<ChoreRow>(db, 'SELECT * FROM chores WHERE id = ?', id);
+  const row = get<ChoreRow>(db, `${CHORE_SELECT} WHERE c.id = ?`, id);
   if (!row) throw notFound('Chore');
   return toChore(row);
+}
+
+/** Every chore due in [from, to), one row per person (or one for a family job), by date. */
+export function choresBetween(db: Db, from: Ymd, to: Ymd): ChoreForDay[] {
+  const done = new Set(
+    all<{ k: string }>(db, "SELECT chore_id || ':' || member_id || ':' || date AS k FROM chore_completions WHERE date >= ? AND date < ?", from, to).map((r) => r.k),
+  );
+  const out: ChoreForDay[] = [];
+  for (const c of listChores(db)) {
+    for (const date of expandDates(c.start, c.rrule, from, to)) {
+      for (const memberId of c.memberIds.length ? c.memberIds : [null]) {
+        out.push({ ...c, date, memberId, done: done.has(`${c.id}:${memberId ?? 0}:${date}`) });
+      }
+    }
+  }
+  return out.sort((a, b) => a.date.localeCompare(b.date));
 }
 
 interface BillRow {

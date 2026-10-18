@@ -84,10 +84,9 @@ export function Kid() {
   // Things starting together share the Next card, so the same clock never shows twice.
   const together = up.filter((o) => o.start === next?.start);
   const later = up.filter((o) => o.start !== next?.start);
-  const myChores = chores.filter((c) => c.assigneeId === k.id && c.scheduled);
+  const myChores = chores.filter((c) => c.memberId === k.id);
   const myPrep = prep.filter((p) => p.memberIds.includes(k.id));
-  // A kid's tiles skip the next round of a repeating job until its day comes.
-  const myTodos = todos.filter((t) => t.kind === 'todo' && t.assigneeId === k.id && !(t.rrule && t.due && t.due > today));
+  const myTodos = todos.filter((t) => t.kind === 'todo' && t.assigneeId === k.id);
   const seen = new Set<number>();
   const sleeps = occs
     .filter((o) => o.fun && o.memberIds.includes(k.id) && occDate(o) > today)
