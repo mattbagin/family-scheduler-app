@@ -134,7 +134,11 @@ export function memberRoutes(app: FastifyInstance, { db, changed }: Ctx) {
     requireEditor(req);
     const row = getMemberRow(db, idParam(req.params));
     if (row.role === 'adult' && adultsWithPin(row.id) === 0) throw badRequest('At least one parent with a PIN is needed');
-    run(db, 'DELETE FROM members WHERE id = ?', row.id);
+    tx(db, () => {
+      // Their own chores go with them; shared ones stay with the others (rather than turning into family jobs).
+      run(db, `DELETE FROM chores WHERE id IN (SELECT chore_id FROM chore_members GROUP BY chore_id HAVING count(*) = 1 AND max(member_id) = ?)`, row.id);
+      run(db, 'DELETE FROM members WHERE id = ?', row.id);
+    });
     changed('members', 'events', 'plans', 'chores', 'todos');
     return reply.status(204).send();
   });

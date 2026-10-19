@@ -55,26 +55,29 @@ describe('to-dos', () => {
     expect((await app.inject({ method: 'POST', url: '/api/todos', cookies: kid, payload: { text: 'Candy' } })).statusCode).toBe(403);
   });
 
-  it('adds the next round when a repeating to-do is ticked off, and takes it back when unticked', async () => {
+  it('adds the next round when a repeating prep item is ticked off, and takes it back when unticked', async () => {
     const { adult, members } = await setupFamily(app);
     const [, , kit] = members;
     const lastWeek = addDays(today, -7);
-    const bins = (await app.inject({ method: 'POST', url: '/api/todos', cookies: adult, payload: { text: 'Bins out', assigneeId: kit.id, due: lastWeek, rrule: 'FREQ=DAILY;INTERVAL=7' } })).json<Todo>();
-    expect(bins.rrule).toBe('FREQ=DAILY;INTERVAL=7');
+    const post = (payload: object) => app.inject({ method: 'POST', url: '/api/todos', cookies: adult, payload });
+    const gym = (await post({ kind: 'prep', text: 'Gym shoes', assigneeId: kit.id, due: lastWeek, rrule: 'FREQ=DAILY;INTERVAL=7' })).json<Todo>();
+    expect(gym.rrule).toBe('FREQ=DAILY;INTERVAL=7');
     const tick = (t: Todo, done: boolean) => app.inject({ method: 'PATCH', url: `/api/todos/${t.id}`, cookies: adult, payload: { done } });
     const open = async () => (await app.inject({ url: '/api/todos', cookies: adult })).json<Todo[]>().filter((t) => !t.doneAt);
 
     // A week late: the next one lands after today, not on today.
-    await tick(bins, true);
-    await tick(bins, true); // ticking twice doesn't add two
-    expect(await open()).toMatchObject([{ text: 'Bins out', due: addDays(today, 7), rrule: 'FREQ=DAILY;INTERVAL=7', assigneeId: kit.id }]);
-    await tick(bins, false);
-    expect((await open()).map((t) => t.id)).toEqual([bins.id]);
+    await tick(gym, true);
+    await tick(gym, true); // ticking twice doesn't add two
+    expect(await open()).toMatchObject([{ text: 'Gym shoes', due: addDays(today, 7), rrule: 'FREQ=DAILY;INTERVAL=7', assigneeId: kit.id }]);
+    await tick(gym, false);
+    expect((await open()).map((t) => t.id)).toEqual([gym.id]);
 
-    // No day given: it starts today.
-    const daily = (await app.inject({ method: 'POST', url: '/api/todos', cookies: adult, payload: { text: 'Feed the fish', rrule: 'FREQ=DAILY' } })).json<Todo>();
-    expect(daily.due).toBe(today);
-    expect((await app.inject({ method: 'POST', url: '/api/todos', cookies: adult, payload: { text: 'X', rrule: 'nonsense' } })).statusCode).toBe(400);
+    expect((await post({ kind: 'prep', text: 'X', due: today, rrule: 'nonsense' })).statusCode).toBe(400);
+    // Repeating to-dos are chores now.
+    const bins = await post({ text: 'Bins out', rrule: 'FREQ=WEEKLY;BYDAY=MO' });
+    expect(bins.json().message).toMatch(/^rrule: to-dos don’t repeat/);
+    const once = (await post({ text: 'Call the plumber' })).json<Todo>();
+    expect((await app.inject({ method: 'PATCH', url: `/api/todos/${once.id}`, cookies: adult, payload: { rrule: 'FREQ=DAILY' } })).statusCode).toBe(400);
   });
 });
 

@@ -87,15 +87,20 @@ export interface Chore {
   id: number;
   text: string;
   icon: string;
-  assigneeId: number;
-  /** Weekdays the chore is due, 0 = Monday … 6 = Sunday. */
-  days: number[];
+  /** Who does it; each person ticks their own. Empty means a family job that anyone ticks once. */
+  memberIds: number[];
+  /** When it's due, as an RRULE (FREQ=DAILY, FREQ=WEEKLY;BYDAY=TU, FREQ=MONTHLY …). */
+  rrule: string;
+  /** The first day; monthly and every-other-week rules count from it. */
+  start: Ymd;
   sort: number;
 }
 
+/** A chore for one person on one day it's due. */
 export interface ChoreForDay extends Chore {
   date: Ymd;
-  scheduled: boolean;
+  /** Whose tile this is; null for a family job. */
+  memberId: number | null;
   done: boolean;
 }
 
@@ -137,7 +142,7 @@ export interface Todo {
   /** Null means someday (to-dos only; prep always has a day). */
   due: Ymd | null;
   doneAt: string | null;
-  /** Repeat rule (to-dos with a day only). Ticking one off adds the next. */
+  /** Repeat rule (prep items only; repeating jobs are chores). Ticking one off adds the next. */
   rrule: string | null;
 }
 

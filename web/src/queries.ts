@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
-import type { Bill, Bootstrap, Calendar, ChoreForDay, HubSettings, LiveTopic, Occurrence, Plan, PrepItem, Todo, Weather, Ymd } from '@shared';
+import type { Bill, Bootstrap, Calendar, Chore, ChoreForDay, HubSettings, LiveTopic, Occurrence, Plan, PrepItem, Todo, Weather, Ymd } from '@shared';
 import { api } from './api.ts';
 
 export const useBootstrap = () => useQuery({ queryKey: ['bootstrap'], queryFn: () => api<Bootstrap>('/bootstrap') });
@@ -14,7 +14,8 @@ export const useOccurrences = (from: Ymd, to: Ymd, enabled = true) =>
   });
 
 export const usePlans = () => useQuery({ queryKey: ['plans'], queryFn: () => api<Plan[]>('/plans') });
-export const useChores = (date: Ymd) => useQuery({ queryKey: ['chores', date], queryFn: () => api<ChoreForDay[]>(`/chores?date=${date}`) });
+export const useChores = (date: Ymd) => useQuery({ queryKey: ['chores', date], queryFn: () => api<ChoreForDay[]>(`/chores/due?date=${date}`) });
+export const useChoreList = () => useQuery({ queryKey: ['chores', 'list'], queryFn: () => api<Chore[]>('/chores') });
 export const useBills = () => useQuery({ queryKey: ['bills'], queryFn: () => api<Bill[]>('/bills') });
 export const useTodos = () => useQuery({ queryKey: ['todos'], queryFn: () => api<Todo[]>('/todos') });
 /** What to get ready from today on; today's bring notes drop off once their event has started. */

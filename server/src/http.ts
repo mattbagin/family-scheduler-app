@@ -62,10 +62,6 @@ export const v = {
     if (!Array.isArray(x) || !x.every((i) => Number.isInteger(i) && i > 0)) throw badRequest(`${f}: must be a list of ids`);
     return [...new Set(x as number[])];
   }) as Check<number[]>,
-  weekdays: ((x, f) => {
-    if (!Array.isArray(x) || !x.length || !x.every((i) => Number.isInteger(i) && i >= 0 && i <= 6)) throw badRequest(`${f}: must list weekdays 0 (Mon) to 6 (Sun)`);
-    return [...new Set(x as number[])].sort();
-  }) as Check<number[]>,
   oneOf:
     <T extends string>(...opts: T[]): Check<T> =>
     (x, f) => {
@@ -81,6 +77,10 @@ export const v = {
     if (typeof x !== 'string' || !isValidRRule(x)) throw badRequest(`${f}: must be a repeat rule like FREQ=WEEKLY;BYDAY=TU`);
     return x.replace(/^RRULE:/i, '');
   }) as Check<string | null>,
+  rrule: ((x, f) => {
+    if (typeof x !== 'string' || !isValidRRule(x)) throw badRequest(`${f}: must be a repeat rule like FREQ=WEEKLY;BYDAY=TU`);
+    return x.replace(/^RRULE:/i, '');
+  }) as Check<string>,
   pin: ((x, f) => {
     if (typeof x !== 'string' || !/^\d{4,8}$/.test(x)) throw badRequest(`${f}: must be 4 to 8 digits`);
     return x;

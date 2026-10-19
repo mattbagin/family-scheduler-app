@@ -148,11 +148,12 @@ export function Today() {
 
   /* ---- people, plans, countdowns ---- */
   const openCount = (id: number) =>
-    chores.filter((c) => c.assigneeId === id && c.scheduled && !c.done).length +
+    chores.filter((c) => c.memberId === id && !c.done).length +
     plans.reduce((n, p) => n + p.tasks.filter((t) => t.assigneeId === id && !t.doneAt && dayDiff(today, t.due) <= 2).length, 0) +
     todos.filter((t) => t.kind === 'todo' && t.assigneeId === id && !t.doneAt && t.due && dayDiff(today, t.due) <= 2).length +
     prep.filter((p) => p.memberIds.includes(id) && !p.done).length;
-  const kidsWithJobs = f.members.filter((m) => m.role === 'kid' && chores.some((c) => c.assigneeId === m.id && c.scheduled));
+  const kidsWithJobs = f.members.filter((m) => m.role === 'kid' && chores.some((c) => c.memberId === m.id));
+  const familyJobs = chores.filter((c) => c.memberId === null);
   const activePlans = plans.filter((p) => p.start.slice(0, 10) >= today);
   const seen = new Set<number>();
   const countdowns = occs
@@ -162,12 +163,12 @@ export function Today() {
 
   // On the shared hub the sticker chart is the heart of Today: it leads, full width, at full size.
   const isHub = f.session.kind === 'hub';
-  const chart = kidsWithJobs.length > 0 && (
+  const chart = (kidsWithJobs.length > 0 || familyJobs.length > 0) && (
     <section className={`panel${isHub ? ' chart-wide' : ''}`} aria-label="Chore chart">
       <div className="panel-head"><h2>Today’s jobs</h2><span className="label">Tap when it’s done</span></div>
       <div className="chart-rows">
         {kidsWithJobs.map((k) => {
-          const mine = chores.filter((c) => c.assigneeId === k.id && c.scheduled);
+          const mine = chores.filter((c) => c.memberId === k.id);
           const done = mine.filter((c) => c.done).length;
           return (
             <div key={k.id} className="chart-row" style={pc(k.color)}>
@@ -179,6 +180,12 @@ export function Today() {
             </div>
           );
         })}
+        {familyJobs.length > 0 && (
+          <div className="chart-row">
+            <div className="who"><span aria-hidden="true">🏠</span> Anyone</div>
+            <div className="tiles">{familyJobs.map((c) => <ChoreTile key={c.id} c={c} all={chores} />)}</div>
+          </div>
+        )}
       </div>
     </section>
   );

@@ -233,9 +233,11 @@ function TodoQuick({ text, setText }: { text: string; setText: (t: string) => vo
   };
   const add = async () => {
     if (!ready || !base) return;
-    const body = { kind, text: base.text, assigneeId: who, due, rrule };
     const whose = who ? `${f.byId(who)?.name}’s` : 'the family';
-    const ok = await act(() => api('/todos', { method: 'POST', body }), `Added “${base.text}” to ${whose} ${kind === 'prep' ? 'packing list' : 'to-dos'}`);
+    // A to-do that repeats is a job, so it shows on the chore chart every time it's due.
+    const ok = kind === 'todo' && rrule
+      ? await act(() => api('/chores', { method: 'POST', body: { text: base.text, memberIds: who ? [who] : [], rrule, start: due ?? today } }), `Added “${base.text}” to ${whose} jobs`)
+      : await act(() => api('/todos', { method: 'POST', body: { kind, text: base.text, assigneeId: who, due, rrule } }), `Added “${base.text}” to ${whose} ${kind === 'prep' ? 'packing list' : 'to-dos'}`);
     if (ok) sheets.close();
   };
 

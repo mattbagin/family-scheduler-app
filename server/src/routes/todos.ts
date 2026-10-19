@@ -41,6 +41,8 @@ function rollOver(db: Db, todo: Todo, done: boolean) {
   }
 }
 
+const NO_REPEAT = 'rrule: to-dos don’t repeat; add it as a job instead';
+
 /** Prep items get a backpack unless the words suggest something better. */
 const iconFor = (kind: string, text: string) => {
   const guess = guessTaskIcon(text);
@@ -64,9 +66,9 @@ export function todoRoutes(app: FastifyInstance, { db, changed }: Ctx) {
     const t = parseBody(schema, req.body, ['kind', 'icon', 'assigneeId', 'due', 'rrule']);
     const kind = t.kind ?? 'todo';
     if (kind === 'prep' && !t.due) throw badRequest('due: say which day to get this ready for');
+    if (kind === 'todo' && t.rrule) throw badRequest(NO_REPEAT);
     checkAssignee(t.assigneeId);
-    // A repeating to-do needs a day to count from; with none, it starts today.
-    const due = t.due ?? (t.rrule ? ymd(new Date()) : null);
+    const due = t.due ?? null;
     const { id } = run(
       db, 'INSERT INTO todos (kind, text, icon, assignee_id, due, rrule, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
       kind, t.text, t.icon ?? iconFor(kind, t.text), t.assigneeId ?? null, due, t.rrule ?? null, new Date().toISOString(),
@@ -86,7 +88,7 @@ export function todoRoutes(app: FastifyInstance, { db, changed }: Ctx) {
     const due = p.due === undefined ? todo.due : p.due;
     const rrule = p.rrule === undefined ? todo.rrule : p.rrule;
     if (kind === 'prep' && !due) throw badRequest('due: say which day to get this ready for');
-    if (rrule && !due) throw badRequest('due: say which day this repeats from');
+    if (kind === 'todo' && rrule) throw badRequest(NO_REPEAT);
     const doneAt = p.done === undefined ? todo.doneAt : p.done ? (todo.doneAt ?? new Date().toISOString()) : null;
     tx(db, () => {
       run(
