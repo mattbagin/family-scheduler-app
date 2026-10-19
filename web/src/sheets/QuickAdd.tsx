@@ -259,6 +259,7 @@ function TodoQuick({ text, setText }: { text: string; setText: (t: string) => vo
                 onChange={(e) => setDuePick(e.target.value || null)} />
               {due ? dayLabel(today, due) : rrule ? 'Starts today' : 'No day (someday)'}
             </dd>
+            {kind === 'prep' ? <>
             <dt>Repeats</dt>
             <dd className="row" style={{ gap: 8 }}>
               <select className="inline-select" style={{ width: 'auto' }} value={rruleToPreset(rrule).preset} aria-label="Repeats"
@@ -267,6 +268,10 @@ function TodoQuick({ text, setText }: { text: string; setText: (t: string) => vo
               </select>
               {rrule && <span><span aria-hidden="true">🔁</span> {describeRRule(rrule)}</span>}
             </dd>
+            </> : rrule && <>
+            <dt>Repeats</dt>
+            <dd><span aria-hidden="true">🔁</span> {describeRRule(rrule)}, so it goes on the chore chart as a job</dd>
+            </>}
           </dl>
           <div className="stack" style={{ gap: 8 }}>
             <div className="label">Whose is it?</div>
@@ -282,7 +287,7 @@ function TodoQuick({ text, setText }: { text: string; setText: (t: string) => vo
         </>
       )}
       <div className="row-end">
-        <button className="primary" disabled={!ready} onClick={add}>{kind === 'prep' ? 'Add to the packing list' : 'Add to-do'}</button>
+        <button className="primary" disabled={!ready} onClick={add}>{kind === 'prep' ? 'Add to the packing list' : rrule ? 'Add job' : 'Add to-do'}</button>
       </div>
     </>
   );

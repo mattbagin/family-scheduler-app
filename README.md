@@ -35,8 +35,8 @@ Every change is pushed live to every open screen.
 
 ## Jobs, to-dos and packing
 
-- **Jobs** (Settings) repeat every day, on chosen weekdays or monthly, and show as picture tiles on the Today board, each kid's page and in kid mode. A job can be for several people, and each ticks off their own; a job for **Anyone** (“Take out the garbage”) is done once by whoever does it. Finishing the last one gets a big celebration.
-- **To-dos** ("Call the plumber Friday Dad") live on each person's page. On a phone, swipe right to finish one or left to push it to tomorrow; the buttons do the same. A to-do that repeats (“Wash the car every Saturday”, or pick **Repeats** in quick add) is saved as a job. Packing items can repeat too: ticking one off adds the next, and unticking takes it back.
+- **Jobs** repeat every day, on chosen weekdays, every two weeks, or monthly (on a date like the 18th, or a day like the 3rd Sunday). Add one with **+ Add a job** on the Today board, a person's page or Settings; tap a job in Settings to change or remove it. Jobs and show as picture tiles on the Today board, each kid's page and in kid mode. A job can be for several people, and each ticks off their own; a job for **Anyone** (“Take out the garbage”) is done once by whoever does it. Finishing the last one gets a big celebration.
+- **To-dos** ("Call the plumber Friday Dad") live on each person's page. On a phone, swipe right to finish one or left to push it to tomorrow; the buttons do the same. A to-do that repeats (“Wash the car every Saturday”) is saved as a job. Packing items can repeat too: ticking one off adds the next, and unticking takes it back.
 - **Packing:** an event's "what to bring" note and prep items ("Pack gym shoes Thursday Emma") make a Get ready checklist for today and tomorrow. Today's items drop off once their event starts.
 - **Quick add (+)** understands plain words: days ("Oct 12", "10/12", "the 15th", "in 2 weeks"), times and ranges ("5-6:30pm", "at noon for 45 min"), repeats ("every Tue and Thu", "every other Saturday", "weekdays") and "all day". An event with no time can be saved as a to-do instead.
 

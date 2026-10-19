@@ -172,7 +172,7 @@ All planned milestones are built. Ideas for later: leave-by times that clash as 
    - `POST /api/todos` rejects `rrule` for kind 'todo'.
 
    Tests: expansion, per-person ticks, the family-job tick, the migration of old `days` rows and repeating to-dos.
-2. **Adding and editing** (`feat/chore-sheet`):
+2. ✅ **Adding and editing** (`feat/chore-sheet`):
    - A chore sheet (text, icon, people, repeat preset from `REPEAT_PRESETS` plus monthly), opened from "+ Add a job" on the Today chore chart and person pages, and by tapping a job to edit it.
    - Settings keeps the list but uses the same sheet.
    - Quick add: a to-do with a repeat ("make bed every day for Sam") becomes a chore. The repeat picker leaves the to-do form (it stays for prep).
@@ -184,5 +184,11 @@ All planned milestones are built. Ideas for later: leave-by times that clash as 
 - Removing a person deletes the chores that were only theirs; shared ones stay with the others.
 - The web side got only what keeps it working: Settings shows each job's repeat and people and can add a family job; Today's chore chart has an **Anyone** row for family jobs; quick add saves a repeating to-do as a chore. The sample family now has a shared “Brush teeth”, a Saturday “Clean my room” and a weekly garbage family job.
 - `scripts/check-chores.py` drives the chore chart, kid ticks, quick add and Settings in a browser; extend it in steps 2 and 3.
+
+**Step 2 as built:**
+- `web/src/sheets/ChoreSheet.tsx`: text, people (or Anyone), repeat, a **Starts** day, picture. Monthly is two choices made from the start day by `monthlyRules` (shared): the same date (`BYMONTHDAY=18`) or the same weekday (`BYDAY=3SU`; a 5th weekday becomes the last). A rule the sheet can't make is shown as it is and kept on save.
+- Tapping a tile still ticks it (kids use the chart), so editing is from the Settings list, where each row opens the sheet; **Remove** is in the sheet. **+ Add a job** is on the Today chart, each person page (with that person picked) and Settings. Today's chart still hides when there are no jobs at all.
+- Person pages always show a **Today’s jobs** panel (was “Daily jobs”), with “No jobs today.” when empty.
+- Quick add: the repeat picker shows only for packing items; a to-do with a typed repeat shows the repeat read-only and the button says **Add job**.
 
 **Open:** whether nudges should mention undone family jobs (for example "Garbage goes out tonight" in the evening digest). Leave this out of the steps above; decide after step 3.

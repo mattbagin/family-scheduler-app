@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { describeRRule, expandDates, expandEvent, formatRRule, parseRRule, presetToRRule, rruleToPreset } from '../src/recurrence.ts';
+import { describeRRule, expandDates, expandEvent, formatRRule, monthlyRules, parseRRule, presetToRRule, rruleToPreset } from '../src/recurrence.ts';
 import { addMonths, dayLabel, fmtTime, withMinutes } from '../src/time.ts';
 import type { EventRecord, OccurrencePatch } from '../src/types.ts';
 
@@ -115,6 +115,15 @@ describe('repeat presets', () => {
     expect(presetToRRule('weekly', [1, 3])).toBe('FREQ=WEEKLY;BYDAY=TU,TH');
     expect(rruleToPreset('FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR').preset).toBe('weekdays');
     expect(rruleToPreset('FREQ=WEEKLY;INTERVAL=2;BYDAY=SA')).toEqual({ preset: 'biweekly', weekdays: [5] });
+  });
+});
+
+describe('monthly rules from a first day', () => {
+  it('keeps the date or the weekday, and a 5th weekday becomes the last', () => {
+    expect(monthlyRules('2026-10-18')).toEqual({ byDate: 'FREQ=MONTHLY;BYMONTHDAY=18', byWeekday: 'FREQ=MONTHLY;BYDAY=3SU' });
+    const { byWeekday } = monthlyRules('2026-10-30');
+    expect(describeRRule(byWeekday)).toBe('Monthly on the last Fri');
+    expect(expandDates('2026-10-30', byWeekday, '2026-11-01', '2026-12-01')).toEqual(['2026-11-27']);
   });
 });
 

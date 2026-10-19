@@ -4,6 +4,7 @@ import { api } from '../api.ts';
 import { namesOf, useAction, useFamily, useNow } from '../context.tsx';
 import { mainRange, money, occDate, personItems, type PersonItem, relDay } from '../lib.ts';
 import { useBills, useChores, useOccurrences, usePlans, usePrep, useTodos } from '../queries.ts';
+import { ChoreSheet } from '../sheets/ChoreSheet.tsx';
 import { EventSheet } from '../sheets/EventSheet.tsx';
 import { TaskRow, useToggleTask } from '../sheets/PlanSheet.tsx';
 import { NudgeFeed } from '../nudges.tsx';
@@ -120,12 +121,14 @@ export function Person() {
           </section>
         </div>
         <div className="col">
-          {myChores.length > 0 && (
-            <section className="panel">
-              <div className="panel-head"><h2>Daily jobs</h2><span className="note">{myChores.filter((c) => c.done).length} of {myChores.length} done</span></div>
-              <div className="tiles">{myChores.map((c) => <ChoreTile key={c.id} c={c} all={chores} />)}</div>
-            </section>
-          )}
+          <section className="panel">
+            <div className="panel-head">
+              <h2>Today’s jobs</h2>
+              {myChores.length > 0 && <span className="note">{myChores.filter((c) => c.done).length} of {myChores.length} done</span>}
+              <button className="mini-btn" onClick={() => sheets.open(<ChoreSheet memberIds={[m.id]} />)}>+ Add a job</button>
+            </div>
+            {myChores.length ? <div className="tiles">{myChores.map((c) => <ChoreTile key={c.id} c={c} all={chores} />)}</div> : <p className="note">No jobs today.</p>}
+          </section>
           {myPrep.length > 0 && (
             <section className="panel">
               <div className="panel-head"><h2>Get ready</h2><span className="note">{myPrep.filter((p) => !p.done).length} to pack</span></div>

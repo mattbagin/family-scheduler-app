@@ -15,6 +15,7 @@ import { QuickAdd } from '../sheets/QuickAdd.tsx';
 import { PrepList } from '../todos.tsx';
 import { Avatar, Face, pc, useSheets } from '../ui.tsx';
 import { ChoreTile } from './Person.tsx';
+import { ChoreSheet } from '../sheets/ChoreSheet.tsx';
 
 const WINDOW_MIN = 6 * 60;
 
@@ -165,7 +166,10 @@ export function Today() {
   const isHub = f.session.kind === 'hub';
   const chart = (kidsWithJobs.length > 0 || familyJobs.length > 0) && (
     <section className={`panel${isHub ? ' chart-wide' : ''}`} aria-label="Chore chart">
-      <div className="panel-head"><h2>Today’s jobs</h2><span className="label">Tap when it’s done</span></div>
+      <div className="panel-head">
+        <h2>Today’s jobs</h2><span className="label">Tap when it’s done</span>
+        <button className="mini-btn" onClick={() => sheets.open(<ChoreSheet />)}>+ Add a job</button>
+      </div>
       <div className="chart-rows">
         {kidsWithJobs.map((k) => {
           const mine = chores.filter((c) => c.memberId === k.id);
