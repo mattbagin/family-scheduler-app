@@ -176,7 +176,7 @@ All planned milestones are built. Ideas for later: leave-by times that clash as 
    - A chore sheet (text, icon, people, repeat preset from `REPEAT_PRESETS` plus monthly), opened from "+ Add a job" on the Today chore chart and person pages, and by tapping a job to edit it.
    - Settings keeps the list but uses the same sheet.
    - Quick add: a to-do with a repeat ("make bed every day for Sam") becomes a chore. The repeat picker leaves the to-do form (it stays for prep).
-3. **Calendar** (`feat/chores-on-calendar`): Week and Month show each day's jobs as small chips (icon + face) under the all-day row. Tapping one ticks it; the Month day sheet lists them. Jobs on later days are view-only, so nobody ticks next Tuesday's garbage early.
+3. ✅ **Calendar** (`feat/chores-on-calendar`): Week and Month show each day's jobs as small chips (icon + face) under the all-day row. Tapping one ticks it; the Month day sheet lists them. Jobs on later days are view-only, so nobody ticks next Tuesday's garbage early.
 
 **Step 1 as built** (differs from the plan above):
 - Reads are split: `GET /api/chores` lists the chores themselves (for Settings), and `GET /api/chores/due?date=` or `?from=&to=` (up to 62 days) returns one row per chore, person and date.
@@ -190,5 +190,12 @@ All planned milestones are built. Ideas for later: leave-by times that clash as 
 - Tapping a tile still ticks it (kids use the chart), so editing is from the Settings list, where each row opens the sheet; **Remove** is in the sheet. **+ Add a job** is on the Today chart, each person page (with that person picked) and Settings. Today's chart still hides when there are no jobs at all.
 - Person pages always show a **Today’s jobs** panel (was “Daily jobs”), with “No jobs today.” when empty.
 - Quick add: the repeat picker shows only for packing items; a to-do with a typed repeat shows the repeat read-only and the button says **Add job**.
+
+**Step 3 as built:**
+- The Week grid has no all-day row (people are rows), so jobs get their own **Jobs** row under the day headings: one chip per job and person (picture + face; family jobs have no face), green when done. `ChoreChip` lives in `views/Person.tsx` next to `ChoreTile` and uses the same tick, burst and toast.
+- Month day cells stay as they were (they're one button, and too small for chips on a phone); the day sheet lists the jobs as chips with their text, tickable the same way.
+- Later days' chips are disabled, and the server also refuses ticks for a date after today (`date: this job isn’t due yet…`). Past days can still be ticked.
+- `useChores(from, to?)` now takes a range (`/api/chores/due?from&to`); one day by default.
+- `scripts/check-chores.py` covers the Week row (per-kid chips, ticking, later days view-only) and the Month day sheet.
 
 **Open:** whether nudges should mention undone family jobs (for example "Garbage goes out tonight" in the evening digest). Leave this out of the steps above; decide after step 3.

@@ -4,7 +4,8 @@ import {
 } from '@shared';
 import { useFamily, useNow } from '../context.tsx';
 import { occDate } from '../lib.ts';
-import { useCalendars, useOccurrences } from '../queries.ts';
+import { useCalendars, useChores, useOccurrences } from '../queries.ts';
+import { ChoreChip } from './Person.tsx';
 import { EventForm } from '../sheets/EventForm.tsx';
 import { EventSheet } from '../sheets/EventSheet.tsx';
 import { Face, pc, Sheet, useSheets } from '../ui.tsx';
@@ -83,6 +84,7 @@ function DaySheet({ day }: { day: Ymd }) {
   const { today } = useNow();
   const { data: occs = [] } = useOccurrences(day, addDays(day, 1));
   const list = occs.filter((o) => onDay(o, day)).sort(byTime);
+  const { data: chores = [] } = useChores(day);
   const label = dayLabel(today, day);
   return (
     <Sheet title={longDay(day)} sub={['Today', 'Tomorrow', 'Yesterday'].includes(label) ? label : undefined} icon="📅">
@@ -101,6 +103,12 @@ function DaySheet({ day }: { day: Ymd }) {
           ))}
         </div>
       ) : <p className="empty">Nothing planned yet.</p>}
+      {chores.length > 0 && (
+        <>
+          <div className="label">Jobs</div>
+          <div className="job-chips">{chores.map((c) => <ChoreChip key={`${c.id}:${c.memberId}`} c={c} all={chores} withText />)}</div>
+        </>
+      )}
       <div className="row-end">
         <button className="primary" onClick={() => sheets.replace(<EventForm draft={{ start: `${day}T16:00`, end: `${day}T17:00` }} />)}>+ Add to this day</button>
       </div>
