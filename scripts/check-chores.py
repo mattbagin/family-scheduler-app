@@ -1,4 +1,4 @@
-"""Browser check for chores: the sample family's chore chart, kid-mode ticks, quick add and Settings.
+"""Browser check for chores: the sample family's chore chart, kid-mode ticks, quick add, Settings, Week and Month.
 
 Start a server on a fresh database first (see CLAUDE.md, "Checking the real app in a browser"), then:
     PYTHONIOENCODING=utf-8 python scripts/check-chores.py [base_url]
@@ -135,6 +135,35 @@ with sync_playwright() as p:
     dlg.get_by_role('button', name='Yes, remove').click()
     page.wait_for_timeout(500)
     check(not chores_named('Water plants'), 'removed job is gone')
+
+    # Week: a Jobs row of chips; today's can be ticked, later days' can't.
+    page.goto(f'{BASE}/week')
+    page.locator('.jobs-lab').wait_for()
+    today_cell = page.locator('.cell.jobs.today')
+    teeth = [today_cell.get_by_role('button', name=f"Brush teeth, {k['name']}") for k in kids]
+    check(all(t.count() == 1 for t in teeth), 'Week: one "Brush teeth" chip per kid today')
+    check(teeth[0].get_attribute('aria-pressed') == 'true', 'Week: kid-mode tick shows on the chip')
+    teeth[1].click()
+    page.wait_for_timeout(500)
+    page.reload()
+    page.locator('.jobs-lab').wait_for()
+    check(page.locator('.cell.jobs.today').get_by_role('button', name=f"Brush teeth, {kids[1]['name']}").get_attribute('aria-pressed') == 'true', 'Week: ticking a chip sticks')
+    later = page.locator('.cell.jobs:not(.today):not(.past) .job-chip')
+    print('Week later chips:', later.count())
+    check(later.count() == 0 or all(later.nth(i).is_disabled() for i in range(later.count())), 'Week: later days are view-only')
+    if later.count():
+        later.first.click(force=True)
+        page.wait_for_timeout(300)
+        check(later.first.get_attribute('aria-pressed') == 'false', 'Week: a later chip ignores a click')
+
+    # Month: the day sheet lists the jobs with their text.
+    page.goto(f'{BASE}/month')
+    page.locator('.mday.today .mday-btn').click()
+    dlg = page.get_by_role('dialog')
+    dlg.get_by_text('Jobs', exact=True).wait_for()
+    chips = dlg.locator('.job-chip')
+    print('Month day sheet jobs:', ' | '.join(chips.nth(i).inner_text().replace('\n', ' ') for i in range(chips.count())))
+    check(dlg.locator('.job-chip', has_text='Brush teeth').count() == 2, 'Month day sheet lists "Brush teeth" per kid')
 
     check(not errors, f'no page errors {errors}')
     browser.close()

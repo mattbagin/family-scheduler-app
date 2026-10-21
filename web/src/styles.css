@@ -356,6 +356,13 @@ body:has(.ambient) .nudges { bottom: calc(110px + env(safe-area-inset-bottom, 0p
 /* Days already gone fade back, like past chips. */
 .gh.past { color: var(--muted); }
 .cell.past .ev { opacity: .55; }
+.cell.jobs { min-height: 0; flex-direction: row; flex-wrap: wrap; gap: 4px; }
+.jobs-lab { color: var(--muted); font-size: var(--fs-small); background: var(--surface-2); }
+.job-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.job-chip { display: inline-flex; align-items: center; gap: 4px; border: 1px dashed var(--line); border-radius: 999px; padding: 2px 4px 2px 8px; background: var(--surface); font-size: var(--fs-small); min-height: 28px; }
+.job-chip.is-done { border-style: solid; border-color: var(--good); background: var(--good-bg); color: var(--good); }
+.job-chip:disabled { opacity: .6; cursor: default; }
+.job-chip .face { width: 20px; height: 20px; font-size: 11px; }
 .cell.today { background: color-mix(in srgb, var(--focus) 5%, var(--surface)); }
 .cell.over { background: color-mix(in srgb, var(--pc) 16%, var(--surface)); outline: 2px dashed var(--pc); outline-offset: -4px; }
 .ev { border: 0; text-align: left; border-radius: 10px; padding: 6px 8px; background: color-mix(in srgb, var(--pc) 15%, var(--surface)); font-size: var(--fs-small); line-height: 1.25; cursor: grab; width: 100%; }

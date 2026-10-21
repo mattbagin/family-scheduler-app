@@ -28,7 +28,7 @@ describe('chores', () => {
     const teeth = (await post({ text: 'Brush teeth', memberIds: [kit.id, alex.id] })).json<Chore>();
     expect(teeth).toMatchObject({ icon: '🪥', rrule: 'FREQ=DAILY', start: today, memberIds: [alex.id, kit.id] });
     const garbageDay = addDays(today, 2);
-    const garbage = (await post({ text: 'Take out the garbage', rrule: `FREQ=WEEKLY;BYDAY=${DAY[weekdayMon(garbageDay)]}` })).json<Chore>();
+    const garbage = (await post({ text: 'Take out the garbage', rrule: `FREQ=WEEKLY;BYDAY=${DAY[weekdayMon(garbageDay)]}`, start: addDays(today, -7) })).json<Chore>();
     expect(garbage.memberIds).toEqual([]);
     await post({ text: 'Change the furnace filter', memberIds: [alex.id], rrule: 'FREQ=MONTHLY', start: addDays(today, 3) });
 
@@ -44,13 +44,15 @@ describe('chores', () => {
     expect((await tick(teeth, today, { done: true, memberId: kit.id }, kid)).statusCode).toBe(200);
     expect((await tick(teeth, today, { done: true, memberId: alex.id }, kid)).statusCode).toBe(403);
     expect((await tick(teeth, today, { done: true })).json().message).toMatch(/^memberId:/);
-    // Anyone can do a family job, kids included, but only on its day.
-    expect((await tick(garbage, garbageDay, { done: true }, kid)).statusCode).toBe(200);
+    // Anyone can do a family job, kids included, but only on its day, and not before it comes.
+    const lastGarbage = addDays(garbageDay, -7);
+    expect((await tick(garbage, lastGarbage, { done: true }, kid)).statusCode).toBe(200);
     expect((await tick(garbage, today, { done: true })).json().message).toMatch(/^date:/);
+    expect((await tick(garbage, garbageDay, { done: true })).json().message).toMatch(/^date: this job isn’t due yet/);
 
     const day = await due(`date=${today}`);
     expect(day.filter((c) => c.id === teeth.id).map((c) => [c.memberId, c.done])).toEqual([[alex.id, false], [kit.id, true]]);
-    expect((await due(`date=${garbageDay}`)).find((c) => c.id === garbage.id)!.done).toBe(true);
+    expect((await due(`date=${lastGarbage}`)).find((c) => c.id === garbage.id)!.done).toBe(true);
     await tick(teeth, today, { done: false, memberId: kit.id }, kid);
     expect((await due(`date=${today}`)).every((c) => !c.done)).toBe(true);
 

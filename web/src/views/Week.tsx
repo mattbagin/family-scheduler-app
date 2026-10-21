@@ -6,7 +6,8 @@ import {
 import { api } from '../api.ts';
 import { useAction, useFamily, useNow } from '../context.tsx';
 import { occDate } from '../lib.ts';
-import { useOccurrences } from '../queries.ts';
+import { useChores, useOccurrences } from '../queries.ts';
+import { ChoreChip } from './Person.tsx';
 import { EventForm } from '../sheets/EventForm.tsx';
 import { EventSheet } from '../sheets/EventSheet.tsx';
 import { Avatar, pc, useSheets, useToast } from '../ui.tsx';
@@ -34,6 +35,7 @@ export function Week() {
     }
   }, [offset]);
   const { data: occs = [], isFetching } = useOccurrences(first, addDays(first, 7));
+  const { data: chores = [] } = useChores(first, addDays(first, 7));
   const flags = computeFlags(occs, f.members);
   const anyFlag = (kind: 'bad' | 'warn') => [...flags.values()].some((list) => list.some((x) => x.kind === kind));
 
@@ -82,6 +84,16 @@ export function Week() {
               {WEEKDAYS[weekdayMon(d)].slice(0, 3)}<span className="d num">{Number(d.slice(8))}</span>
             </div>
           ))}
+          {chores.length > 0 && (
+            <>
+              <div className="rowlab jobs-lab">Jobs</div>
+              {days.map((d) => (
+                <div key={d} className={`cell jobs ${d === today ? 'today' : d < today ? 'past' : ''}`}>
+                  {chores.filter((c) => c.date === d).map((c) => <ChoreChip key={`${c.id}:${c.memberId}`} c={c} all={chores} />)}
+                </div>
+              ))}
+            </>
+          )}
           {f.members.map((m) => (
             <Fragment key={m.id}>
               <Link to={`/person/${m.id}`} className="rowlab" style={pc(m.color)}><Avatar m={m} />{m.name}</Link>

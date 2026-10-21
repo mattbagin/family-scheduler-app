@@ -9,7 +9,7 @@ import { EventSheet } from '../sheets/EventSheet.tsx';
 import { TaskRow, useToggleTask } from '../sheets/PlanSheet.tsx';
 import { NudgeFeed } from '../nudges.tsx';
 import { AddTodo, PrepList, PrepTiles, TodoRow, useToggleTodo } from '../todos.tsx';
-import { Avatar, burstFrom, celebrate, chime, pc, useSheets, useToast } from '../ui.tsx';
+import { Avatar, burstFrom, celebrate, chime, Face, pc, useSheets, useToast } from '../ui.tsx';
 
 export function useToggleChore() {
   const f = useFamily();
@@ -36,6 +36,31 @@ export function ChoreTile({ c, all }: { c: ChoreForDay; all: ChoreForDay[] }) {
   return (
     <button className={`tile ${c.done ? 'is-done' : ''}`} aria-pressed={c.done} onClick={(e) => toggle(c, all, e.currentTarget)}>
       <span className="e" aria-hidden="true">{c.icon}</span>{c.text}
+    </button>
+  );
+}
+
+/** A job on the calendar: picture and face (and its text when there's room). Not tickable before its day. */
+export function ChoreChip({ c, all, withText }: { c: ChoreForDay; all: ChoreForDay[]; withText?: boolean }) {
+  const f = useFamily();
+  const { today } = useNow();
+  const toggle = useToggleChore();
+  const m = c.memberId ? f.byId(c.memberId) : undefined;
+  const later = c.date > today;
+  const label = `${c.text}, ${m?.name ?? 'anyone'}`;
+  return (
+    <button
+      className={`job-chip${c.done ? ' is-done' : ''}`}
+      style={pc(m?.color)}
+      aria-pressed={c.done}
+      aria-label={withText ? undefined : label}
+      disabled={later}
+      title={later ? `${label}: tick it off on the day` : label}
+      onClick={(e) => toggle(c, all, e.currentTarget)}
+    >
+      <span aria-hidden="true">{c.icon}</span>
+      {withText && <span>{c.text}</span>}
+      {m && <Face m={m} size={20} />}
     </button>
   );
 }

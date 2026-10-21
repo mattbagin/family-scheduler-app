@@ -88,6 +88,7 @@ export function choreRoutes(app: FastifyInstance, { db, changed }: Ctx) {
       requireAuth(req);
     }
     if (!expandDates(c.start, c.rrule, date, addDays(date, 1)).length) throw badRequest('date: this job isn’t due that day');
+    if (date > ymd(new Date())) throw badRequest('date: this job isn’t due yet, so tick it off on the day');
     if (done) {
       run(
         db, 'INSERT OR IGNORE INTO chore_completions (chore_id, member_id, date, completed_at) VALUES (?, ?, ?, ?)',
