@@ -242,6 +242,19 @@ export function rruleToPreset(rrule: string | null): { preset: RepeatPreset; wee
 
 const ordinal = (n: number) => `${n}${n % 10 === 1 && n !== 11 ? 'st' : n % 10 === 2 && n !== 12 ? 'nd' : n % 10 === 3 && n !== 13 ? 'rd' : 'th'}`;
 
+/**
+ * The two ways a monthly job can follow its first day: the same date ("the 18th") or the same
+ * weekday ("the 3rd Sun"; a 5th one becomes "the last", since not every month has five).
+ */
+export function monthlyRules(start: Ymd): { byDate: string; byWeekday: string } {
+  const day = Number(start.slice(8, 10));
+  const n = Math.ceil(day / 7);
+  return {
+    byDate: formatRRule({ freq: 'MONTHLY', interval: 1, byMonthDay: [day] }),
+    byWeekday: formatRRule({ freq: 'MONTHLY', interval: 1, byNthDay: [{ n: n === 5 ? -1 : n, day: weekdayMon(start) }] }),
+  };
+}
+
 export function describeRRule(rrule: string | null): string {
   if (!rrule) return 'Does not repeat';
   const r = parseRRule(rrule);

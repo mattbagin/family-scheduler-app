@@ -55,10 +55,13 @@ const TASK_KEYWORDS: [string, string][] = [
   ['vacuum', '🧹'], ['sweep', '🧹'], ['mop', '🧽'], ['clean', '🧽'], ['dust', '🪶'], ['chair', '🪑'], ['table', '🍽️'],
   ['napkin', '🧻'], ['card', '🖍️'], ['decor', '🎃'], ['balloon', '🎈'], ['shop', '🛒'], ['buy', '🛒'], ['order', '🛒'],
   ['grocer', '🛒'], ['invite', '✉️'], ['gift', '🎁'], ['wrap', '🎁'], ['dish', '🍽️'], ['trash', '🗑️'], ['garbage', '🗑️'],
-  ['menu', '📝'], ['plan', '📝'], ['book', '📞'], ['call', '📞'], ['pack', '🧳'], ['laundry', '🧺'], ['bed', '🛏️'],
-  ['teeth', '🪥'], ['toy', '🧸'], ['plant', '🪴'], ['dog', '🐕'], ['cat', '🐈'], ['fish', '🐟'], ['feed', '🐾'],
+  ['menu', '📝'], ['plant', '🪴'], ['plan', '📝'], ['book', '📞'], ['call', '📞'], ['pack', '🧳'], ['laundry', '🧺'], ['bed', '🛏️'],
+  ['teeth', '🪥'], ['toy', '🧸'], ['dog', '🐕'], ['cat', '🐈'], ['fish', '🐟'], ['feed', '🐾'],
   ['water', '💧'], ['homework', '📓'], ['read', '📖'], ['sock', '🧦'], ['shoe', '👟'], ['yard', '🍂'], ['rake', '🍂'],
 ];
+
+/** Pictures for jobs and to-dos, for pickers. */
+export const TASK_ICONS = ['✅', ...new Set(TASK_KEYWORDS.map(([, icon]) => icon))];
 
 export function guessTaskIcon(text: string): string {
   const t = text.toLowerCase();
