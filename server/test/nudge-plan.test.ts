@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { Bill, Member, Occurrence, PrepItem } from '../../shared/src/index.ts';
+import type { Bill, ChoreForDay, Member, Occurrence, PrepItem } from '../../shared/src/index.ts';
 import { planNudges, type PlanInput } from '../src/nudges/plan.ts';
 
 const members: Member[] = [
@@ -23,8 +23,12 @@ const prep = (date: string, text: string): PrepItem => ({
   key: `todo:${text}`, date, text, icon: '🎒', memberIds: [3], done: false, eventId: null, eventTitle: null, startMin: null, todoId: 1,
 });
 
+const job = (text: string, over: Partial<ChoreForDay> = {}): ChoreForDay => ({
+  id: 1, text, icon: '🗑️', memberIds: [], rrule: 'FREQ=WEEKLY;BYDAY=MO', start: DAY, sort: 0, date: DAY, memberId: null, done: false, ...over,
+});
+
 const plan = (now: string, over: Partial<PlanInput> = {}) =>
-  planNudges({ now, members, occurrences: [], prep: [], bills: [], todos: [], morningAt: '07:00', eveningAt: '19:30', ...over });
+  planNudges({ now, members, occurrences: [], prep: [], bills: [], todos: [], chores: [], morningAt: '07:00', eveningAt: '19:30', ...over });
 const keys = (now: string, over: Partial<PlanInput> = {}) => plan(now, over).map((n) => n.key);
 
 describe('leave-by nudges', () => {
@@ -67,6 +71,15 @@ describe('daily digests', () => {
     expect(n).toMatchObject({ key: `evening:${DAY}`, title: '🎒 Pack for tomorrow: 1 thing', audience: [1, 2] });
     expect(n.body).toBe('Pack: Gym shoes (Emma)\n8:30 AM School (Emma)');
     expect(keys(`${DAY}T19:30`)).toEqual([]);
+  });
+
+  it('mention family jobs still undone in the evening digest, not people’s own jobs', () => {
+    const chores = [job('Garbage out'), job('Feed the cat', { done: true }), job('Brush teeth', { memberIds: [3], memberId: 3 })];
+    const [n] = plan(`${DAY}T19:30`, { chores });
+    expect(n).toMatchObject({ key: `evening:${DAY}`, title: '🧹 Still to do tonight: Garbage out', body: 'Still to do: Garbage out' });
+    expect(keys(`${DAY}T19:30`, { chores: [job('Garbage out', { done: true })] })).toEqual([]);
+    const tomorrow = [occ(12, `${NEXT}T08:30`, `${NEXT}T15:00`, { title: 'School', category: 'school' })];
+    expect(plan(`${DAY}T19:30`, { chores, occurrences: tomorrow })[0].body).toBe('Still to do: Garbage out\n8:30 AM School (Emma)');
   });
 
   it('send the morning briefing from 7 AM until 11', () => {

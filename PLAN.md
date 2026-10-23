@@ -198,4 +198,4 @@ All planned milestones are built. Ideas for later: leave-by times that clash as 
 - `useChores(from, to?)` now takes a range (`/api/chores/due?from&to`); one day by default.
 - `scripts/check-chores.py` covers the Week row (per-kid chips, ticking, later days view-only) and the Month day sheet.
 
-**Open:** whether nudges should mention undone family jobs (for example "Garbage goes out tonight" in the evening digest). Leave this out of the steps above; decide after step 3.
+**Family jobs in nudges** (`feat/family-job-nudge`): the evening digest starts with “Still to do: …” for today’s family jobs nobody has ticked yet, and goes out for those alone on a day with nothing else to say (“🧹 Still to do tonight: Garbage out”). People’s own jobs stay out; they’re on the chart, and kids don’t get nudges.
