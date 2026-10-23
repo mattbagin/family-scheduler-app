@@ -1,7 +1,7 @@
 import {
   createContext, useCallback, useContext, useEffect, useId, useMemo, useRef, useState, useSyncExternalStore, type CSSProperties, type ReactNode,
 } from 'react';
-import type { Member } from '@shared';
+import type { DailyStatus, Member } from '@shared';
 
 /** Sets --pc, the person color that tints cards, rings and avatars. */
 export const pc = (color: string | undefined, extra?: CSSProperties): CSSProperties =>
@@ -13,11 +13,12 @@ export function Face({ m, size }: { m: Member | undefined; size?: number }) {
   return <span className="face" style={style} title={m.name} role="img" aria-label={m.name}>{m.avatar}</span>;
 }
 
-export function Avatar({ m, className = '', badge }: { m: Member; className?: string; badge?: number }) {
+export function Avatar({ m, className = '', badge, status }: { m: Member; className?: string; badge?: number; status?: DailyStatus }) {
   return (
     <span className={`avatar ${className}`} style={pc(m.color)} aria-hidden="true">
       {m.avatar}
       {badge ? <i className="badge num">{badge}</i> : null}
+      {status && <i className="status">{status.icon}</i>}
     </span>
   );
 }

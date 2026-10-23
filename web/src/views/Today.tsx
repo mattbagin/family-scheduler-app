@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  addDays, chipLabel, computeFlags, rideHeadsUp, rideStatus, dayDiff, dayLabel, fmtDur, dayWithDate, fmtTime, minutesOf, weatherLook, type Occurrence, type Plan,
+  addDays, chipLabel, hhmmToMin, statusNow, computeFlags, rideHeadsUp, rideStatus, dayDiff, dayLabel, fmtDur, dayWithDate, fmtTime, minutesOf, weatherLook, type Occurrence, type Plan,
 } from '@shared';
 import { api } from '../api.ts';
 import { namesOf, useAction, useFamily, useNow } from '../context.tsx';
@@ -77,6 +77,7 @@ export function Today() {
   const [openAlert, setOpenAlert] = useState<string | null>(null);
   const flags = computeFlags(occs, f.members);
   // Person color first; an unassigned event from a subscribed calendar takes the calendar's color.
+  const offCalendars = calendars.filter((c) => c.daysOff).map((c) => c.id);
   const colorOf = (o: Occurrence) => f.byId(o.memberIds[0])?.color ?? calendars.find((c) => c.id === o.calendarId)?.color;
   const openOcc = (o: Occurrence) => sheets.open(<EventSheet occ={o} />);
   const openPlan = (p: Plan) => sheets.open(<PlanSheet planId={p.id} />);
@@ -207,12 +208,18 @@ export function Today() {
           <WeatherNow />
         </div>
         <nav className="members" aria-label="Family members">
-          {f.members.map((m) => (
-            <Link key={m.id} to={f.session.kind === 'hub' && m.role === 'kid' ? `/kid/${m.id}` : `/person/${m.id}`} className="mem-btn" style={pc(m.color)}
-              aria-label={`${m.name}${openCount(m.id) ? `, ${openCount(m.id)} still to do` : ''}`} title={openCount(m.id) ? `${openCount(m.id)} jobs, to-dos and things to pack still open` : undefined}>
-              <Avatar m={m} badge={openCount(m.id)} />{m.name}
-            </Link>
-          ))}
+          {f.members.map((m) => {
+            const n = openCount(m.id);
+            const st = statusNow(m, today, nowMin, occs, offCalendars);
+            const where = st && `${st.label} until ${fmtTime(hhmmToMin(st.end))}`;
+            return (
+              <Link key={m.id} to={f.session.kind === 'hub' && m.role === 'kid' ? `/kid/${m.id}` : `/person/${m.id}`} className="mem-btn" style={pc(m.color)}
+                aria-label={[m.name, where, n && `${n} still to do`].filter(Boolean).join(', ')}
+                title={[where, n && `${n} jobs, to-dos and things to pack still open`].filter(Boolean).join(' · ') || undefined}>
+                <Avatar m={m} badge={n} status={st} />{m.name}
+              </Link>
+            );
+          })}
         </nav>
       </section>
 

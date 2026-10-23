@@ -148,4 +148,13 @@ describe('calendar subscriptions', () => {
     expect(seen[0]).toMatchObject({ name: 'Soccer club', url: null });
     expect((await app.inject({ method: 'POST', url: '/api/calendars', cookies: kid, payload: body })).statusCode).toBe(403);
   });
+
+  it('marks a calendar as days off', async () => {
+    const { adult } = await setupFamily(app);
+    const made = (await app.inject({ method: 'POST', url: '/api/calendars', cookies: adult, payload: { url: feedUrl, name: 'Holidays', color: '#E0533D', daysOff: true } })).json<Calendar>();
+    expect(made.daysOff).toBe(true);
+    const patched = await app.inject({ method: 'PATCH', url: `/api/calendars/${made.id}`, cookies: adult, payload: { daysOff: false } });
+    expect(patched.json<Calendar>().daysOff).toBe(false);
+    expect((await app.inject({ method: 'PATCH', url: `/api/calendars/${made.id}`, cookies: adult, payload: { name: 'Stat holidays' } })).json<Calendar>().daysOff).toBe(false);
+  });
 });

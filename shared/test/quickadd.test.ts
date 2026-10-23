@@ -4,10 +4,10 @@ import { guessTodoKind, parseQuickAdd } from '../src/quickadd.ts';
 import type { Member, Occurrence } from '../src/types.ts';
 
 const members: Member[] = [
-  { id: 1, name: 'Mom', role: 'adult', color: '#D9487A', avatar: '👩', hasPin: true, sort: 0 },
-  { id: 2, name: 'Dad', role: 'adult', color: '#2F7DE1', avatar: '👨', hasPin: true, sort: 1 },
-  { id: 3, name: 'Emma', role: 'kid', color: '#DB8616', avatar: '👧', hasPin: false, sort: 2 },
-  { id: 4, name: 'Leo', role: 'kid', color: '#1F9C62', avatar: '👦', hasPin: false, sort: 3 },
+  { id: 1, name: 'Mom', role: 'adult', color: '#D9487A', avatar: '👩', hasPin: true, sort: 0, statuses: [] },
+  { id: 2, name: 'Dad', role: 'adult', color: '#2F7DE1', avatar: '👨', hasPin: true, sort: 1, statuses: [] },
+  { id: 3, name: 'Emma', role: 'kid', color: '#DB8616', avatar: '👧', hasPin: false, sort: 2, statuses: [] },
+  { id: 4, name: 'Leo', role: 'kid', color: '#1F9C62', avatar: '👦', hasPin: false, sort: 3, statuses: [] },
 ];
 const MONDAY = '2026-09-28';
 

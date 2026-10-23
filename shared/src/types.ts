@@ -15,6 +15,17 @@ export interface Member {
   avatar: string;
   hasPin: boolean;
   sort: number;
+  /** Where they usually are, like “At school” on weekdays. Shown on faces, not on the calendar. */
+  statuses: DailyStatus[];
+}
+
+/** A regular place to be: on these weekdays (0 = Monday), from `start` to `end` (`HH:mm`). */
+export interface DailyStatus {
+  icon: string;
+  label: string;
+  days: number[];
+  start: string;
+  end: string;
 }
 
 export type Category = 'school' | 'sports' | 'medical' | 'playdate' | 'family' | 'work' | 'bills' | 'other';
@@ -212,6 +223,8 @@ export interface Calendar {
   /** Who new events from this feed are for (each event can still be changed). */
   memberIds: number[];
   refreshMin: number;
+  /** Its all-day events are days off (public holidays), so statuses pause on them. */
+  daysOff: boolean;
   /** ISO time of the last successful fetch. */
   lastSynced: string | null;
   /** Why the last attempt failed; null when it worked. */

@@ -6,3 +6,4 @@ export * from './quickadd.ts';
 export * from './flags.ts';
 export * from './nudges.ts';
 export * from './weather.ts';
+export * from './status.ts';

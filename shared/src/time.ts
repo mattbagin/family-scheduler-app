@@ -134,3 +134,7 @@ export function parseLocal(dt: LocalDateTime): Date {
   const min = minutesOf(dt);
   return new Date(y, m - 1, d, Math.floor(min / 60), min % 60);
 }
+
+/** Minutes after midnight for an `HH:mm` string. */
+export const hhmmToMin = (s: string) => Number(s.slice(0, 2)) * 60 + Number(s.slice(3, 5));
+

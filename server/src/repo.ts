@@ -16,10 +16,11 @@ export interface MemberRow {
   avatar: string;
   pin_hash: string | null;
   sort: number;
+  statuses: string;
 }
 
 export const toMember = (r: MemberRow): Member => ({
-  id: r.id, name: r.name, role: r.role, color: r.color, avatar: r.avatar, hasPin: !!r.pin_hash, sort: r.sort,
+  id: r.id, name: r.name, role: r.role, color: r.color, avatar: r.avatar, hasPin: !!r.pin_hash, sort: r.sort, statuses: JSON.parse(r.statuses),
 });
 
 export function listMembers(db: Db): Member[] {
@@ -249,6 +250,7 @@ interface CalendarRow {
   last_error: string | null;
   member_ids: string | null;
   event_count: number;
+  days_off: number;
 }
 
 const CALENDAR_SELECT = `
@@ -260,7 +262,7 @@ const CALENDAR_SELECT = `
 const toCalendar = (r: CalendarRow, showUrl: boolean): Calendar => ({
   id: r.id, name: r.name, kind: r.kind, url: showUrl ? r.url : null, color: r.color ?? '#8A8F98',
   memberIds: r.member_ids ? r.member_ids.split(',').map(Number).sort((a, b) => a - b) : [],
-  refreshMin: r.refresh_min, lastSynced: r.last_synced, lastError: r.last_error, eventCount: r.event_count,
+  refreshMin: r.refresh_min, daysOff: !!r.days_off, lastSynced: r.last_synced, lastError: r.last_error, eventCount: r.event_count,
 });
 
 export function listCalendars(db: Db, showUrl: boolean): Calendar[] {

@@ -100,6 +100,8 @@ h3 { font-size: var(--fs-title-sm); }
 .mem-btn:hover { transform: translateY(-2px); }
 .mem-btn .avatar { width: 64px; height: 64px; font-size: 36px; background: color-mix(in srgb, var(--pc) 14%, var(--surface)); }
 .members.small .mem-btn .avatar { width: 42px; height: 42px; font-size: 22px; border-width: 2px; }
+/* Where they are right now (“At school”), tucked under the face; the open-count badge sits on top. */
+.avatar .status { position: absolute; right: -.35em; bottom: -.35em; font-size: max(11px, .5em); font-style: normal; width: 1.75em; height: 1.75em; border-radius: 50%; display: grid; place-items: center; background: var(--surface); border: 2px solid var(--bg); box-shadow: 0 1px 3px rgba(24, 32, 58, .18); }
 .badge { position: absolute; top: -4px; right: -6px; min-width: 22px; height: 22px; padding: 0 6px; border-radius: 999px; background: var(--btn); color: var(--btn-ink); font-style: normal; font-size: var(--fs-label); font-weight: 800; display: grid; place-items: center; border: 2px solid var(--bg); font-family: var(--body); }
 .toggles { display: flex; gap: 8px; flex-wrap: wrap; }
 .tog { display: flex; align-items: center; gap: 6px; border: 2px solid var(--line); background: var(--surface); border-radius: 999px; padding: 4px 12px 4px 4px; font-weight: 700; }
@@ -352,6 +354,7 @@ body:has(.ambient) .nudges { bottom: calc(110px + env(safe-area-inset-bottom, 0p
 .gh.corner { background: var(--surface); }
 .rowlab { border: 0; border-bottom: 1px solid var(--line); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; padding: 10px 4px; font-weight: 700; background: color-mix(in srgb, var(--pc) 12%, var(--surface)); }
 .rowlab .avatar { width: 40px; height: 40px; font-size: 22px; }
+.rl-status { display: flex; gap: 3px; font-size: var(--fs-label); font-weight: 600; color: var(--muted); white-space: nowrap; }
 .cell { border-bottom: 1px solid var(--line); border-left: 1px solid var(--line); padding: 8px 6px; display: flex; flex-direction: column; gap: 6px; min-height: 104px; }
 /* Days already gone fade back, like past chips. */
 .gh.past { color: var(--muted); }
@@ -551,7 +554,17 @@ body:has(.ambient) .nudges { bottom: calc(110px + env(safe-area-inset-bottom, 0p
 .keys button:active { background: var(--line); }
 .shake { animation: shake .4s; }
 @keyframes shake { 20%, 60% { transform: translateX(-8px); } 40%, 80% { transform: translateX(8px); } }
+.status-edit { border: 0; margin: 0; padding: 0; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+.status-edit legend { padding: 0; margin-bottom: 6px; font-size: var(--fs-small); font-weight: 700; color: var(--muted); }
+.status-row { display: grid; grid-template-columns: auto minmax(0, 1fr) 8.5rem 8.5rem auto; grid-template-areas: "ic label from until x" ". days days days days"; gap: 8px 10px; align-items: end; padding: 10px 12px; background: var(--surface); border-radius: 14px; }
+.status-row .e { grid-area: ic; align-self: center; font-size: 1.6rem; }
+.st-label { grid-area: label; } .st-from { grid-area: from; } .st-until { grid-area: until; } .st-x { grid-area: x; } .st-days { grid-area: days; gap: 6px; }
+.st-days .tog.plain { padding: 4px 10px; font-size: var(--fs-small); }
 .member-editor { display: grid; grid-template-columns: auto 1fr; gap: 12px 16px; align-items: start; background: var(--surface-2); border-radius: 18px; padding: 14px; text-align: left; }
+@media (max-width: 620px) {
+  .member-editor { grid-template-columns: minmax(0, 1fr); }
+  .status-row { grid-template-columns: auto repeat(2, minmax(0, 1fr)) auto; grid-template-areas: "ic label label x" "from from until until" "days days days days"; }
+}
 .setting-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-top: 1px solid var(--line); flex-wrap: wrap; }
 .setting-row:first-child { border-top: 0; }
 button.setting-row { width: 100%; text-align: left; background: none; border-width: 1px 0 0; border-radius: 0; }
