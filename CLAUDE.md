@@ -27,7 +27,7 @@ Run a single test file with `npx vitest run server/test/calendars.test.ts`. Befo
 ## Layout
 
 ```
-shared/src/   types.ts (API shapes), time.ts, recurrence.ts (RRULE parse/expand), flags.ts (conflicts), quickadd.ts, icons.ts, weather.ts (WMO codes)
+shared/src/   types.ts (API shapes), time.ts, recurrence.ts (RRULE parse/expand), flags.ts (conflicts), quickadd.ts, icons.ts, weather.ts (WMO codes), status.ts (daily statuses, days off)
 server/src/   app.ts (Fastify wiring), db.ts + migrations/NNN_*.sql, repo.ts (row -> API mapping, reads),
               http.ts (validators v.*, parseBody/parsePatch, HttpError), auth.ts, live.ts (websocket broadcast),
               routes/*.ts, ics/ (feed parser, zones, sync + poller), nudges/ (plan, nudger, webpush), seed.ts (sample family),
@@ -59,7 +59,7 @@ scripts/      service.mjs picks the platform's script for `npm run service`: ser
 
 ## Checking the real app in a browser
 
-Unit tests don't prove the UI works, so each milestone was also driven with Playwright (Python, through the `webapp-testing` skill). Most scripts were throwaway; `scripts/check-chores.py` is kept (chore chart, kid ticks, quick add, Settings). What works on this machine:
+Unit tests don't prove the UI works, so each milestone was also driven with Playwright (Python, through the `webapp-testing` skill). Most scripts were throwaway; `scripts/check-chores.py` (chore chart, kid ticks, quick add, Settings) and `scripts/check-statuses.py` (daily statuses on Today, Week and Settings) are kept. What works on this machine:
 
 1. `npm run build`, then start the server on a throwaway database in the background: `PORT=8090 HOMEBASE_DB=<scratch>/e2e.db node --disable-warning=ExperimentalWarning server/src/index.ts`. Use a new file name for each run, because the sample family can only be set up once per database.
 2. In the script, go to `http://localhost:8090`, click "Try it with a sample family" (both parents' PIN is `1234`), and drive the UI. Log in a hub with `context.request.post('/api/login', data={memberId, pin, asHub: True})`.

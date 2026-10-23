@@ -15,6 +15,7 @@ const calendarSchema = {
   color: v.color,
   memberIds: v.ids,
   refreshMin: v.int(5, 24 * 60),
+  daysOff: v.bool,
 };
 
 function checkMembers(db: Db, ids: number[]) {
@@ -77,14 +78,14 @@ export function calendarRoutes(app: FastifyInstance, { db, changed }: Ctx) {
 
   app.post('/api/calendars', async (req, reply) => {
     requireEditor(req);
-    const c = parseBody(calendarSchema, req.body, ['memberIds', 'refreshMin']);
+    const c = parseBody(calendarSchema, req.body, ['memberIds', 'refreshMin', 'daysOff']);
     const memberIds = c.memberIds ?? [];
     checkMembers(db, memberIds);
     assertNewUrl(db, c.url);
     const id = tx(db, () => {
       const { id } = run(
-        db, "INSERT INTO calendars (name, kind, url, color, refresh_min) VALUES (?, 'ics', ?, ?, ?)",
-        c.name, c.url, c.color, c.refreshMin ?? 30,
+        db, "INSERT INTO calendars (name, kind, url, color, refresh_min, days_off) VALUES (?, 'ics', ?, ?, ?, ?)",
+        c.name, c.url, c.color, c.refreshMin ?? 30, c.daysOff ? 1 : 0,
       );
       writeMembers(db, id, memberIds);
       return id;
@@ -104,8 +105,8 @@ export function calendarRoutes(app: FastifyInstance, { db, changed }: Ctx) {
     if (newUrl) assertNewUrl(db, p.url!, cal.id);
     tx(db, () => {
       run(
-        db, 'UPDATE calendars SET name = ?, color = ?, refresh_min = ? WHERE id = ?',
-        p.name ?? cal.name, p.color ?? cal.color, p.refreshMin ?? cal.refreshMin, cal.id,
+        db, 'UPDATE calendars SET name = ?, color = ?, refresh_min = ?, days_off = ? WHERE id = ?',
+        p.name ?? cal.name, p.color ?? cal.color, p.refreshMin ?? cal.refreshMin, (p.daysOff ?? cal.daysOff) ? 1 : 0, cal.id,
       );
       if (newUrl) run(db, 'UPDATE calendars SET url = ?, etag = NULL, last_modified = NULL WHERE id = ?', p.url!, cal.id);
       if (p.memberIds) {

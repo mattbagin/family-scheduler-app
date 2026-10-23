@@ -53,6 +53,21 @@ describe('setup and sign-in', () => {
     await app.inject({ method: 'POST', url: '/api/unlock', cookies: hub, payload: { memberId: members[1].id, pin: '1357' } });
     expect((await create()).statusCode).toBe(201);
   });
+
+  it('saves daily statuses on a member and checks them', async () => {
+    const { adult, members } = await setupFamily();
+    expect(members[2].statuses).toEqual([]);
+    const school = { icon: '🏫', label: 'At school', days: [4, 0, 2, 2], start: '08:30', end: '15:15' };
+    const patch = (statuses: unknown) => app.inject({ method: 'PATCH', url: `/api/members/${members[2].id}`, cookies: adult, payload: { statuses } });
+    const ok = await patch([school]);
+    expect(ok.statusCode).toBe(200);
+    expect(ok.json().statuses).toEqual([{ ...school, days: [0, 2, 4] }]);
+    expect((await patch([{ ...school, end: '08:00' }])).json().message).toBe('statuses.0.end: must be after the start time');
+    expect((await patch([{ ...school, days: [] }])).json().message).toBe('statuses.0.days: pick at least one weekday');
+    expect((await patch([{ ...school, start: '8:30' }])).statusCode).toBe(400);
+    // Other edits leave statuses alone.
+    expect((await app.inject({ method: 'PATCH', url: `/api/members/${members[2].id}`, cookies: adult, payload: { name: 'Kitty' } })).json().statuses).toHaveLength(1);
+  });
 });
 
 describe('events', () => {

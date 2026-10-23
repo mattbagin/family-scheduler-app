@@ -1,4 +1,4 @@
-import { addDays, weekdayMon, type Ymd } from '../../shared/src/index.ts';
+import { addDays, weekdayMon, type DailyStatus, type Ymd } from '../../shared/src/index.ts';
 import { hashPin } from './auth.ts';
 import { run, setSetting, tx, type Db } from './db.ts';
 import { eventDefaults, insertEvent, type EventInput } from './routes/events.ts';
@@ -22,6 +22,13 @@ export function seedSample(db: Db, today: Ymd): { adultIds: number[] } {
     const emma = add('Emma', 'kid', '#DB8616', '👧', 2);
     const leo = add('Leo', 'kid', '#1F9C62', '👦', 3);
     const everyone = [mom, dad, emma, leo];
+    const status = (id: number, ...list: DailyStatus[]) => run(db, 'UPDATE members SET statuses = ? WHERE id = ?', JSON.stringify(list), id);
+    status(mom,
+      { icon: '🏢', label: 'Working at the office', days: [0, 1, 3], start: '09:00', end: '17:00' },
+      { icon: '🏠', label: 'Working from home', days: [2, 4], start: '09:00', end: '17:00' });
+    status(dad, { icon: '💼', label: 'At work', days: [0, 1, 2, 3, 4], start: '08:00', end: '16:30' });
+    status(emma, { icon: '🏫', label: 'At school', days: [0, 1, 2, 3, 4], start: '08:30', end: '15:15' });
+    status(leo, { icon: '🧸', label: 'At preschool', days: [0, 1, 2, 3, 4], start: '09:00', end: '12:00' });
 
     const d = (offset: number) => addDays(today, offset);
     const ev = (offset: number, start: string, end: string, e: Partial<EventInput> & { title: string }) =>

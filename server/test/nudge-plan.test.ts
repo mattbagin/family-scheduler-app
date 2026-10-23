@@ -3,9 +3,9 @@ import type { Bill, ChoreForDay, Member, Occurrence, PrepItem } from '../../shar
 import { planNudges, type PlanInput } from '../src/nudges/plan.ts';
 
 const members: Member[] = [
-  { id: 1, name: 'Mom', role: 'adult', color: '#D9487A', avatar: '👩', hasPin: true, sort: 0 },
-  { id: 2, name: 'Dad', role: 'adult', color: '#2F7DE1', avatar: '👨', hasPin: true, sort: 1 },
-  { id: 3, name: 'Emma', role: 'kid', color: '#DB8616', avatar: '👧', hasPin: false, sort: 2 },
+  { id: 1, name: 'Mom', role: 'adult', color: '#D9487A', avatar: '👩', hasPin: true, sort: 0, statuses: [] },
+  { id: 2, name: 'Dad', role: 'adult', color: '#2F7DE1', avatar: '👨', hasPin: true, sort: 1, statuses: [] },
+  { id: 3, name: 'Emma', role: 'kid', color: '#DB8616', avatar: '👧', hasPin: false, sort: 2, statuses: [] },
 ];
 const DAY = '2026-10-05';
 const NEXT = '2026-10-06';

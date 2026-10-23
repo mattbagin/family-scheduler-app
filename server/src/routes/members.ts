@@ -1,13 +1,29 @@
 import type { FastifyInstance, FastifyReply } from 'fastify';
-import { ymd, type Bootstrap } from '../../../shared/src/index.ts';
+import { hhmmToMin, ymd, type Bootstrap, type DailyStatus } from '../../../shared/src/index.ts';
 import {
   createSession, hashPin, loadAuth, requireAuth, requireEditor, SESSION_COOKIE, sessionInfo, UNLOCK_MS, verifyPin,
 } from '../auth.ts';
 import type { Ctx } from '../context.ts';
 import { get, getSetting, run, setSetting, tx } from '../db.ts';
 import { badRequest, HttpError, idParam, parseBody, parsePatch, v } from '../http.ts';
+import { isHhmm } from '../nudges/nudger.ts';
 import { getMemberRow, listMembers, toMember } from '../repo.ts';
 import { seedSample } from '../seed.ts';
+
+const statuses = (x: unknown, f: string): DailyStatus[] => {
+  if (!Array.isArray(x) || x.length > 6) throw badRequest(`${f}: must be a list of up to 6 statuses`);
+  return x.map((s, i) => {
+    const at = `${f}.${i}`;
+    const p = parseBody({ icon: v.text(16), label: v.text(40) }, { icon: s?.icon, label: s?.label });
+    const days = s?.days;
+    if (!Array.isArray(days) || !days.length || !days.every((d) => Number.isInteger(d) && d >= 0 && d <= 6)) {
+      throw badRequest(`${at}.days: pick at least one weekday`);
+    }
+    if (!isHhmm(s.start) || !isHhmm(s.end)) throw badRequest(`${at}: times must look like 08:30`);
+    if (hhmmToMin(s.end) <= hhmmToMin(s.start)) throw badRequest(`${at}.end: must be after the start time`);
+    return { ...p, days: [...new Set(days as number[])].sort((a, b) => a - b), start: s.start, end: s.end };
+  });
+};
 
 export const memberSchema = {
   name: v.text(40),
@@ -15,6 +31,7 @@ export const memberSchema = {
   color: v.color,
   avatar: v.text(16),
   pin: v.pin,
+  statuses,
 };
 
 const setCookie = (reply: FastifyReply, token: string) =>
@@ -42,7 +59,7 @@ export function memberRoutes(app: FastifyInstance, { db, changed }: Ctx) {
     } else {
       const familyName = v.text(60)(b.familyName, 'familyName');
       if (!Array.isArray(b.members) || !b.members.length) throw badRequest('members: add at least one family member');
-      const members = b.members.map((m) => parseBody(memberSchema, m, ['pin']));
+      const members = b.members.map((m) => parseBody(memberSchema, m, ['pin', 'statuses']));
       if (!members.some((m) => m.role === 'adult' && m.pin)) throw badRequest('members: at least one parent needs a PIN');
       tx(db, () => {
         setSetting(db, 'familyName', familyName);
@@ -101,12 +118,12 @@ export function memberRoutes(app: FastifyInstance, { db, changed }: Ctx) {
 
   app.post('/api/members', async (req, reply) => {
     requireEditor(req);
-    const m = parseBody(memberSchema, req.body, ['pin']);
+    const m = parseBody(memberSchema, req.body, ['pin', 'statuses']);
     if (m.role === 'adult' && !m.pin) throw badRequest('pin: parents need a PIN');
     const sort = get<{ n: number }>(db, 'SELECT coalesce(max(sort), -1) + 1 AS n FROM members')!.n;
     const { id } = run(
-      db, 'INSERT INTO members (name, role, color, avatar, pin_hash, sort) VALUES (?, ?, ?, ?, ?, ?)',
-      m.name, m.role, m.color, m.avatar, m.pin ? hashPin(m.pin) : null, sort,
+      db, 'INSERT INTO members (name, role, color, avatar, pin_hash, sort, statuses) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      m.name, m.role, m.color, m.avatar, m.pin ? hashPin(m.pin) : null, sort, JSON.stringify(m.statuses ?? []),
     );
     changed('members');
     return reply.status(201).send(toMember(getMemberRow(db, id)));
@@ -123,8 +140,9 @@ export function memberRoutes(app: FastifyInstance, { db, changed }: Ctx) {
       throw badRequest('At least one parent with a PIN is needed');
     }
     run(
-      db, 'UPDATE members SET name = ?, role = ?, color = ?, avatar = ?, pin_hash = ?, sort = ? WHERE id = ?',
-      p.name ?? row.name, role, p.color ?? row.color, p.avatar ?? row.avatar, pinHash, p.sort ?? row.sort, row.id,
+      db, 'UPDATE members SET name = ?, role = ?, color = ?, avatar = ?, pin_hash = ?, sort = ?, statuses = ? WHERE id = ?',
+      p.name ?? row.name, role, p.color ?? row.color, p.avatar ?? row.avatar, pinHash, p.sort ?? row.sort,
+      p.statuses ? JSON.stringify(p.statuses) : row.statuses, row.id,
     );
     changed('members');
     return toMember(getMemberRow(db, row.id));

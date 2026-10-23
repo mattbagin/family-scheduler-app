@@ -33,6 +33,10 @@ For development, `npm run dev` runs the API on :8080 and Vite on http://localhos
 
 Every change is pushed live to every open screen.
 
+**Where everyone usually is:** in Settings → Family, edit a person and add a status under **Where they usually are**, like “At school” Mon–Fri 8:30–3:15, or “Working at the office” on some days and “Working from home” on others. While a status applies, its picture sits on that person’s face on the Today board; the Week view lists each person’s statuses and days under their name. Statuses don’t add anything to the calendar.
+
+**Days off:** a status steps aside on a day off. That’s any all-day event for that person (or for nobody, which means everyone) whose title says so: “PA day”, “PD day”, “Vacation”, “Day off”, “Off work”, “Sick”, “No school”, “Stat holiday”, or a break such as “March Break”. A whole calendar can be days off too: in Settings → Subscribed calendars, pick your province under **Or add Canada’s public holidays** and tap **Use these holidays**. It subscribes to that province’s statutory holidays from [canada-holidays.ca](https://canada-holidays.ca) with **Days off** switched on. A holiday that falls on a weekend and is observed on the Monday isn’t in that feed, so add a “Day off” event for it if you need one.
+
 ## Jobs, to-dos and packing
 
 - **Jobs** repeat every day, on chosen weekdays, every two weeks, or monthly (on a date like the 18th, or a day like the 3rd Sunday). Add one with **+ Add a job** on the Today board, a person's page or Settings; tap a job in Settings to change or remove it. Jobs and show as picture tiles on the Today board, each kid's page and in kid mode. A job can be for several people, and each ticks off their own; a job for **Anyone** (“Take out the garbage”) is done once by whoever does it. Finishing the last one gets a big celebration.

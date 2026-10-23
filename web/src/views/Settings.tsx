@@ -1,8 +1,8 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import {
-  addDays, dayLabel, describeRRule, fmtTime, hhmmToMin, MEMBER_AVATARS, MEMBER_COLORS, minutesOf,
-  type BackupInfo, type Calendar, type CalendarPreview, type Member, type NotifyPrefs, type NudgeSettings, type Place, type Role,
+  addDays, dayLabel, describeRRule, WEEKDAYS, fmtTime, hhmmToMin, MEMBER_AVATARS, MEMBER_COLORS, minutesOf,
+  type BackupInfo, type Calendar, type DailyStatus, type CalendarPreview, type Member, type NotifyPrefs, type NudgeSettings, type Place, type Role,
   type SyncResult,
 } from '@shared';
 import { api } from '../api.ts';
@@ -87,6 +87,57 @@ function FamilySection() {
   );
 }
 
+const WEEKDAYS_ONLY = [0, 1, 2, 3, 4];
+/** Quick starts for “Where they usually are”; times are only a first guess. */
+const STATUS_PRESETS: Record<Role, DailyStatus[]> = {
+  adult: [
+    { icon: '💼', label: 'At work', days: WEEKDAYS_ONLY, start: '09:00', end: '17:00' },
+    { icon: '🏢', label: 'Working at the office', days: WEEKDAYS_ONLY, start: '09:00', end: '17:00' },
+    { icon: '🏠', label: 'Working from home', days: WEEKDAYS_ONLY, start: '09:00', end: '17:00' },
+  ],
+  kid: [
+    { icon: '🏫', label: 'At school', days: WEEKDAYS_ONLY, start: '08:30', end: '15:15' },
+    { icon: '🧸', label: 'At preschool', days: WEEKDAYS_ONLY, start: '09:00', end: '12:00' },
+    { icon: '🎨', label: 'At daycare', days: WEEKDAYS_ONLY, start: '08:00', end: '17:00' },
+  ],
+};
+const OTHER_STATUS: DailyStatus = { icon: '📍', label: '', days: WEEKDAYS_ONLY, start: '09:00', end: '17:00' };
+
+/** Where someone usually is on which days: shown on their face on Today and beside their name on Week. */
+function StatusEditor({ role, statuses, onChange }: { role: Role; statuses: DailyStatus[]; onChange: (s: DailyStatus[]) => void }) {
+  const set = (i: number, p: Partial<DailyStatus>) => onChange(statuses.map((s, j) => (j === i ? { ...s, ...p } : s)));
+  const unused = STATUS_PRESETS[role].filter((p) => !statuses.some((s) => s.label === p.label));
+  return (
+    <fieldset className="status-edit">
+      <legend>Where they usually are</legend>
+      {statuses.map((s, i) => (
+        <div key={i} className="status-row">
+          <span className="e" aria-hidden="true">{s.icon}</span>
+          <label className="field st-label">Status<input value={s.label} onChange={(e) => set(i, { label: e.target.value })} required maxLength={40} placeholder="At swim club" /></label>
+          <label className="field st-from">From<input type="time" value={s.start} onChange={(e) => e.target.value && set(i, { start: e.target.value })} required /></label>
+          <label className="field st-until">Until<input type="time" value={s.end} onChange={(e) => e.target.value && set(i, { end: e.target.value })} required /></label>
+          <button type="button" className="icon-btn st-x" aria-label={`Remove ${s.label || 'this status'}`} onClick={() => onChange(statuses.filter((_, j) => j !== i))}>✕</button>
+          <div className="toggles st-days" role="group" aria-label={`Days for ${s.label || 'this status'}`}>
+            {WEEKDAYS.map((d, wd) => (
+              <button type="button" key={d} className="tog plain" aria-pressed={s.days.includes(wd)} aria-label={d}
+                onClick={() => set(i, { days: s.days.includes(wd) ? s.days.filter((x) => x !== wd) : [...s.days, wd].sort() })}>{d.slice(0, 3)}</button>
+            ))}
+          </div>
+        </div>
+      ))}
+      {statuses.length < 6 && (
+        <div className="toggles" role="group" aria-label="Add a status">
+          {[...unused, OTHER_STATUS].map((p) => (
+            <button type="button" key={p.label} className="mini-btn" onClick={() => onChange([...statuses, p])}>
+              + <span aria-hidden="true">{p.icon}</span> {p.label || 'Something else'}
+            </button>
+          ))}
+        </div>
+      )}
+    </fieldset>
+  );
+}
+
 function MemberEditor({ member, onDone }: { member?: Member; onDone: () => void }) {
   const f = useFamily();
   const act = useAction();
@@ -95,11 +146,12 @@ function MemberEditor({ member, onDone }: { member?: Member; onDone: () => void 
   const [avatar, setAvatar] = useState(member?.avatar ?? '🧒');
   const [color, setColor] = useState(member?.color ?? MEMBER_COLORS[f.members.length % MEMBER_COLORS.length]);
   const [pin, setPin] = useState('');
+  const [statuses, setStatuses] = useState<DailyStatus[]>(member?.statuses ?? []);
   const needsPin = role === 'adult' && !member?.hasPin;
 
   const save = async (e: React.FormEvent) => {
     e.preventDefault();
-    const body = { name: name.trim(), role, avatar, color, ...(pin ? { pin } : {}) };
+    const body = { name: name.trim(), role, avatar, color, statuses, ...(pin ? { pin } : {}) };
     const ok = await act(
       () => (member ? api(`/members/${member.id}`, { method: 'PATCH', body }) : api('/members', { method: 'POST', body })),
       member ? `Saved ${body.name}` : `Welcome, ${body.name}!`,
@@ -122,6 +174,7 @@ function MemberEditor({ member, onDone }: { member?: Member; onDone: () => void 
         </div>
         <div className="emoji-grid" role="group" aria-label="Picture">{MEMBER_AVATARS.map((a) => <button type="button" key={a} aria-pressed={avatar === a} onClick={() => setAvatar(a)}>{a}</button>)}</div>
         <div className="swatches">{MEMBER_COLORS.map((c) => <button type="button" key={c} className="swatch" style={{ background: c }} aria-pressed={color === c} aria-label={`Color ${c}`} onClick={() => setColor(c)} />)}</div>
+        <StatusEditor role={role} statuses={statuses} onChange={setStatuses} />
         <div className="row">
           <button className="primary">{member ? 'Save' : 'Add'}</button>
           <button type="button" className="icon-btn" onClick={onDone}>Cancel</button>
@@ -203,7 +256,7 @@ function CalendarRow({ cal, onEdit }: { cal: Calendar; onEdit: () => void }) {
       <div style={{ flex: 1, minWidth: 0 }}>
         <b>{cal.name}</b>
         <div className="note">
-          {cal.eventCount} event{cal.eventCount === 1 ? '' : 's'} · {cal.lastSynced ? `updated ${ago(cal.lastSynced)}` : 'not loaded yet'}
+          {cal.eventCount} event{cal.eventCount === 1 ? '' : 's'} · {cal.lastSynced ? `updated ${ago(cal.lastSynced)}` : 'not loaded yet'}{cal.daysOff ? ' · days off' : ''}
         </div>
         {cal.lastError && <span className="pill bad">⚠ {cal.lastError}</span>}
       </div>
@@ -215,6 +268,13 @@ function CalendarRow({ cal, onEdit }: { cal: Calendar; onEdit: () => void }) {
 }
 
 /** Subscribe (paste a link, check what's in it, then save) or change an existing subscription. */
+/** canada-holidays.ca publishes each province’s statutory holidays as a calendar feed. */
+const PROVINCES = [
+  ['AB', 'Alberta'], ['BC', 'British Columbia'], ['MB', 'Manitoba'], ['NB', 'New Brunswick'], ['NL', 'Newfoundland and Labrador'],
+  ['NS', 'Nova Scotia'], ['NT', 'Northwest Territories'], ['NU', 'Nunavut'], ['ON', 'Ontario'], ['PE', 'Prince Edward Island'],
+  ['QC', 'Quebec'], ['SK', 'Saskatchewan'], ['YT', 'Yukon'],
+];
+
 function CalendarEditor({ cal, onDone }: { cal?: Calendar; onDone: () => void }) {
   const f = useFamily();
   const act = useAction();
@@ -225,25 +285,37 @@ function CalendarEditor({ cal, onDone }: { cal?: Calendar; onDone: () => void })
   const [name, setName] = useState(cal?.name ?? '');
   const [color, setColor] = useState(cal?.color ?? '#0E9AA7');
   const [memberIds, setMemberIds] = useState<number[]>(cal?.memberIds ?? []);
+  const [daysOff, setDaysOff] = useState(cal?.daysOff ?? false);
+  const [province, setProvince] = useState('ON');
   const [busy, setBusy] = useState(false);
   // A new or changed link must be checked before saving.
   const urlChanged = !cal || url.trim() !== cal.url;
   const ready = !!name.trim() && (!urlChanged || !!preview);
   const showDetails = !!cal || !!preview;
 
-  const check = async () => {
+  const check = async (link = url) => {
     setChecking(true);
-    const p = await act(() => api<CalendarPreview>('/calendars/preview', { method: 'POST', body: { url: url.trim() } }));
+    const p = await act(() => api<CalendarPreview>('/calendars/preview', { method: 'POST', body: { url: link.trim() } }));
     setChecking(false);
     if (!p) return;
     setPreview(p);
     if (!name.trim() && p.name) setName(p.name);
   };
 
+  const pickHolidays = () => {
+    const link = `https://canada-holidays.ca/ics/${province}`;
+    setUrl(link);
+    setName(`${PROVINCES.find(([code]) => code === province)![1]} holidays`);
+    setMemberIds(f.members.map((m) => m.id));
+    setDaysOff(true);
+    setColor('#E0533D');
+    check(link);
+  };
+
   const save = async (e: React.FormEvent) => {
     e.preventDefault();
     setBusy(true);
-    const body = { name: name.trim(), color, memberIds, ...(urlChanged ? { url: url.trim() } : {}) };
+    const body = { name: name.trim(), color, memberIds, daysOff, ...(urlChanged ? { url: url.trim() } : {}) };
     const saved = await act(
       () => (cal ? api<Calendar>(`/calendars/${cal.id}`, { method: 'PATCH', body }) : api<Calendar>('/calendars', { method: 'POST', body })),
       (c) => (c.lastError ? `Saved, but it couldn’t load: ${c.lastError}` : cal ? `Saved ${c.name}` : `Subscribed to ${c.name}: ${c.eventCount} events`),
@@ -258,7 +330,7 @@ function CalendarEditor({ cal, onDone }: { cal?: Calendar; onDone: () => void })
         <label className="field" style={{ flex: 1 }}>Calendar link (ICS or webcal)
           <input id="cal-url" value={url} onChange={(e) => { setUrl(e.target.value); setPreview(null); }} placeholder="webcal://school.example.org/calendar.ics" required autoFocus={!cal} />
         </label>
-        <button type="button" className="icon-btn" onClick={check} disabled={!url.trim() || checking || !urlChanged}>{checking ? 'Checking…' : 'Check link'}</button>
+        <button type="button" className="icon-btn" onClick={() => check()} disabled={!url.trim() || checking || !urlChanged}>{checking ? 'Checking…' : 'Check link'}</button>
       </div>
       <details className="help">
         <summary>Where do I find the link?</summary>
@@ -269,6 +341,16 @@ function CalendarEditor({ cal, onDone }: { cal?: Calendar; onDone: () => void })
           <li><b>School and team sites:</b> look for “Subscribe”, “iCal”, “ICS” or “webcal”.</li>
         </ul>
       </details>
+      {!cal && (
+        <div className="row" style={{ alignItems: 'end' }}>
+          <label className="field" style={{ flex: 1 }}>Or add Canada’s public holidays for
+            <select id="cal-province" value={province} onChange={(e) => setProvince(e.target.value)}>
+              {PROVINCES.map(([code, label]) => <option key={code} value={code}>{label}</option>)}
+            </select>
+          </label>
+          <button type="button" className="icon-btn" onClick={pickHolidays} disabled={checking}>Use these holidays</button>
+        </div>
+      )}
 
       {preview && (
         <div className="feed-preview">
@@ -299,6 +381,14 @@ function CalendarEditor({ cal, onDone }: { cal?: Calendar; onDone: () => void })
                 </button>
               ))}
             </div>
+          </div>
+          <div className="field">Days off
+            <div className="toggles">
+              <button type="button" className="tog plain" aria-pressed={daysOff} onClick={() => setDaysOff(!daysOff)}>
+                <span aria-hidden="true">🏖️</span> Every all-day event here is a day off
+              </button>
+            </div>
+            <span className="note">On those days, statuses like “At school” or “At work” step aside for the people the event is for.</span>
           </div>
           <div className="swatches">
             {MEMBER_COLORS.map((c) => <button type="button" key={c} className="swatch" style={{ background: c }} aria-pressed={color === c} aria-label={`Color ${c}`} onClick={() => setColor(c)} />)}

@@ -1,4 +1,4 @@
-import { addDays } from './time.ts';
+import { addDays, hhmmToMin } from './time.ts';
 import type { HubSettings, NotifyPrefs, Ymd } from './types.ts';
 
 export const DEFAULT_NOTIFY: NotifyPrefs = {
@@ -20,8 +20,6 @@ export function reminderLabel(min: number): string {
   return `${min} min before`;
 }
 
-/** Minutes after midnight for an `HH:mm` string. */
-export const hhmmToMin = (s: string) => Number(s.slice(0, 2)) * 60 + Number(s.slice(3, 5));
 
 /** Whether `min` (minutes after midnight) falls in quiet hours, which may wrap past midnight. */
 /**
