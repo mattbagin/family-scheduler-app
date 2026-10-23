@@ -3,7 +3,7 @@ import {
   type LiveTopic, type NotifyPrefs, type Nudge, type NudgeKind, type NudgeSettings,
 } from '../../../shared/src/index.ts';
 import { all, get, getSetting, run, setSetting, type Db } from '../db.ts';
-import { listBills, listMembers, listTodos, occurrencesBetween, prepBetween } from '../repo.ts';
+import { choresBetween, listBills, listMembers, listTodos, occurrencesBetween, prepBetween } from '../repo.ts';
 import { PREF_OF, planNudges, type NudgePlan } from './plan.ts';
 import { generateVapidKeys, loadVapid, sendPush, type PushTarget, type Vapid } from './webpush.ts';
 
@@ -157,6 +157,7 @@ export function createNudger(db: Db, live: Announcer): Nudger {
       prep: prepBetween(db, today, addDays(today, 2)),
       bills: listBills(db),
       todos: listTodos(db, now.toISOString()),
+      chores: choresBetween(db, today, today),
       morningAt: settings.morningAt,
       eveningAt: settings.eveningAt,
     });

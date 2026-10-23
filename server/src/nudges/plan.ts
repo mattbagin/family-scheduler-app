@@ -1,6 +1,6 @@
 import {
   addDays, addMinutes, datePart, dayDiff, fmtDur, fmtTime, leaveByMin, minutesOf, WEEKDAYS, weekdayMon, withMinutes,
-  type Bill, type LocalDateTime, type Member, type NotifyPrefs, type NudgeKind, type Occurrence, type PrepItem, type Todo,
+  type Bill, type ChoreForDay, type LocalDateTime, type Member, type NotifyPrefs, type NudgeKind, type Occurrence, type PrepItem, type Todo,
 } from '../../../shared/src/index.ts';
 
 /** A nudge that should be showing right now, before delivery rules (quiet hours, preferences) apply. */
@@ -28,6 +28,8 @@ export interface PlanInput {
   prep: PrepItem[];
   bills: Bill[];
   todos: Todo[];
+  /** Today's jobs; the evening digest mentions undone family jobs. */
+  chores: ChoreForDay[];
   morningAt: string;
   eveningAt: string;
 }
@@ -116,15 +118,19 @@ export function planNudges(inp: PlanInput): NudgePlan[] {
     }
   }
 
-  // Evening digest: tomorrow's plan and what to pack tonight.
+  // Evening digest: family jobs still undone today, tomorrow's plan and what to pack tonight.
   {
     const events = agenda(tomorrow);
     const pack = packing(tomorrow);
-    if (events.length || pack.length) {
+    const jobs = inp.chores.filter((c) => c.date === today && c.memberId === null && !c.done).map((c) => c.text);
+    if (events.length || pack.length || jobs.length) {
       out.push({
         key: `evening:${today}`, kind: 'evening', urgent: false, url: '/',
-        title: pack.length ? `🎒 Pack for tomorrow: ${pack.length} thing${pack.length === 1 ? '' : 's'}` : `🌙 Tomorrow: ${events.length} thing${events.length === 1 ? '' : 's'} on`,
-        body: [pack.length ? `Pack: ${list(pack)}` : null, events.length ? list(events) : null].filter(Boolean).join('\n'),
+        title: pack.length ? `🎒 Pack for tomorrow: ${pack.length} thing${pack.length === 1 ? '' : 's'}`
+          : events.length ? `🌙 Tomorrow: ${events.length} thing${events.length === 1 ? '' : 's'} on`
+            : `🧹 Still to do tonight: ${list(jobs)}`,
+        body: [jobs.length ? `Still to do: ${list(jobs)}` : null, pack.length ? `Pack: ${list(pack)}` : null, events.length ? list(events) : null]
+          .filter(Boolean).join('\n'),
         audience: adults, at: at(inp.eveningAt), until: at('23:00'),
       });
     }
