@@ -181,6 +181,13 @@ describe('nudges', () => {
     expect(robinPhone.inbox).toEqual([]); // not in the audience, and turned reminders off anyway
   });
 
+  it('mentions an undone family job in the evening digest', async () => {
+    const { adult } = await family();
+    await app.inject({ method: 'POST', url: '/api/chores', cookies: adult, payload: { text: 'Garbage out' } });
+    const digest = (await app.nudger.tick(at('19:30'))).find((x) => x.kind === 'evening');
+    expect(digest?.body).toMatch(/Garbage out/);
+  });
+
   it('forgets a phone the push service says is gone, and validates settings', async () => {
     const { adult, kit, alexPhone } = await family();
     gonePaths.add(alexPhone.path);

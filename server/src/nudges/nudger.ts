@@ -157,7 +157,7 @@ export function createNudger(db: Db, live: Announcer): Nudger {
       prep: prepBetween(db, today, addDays(today, 2)),
       bills: listBills(db),
       todos: listTodos(db, now.toISOString()),
-      chores: choresBetween(db, today, today),
+      chores: choresBetween(db, today, addDays(today, 1)),
       morningAt: settings.morningAt,
       eveningAt: settings.eveningAt,
     });
