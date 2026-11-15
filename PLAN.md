@@ -236,14 +236,15 @@ Daily statuses (§9) already hold icon, label, weekdays and hours, and Today alr
 
 ### Step 4. Places on the ambient screen (`feat/ambient-places`)
 
-- **Logic (backend-coder, shared only):** `whereNow(member, day, min, occs, offCalendarIds) → { icon, label }` in `shared/src/status.ts`, with tests. First match wins:
-  1. driving someone inside the drive window → 🚗 On the road;
-  2. on a timed event now (latest start wins; all-day events are ignored) → a place from the event: pool 🏊 or rink 🏒 from its icon, else by category (school 🏫, sports 🏟️, medical 🏥, work 🏢, anything else 📍 Out);
-  3. `statusNow` → the status's own icon and label (so "🧸 Daycare" needs no table);
-  4. otherwise 🏠 Home.
-- **Web (frontend-coder):** `views/Ambient.tsx` groups the existing people pills under place cards (large emoji, label, the avatars there). Styles next to `styles.css:456-497`. Night mode keeps today's plain dim clock: no places.
-- **Art:** large emoji to start (every picture in the app is emoji; no new assets). Hand-drawn inline SVG scenes are the upgrade if the emoji look too plain: about eight scenes, 4 to 8 KB.
-- **Checks:** a new `scripts/check-ambient.py`: sample family, a status in hours, an event now; the hub's ambient screen shows each person under the right place.
+- **Logic (backend-coder, shared only):** `whereNow(member, day, min, occs, offCalendarIds) → { place, label, icon? }` in `shared/src/status.ts`, with tests. `place` is one of ten keys: `home`, `office`, `school`, `daycare`, `field`, `rink`, `pool`, `clinic`, `road`, `out`. First match wins:
+  1. driving someone inside the drive window → `road`, "On the road";
+  2. on a timed event now (latest start wins; all-day events are ignored) → from the event: `pool` (🏊) or `rink` (⛸️ 🏒) by its icon, else by category (school → `school`, sports → `field`, medical → `clinic`, work → `office`, anything else → `out`); the label is the event's title;
+  3. `statusNow` → by the status's icon (🏢 💼 → `office`, 🏫 → `school`, 🧸 → `daycare`, 🏠 → `home`), else `out` with the status's own emoji passed as `icon`; the label is the status's label;
+  4. otherwise `home`.
+- **Art (decided 2026-11-14): hand-drawn inline SVG scenes, not emoji.** They may borrow from emoji shapes but should be more playful: chunky outlines, friendly proportions, and one small moving detail each (chimney smoke, a flag, a puck sliding, a bus bobbing along the road), done in CSS and switched off by the reduced-motion rule. One React component per place in a new `web/src/places.tsx`, drawn on a shared `viewBox` with a ground line where avatars stand, coloured from CSS variables. `out` is a signpost that shows the passed emoji. No image files and no new dependency.
+- **Web (frontend-coder, with the impeccable skill):** `views/Ambient.tsx` replaces the row of people pills with the scenes that have someone in them; each person's avatar stands in their scene with their name and the label under it. Styles next to `styles.css:456-497`. Night mode keeps today's plain dim clock: no places.
+- **Style first:** draw `home` and `rink` only, show them to the owner, and draw the other eight once the style is approved.
+- **Checks:** a new `scripts/check-ambient.py`: sample family, a status in hours, an event now; the hub's ambient screen shows each person in the right scene (check by a `data-place` attribute, plus two screenshots for the art).
 
 ### Later, from the review (not scheduled)
 
