@@ -155,13 +155,13 @@ export function Tomorrow({ day: shown }: { day?: Ymd }) {
 function FirstOut({ o, first, pick }: { o?: Occurrence; first?: Occurrence; pick: (driverId: number) => void }) {
   const f = useFamily();
   const who = (ids: number[]) => namesOf(f, ids);
-  const cap = (s: string) => s[0].toUpperCase() + s.slice(1);
+  const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
   if (!o && !first) return null;
   if (!o) {
     return (
       <section className="tb-hero">
         <span className="tb-time num">{fmtTime(minutesOf(first!.start))}</span>
-        <p><b>First up: {first!.title}</b><span className="note">{cap(who(first!.memberIds))} · no driving needed</span></p>
+        <p><b>First up: {first!.title}</b><span className="note">{cap([who(first!.memberIds), 'no driving needed'].filter(Boolean).join(' · '))}</span></p>
       </section>
     );
   }
@@ -170,8 +170,8 @@ function FirstOut({ o, first, pick }: { o?: Occurrence; first?: Occurrence; pick
     <section className={`tb-hero${driver ? '' : ' unsorted'}`} style={pc(driver?.color)}>
       <span className="tb-time num">{fmtTime(leaveBy(o))}</span>
       <p>
-        <b>{driver ? <><Face m={driver} size={44} /> {driver.name} leaves for {o.title}</> : <>Who’s driving {who(o.memberIds)} to {o.title}?</>}</b>
-        <span className="note"><span aria-hidden="true">{o.icon}</span> {cap(who(o.memberIds))} · starts {fmtTime(minutesOf(o.start))} · {o.travelMin} min drive</span>
+        <b>{driver ? <><Face m={driver} size={44} /> {driver.name} leaves for {o.title}</> : <>Who’s driving {who(o.memberIds) && `${who(o.memberIds)} `}to {o.title}?</>}</b>
+        <span className="note"><span aria-hidden="true">{o.icon}</span> {cap([who(o.memberIds), `starts ${fmtTime(minutesOf(o.start))}`, `${o.travelMin} min drive`].filter(Boolean).join(' · '))}</span>
       </p>
       {!driver && (
         <div className="toggles" role="group" aria-label={`Driver for ${o.title}`}>

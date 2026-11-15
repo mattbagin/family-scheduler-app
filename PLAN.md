@@ -216,6 +216,8 @@ Written 2026-11-14 after a whole-codebase review (two reviewers: server and shar
 | f | `web/src/ui.tsx:87-92` | Escape closes a sheet without its `onClose`, so the unlock promise never resolves and the form that asked stays busy. | Handle Escape in `Sheet` with its own `close`. |
 | g | `web/src/ui.tsx:269` | `AudioContext` created before any touch stays suspended: the hub is silent until reload. | `audio.resume()` in `chime` when suspended. |
 
+**Done 2026-11-14** on `fix/review-high` (reviewed; tests and typecheck pass; `scripts/check-review-fixes.py` drives b, c and f in the browser). g can't be checked headless: listen for a chime on the real hub. Also fixed under b: Tomorrow's first-out copy when an event has nobody on it. Left as planned: a feed that empties for good (season over) shows a sync error until it's unsubscribed; the error screen waits for a tap on Reload. **Next: Step 2.**
+
 ### Step 2. Hockey (`feat/hockey-icon`)
 
 Hockey titles already match, but get ⛸️. In `shared/src/icons.ts`: split line 18 into `[/hockey/, '🏒', 'sports']` and `[/skat/, '⛸️', 'sports']`; add `'🏒'` to `EVENT_ICONS`; add a `guessEventStyle('Hockey practice')` test in `shared/test/icons.test.ts`. Existing events keep the ⛸️ they were saved with (a parent can re-pick).

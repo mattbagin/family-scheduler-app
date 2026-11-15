@@ -137,6 +137,18 @@ describe('calendar subscriptions', () => {
     expect((await occs()).some((o) => o.calendarId === cal.id)).toBe(false);
   });
 
+  it('keeps the events when a feed suddenly comes back empty', async () => {
+    const { adult } = await setupFamily(app);
+    const cal = (await app.inject({ method: 'POST', url: '/api/calendars', cookies: adult, payload: { url: feedUrl, name: 'Soccer club', color: '#1F9C62' } })).json<Calendar>();
+    feed.body = ics();
+    feed.etag = '"v2"';
+    const sync = (await app.inject({ method: 'POST', url: `/api/calendars/${cal.id}/sync`, cookies: adult })).json<SyncResult>();
+    expect(sync).toMatchObject({ status: 'error', removed: 0 });
+    expect(sync.error).toMatch(/empty/);
+    const list = (await app.inject({ url: '/api/calendars', cookies: adult })).json<Calendar[]>();
+    expect(list[0]).toMatchObject({ eventCount: 3 });
+  });
+
   it('keeps secret links from kids and refuses duplicates', async () => {
     const { adult, members } = await setupFamily(app);
     const body = { url: feedUrl, name: 'Soccer club', color: '#1F9C62' };

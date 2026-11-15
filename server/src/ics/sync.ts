@@ -115,6 +115,8 @@ export function applyFeed(db: Db, calendarId: number, feed: IcsCalendar, today: 
   const keepFrom = `${addDays(today, -KEEP_PAST_DAYS)}T00:00`;
   const seen = new Set<string>();
   const counts = { added: 0, updated: 0, removed: 0 };
+  // An empty answer for a calendar that had events is far more likely a broken feed than a cleared calendar.
+  if (existing.size && !feed.events.length) throw new FeedError('That calendar came back empty, so the events here were kept. Check the link still works.');
 
   tx(db, () => {
     for (const e of feed.events) {
