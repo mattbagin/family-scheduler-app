@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { StrictMode } from 'react';
+import { Component, StrictMode, type ReactNode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import { App } from './App.tsx';
@@ -13,17 +13,38 @@ const queryClient = new QueryClient({
   },
 });
 
+/** Last resort: a render error shouldn't leave the hub blank. */
+class ErrorBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
+  state = { failed: false };
+  static getDerivedStateFromError() { return { failed: true }; }
+  componentDidCatch(e: unknown) { console.error(e); }
+  render() {
+    if (!this.state.failed) return this.props.children;
+    return (
+      <div className="center-page">
+        <div className="welcome">
+          <h1>Something went wrong</h1>
+          <p>Homebase hit a snag showing this screen. Reloading usually fixes it.</p>
+          <button className="primary" onClick={() => location.reload()}>Reload</button>
+        </div>
+      </div>
+    );
+  }
+}
+
 watchInstallPrompt();
 registerServiceWorker();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <ToastProvider>
-          <App />
-        </ToastProvider>
-      </BrowserRouter>
-    </QueryClientProvider>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <BrowserRouter>
+          <ToastProvider>
+            <App />
+          </ToastProvider>
+        </BrowserRouter>
+      </QueryClientProvider>
+    </ErrorBoundary>
   </StrictMode>,
 );
