@@ -222,6 +222,8 @@ Written 2026-11-14 after a whole-codebase review (two reviewers: server and shar
 
 Hockey titles already match, but get ⛸️. In `shared/src/icons.ts`: split line 18 into `[/hockey/, '🏒', 'sports']` and `[/skat/, '⛸️', 'sports']`; add `'🏒'` to `EVENT_ICONS`; add a `guessEventStyle('Hockey practice')` test in `shared/test/icons.test.ts`. Existing events keep the ⛸️ they were saved with (a parent can re-pick).
 
+**Done 2026-11-15** on `feat/hockey-icon` (tests and typecheck pass). **Next: Step 3.**
+
 ### Step 3. Status colours and badges everywhere (`feat/status-colours`)
 
 Daily statuses (§9) already hold icon, label, weekdays and hours, and Today already badges the avatar. Missing: a colour, a free choice of icon, and the badge on other screens.
