@@ -199,3 +199,56 @@ All planned milestones are built. Ideas for later: leave-by times that clash as 
 - `scripts/check-chores.py` covers the Week row (per-kid chips, ticking, later days view-only) and the Month day sheet.
 
 **Family jobs in nudges** (`feat/family-job-nudge`): the evening digest starts with “Still to do: …” for today’s family jobs nobody has ticked yet, and goes out for those alone on a day with nothing else to say (“🧹 Still to do tonight: Garbage out”). People’s own jobs stay out; they’re on the chart, and kids don’t get nudges.
+
+## 11. Next: review fixes, status colours, places on the ambient screen, hockey
+
+Written 2026-11-14 after a whole-codebase review (two reviewers: server and shared, web) and research into the three features. Nothing here is built yet. Each step is its own branch from main.
+
+### Step 1. Review fixes that matter (`fix/review-high`, one commit per fix)
+
+| # | Where | Problem | Fix |
+|---|---|---|---|
+| a | `server/src/nudges/nudger.ts:160` | `choresBetween(db, today, today)` is an empty range (`to` is exclusive), so the evening digest never mentions undone family jobs. Unit tests pass because they feed chores straight into `planNudges`. | `addDays(today, 1)`; add one `nudger.tick` test with a family job. |
+| b | `web/src/views/Tomorrow.tsx:158` | `cap('')` throws when tomorrow's first event has nobody on it (every new feed event). No error boundary, so the hub goes blank. | Guard `cap`; add one top-level error boundary with a **Reload** button. |
+| c | `web/src/views/Month.tsx:30` | `to` is exclusive, so the last cell of the grid never shows events. | `addDays(days.at(-1)!, 1)`. |
+| d | `server/src/ics/sync.ts:143-147` | A feed that parses to zero events deletes every row on that calendar, and plans, packed ticks and family fields go with them. | A calendar that has events and gets an empty feed is a `FeedError`; keep the rows. Test it. |
+| e | `shared/src/time.ts:24-30` | `isYmd` accepts `2026-02-31`; `isLocalDateTime` accepts `T10:75`. | Round-trip check (`ymd(parseYmd(s)) === s`), hour ≤ 23, minute ≤ 59. Test it. |
+| f | `web/src/ui.tsx:87-92` | Escape closes a sheet without its `onClose`, so the unlock promise never resolves and the form that asked stays busy. | Handle Escape in `Sheet` with its own `close`. |
+| g | `web/src/ui.tsx:269` | `AudioContext` created before any touch stays suspended: the hub is silent until reload. | `audio.resume()` in `chime` when suspended. |
+
+### Step 2. Hockey (`feat/hockey-icon`)
+
+Hockey titles already match, but get ⛸️. In `shared/src/icons.ts`: split line 18 into `[/hockey/, '🏒', 'sports']` and `[/skat/, '⛸️', 'sports']`; add `'🏒'` to `EVENT_ICONS`; add a `guessEventStyle('Hockey practice')` test in `shared/test/icons.test.ts`. Existing events keep the ⛸️ they were saved with (a parent can re-pick).
+
+### Step 3. Status colours and badges everywhere (`feat/status-colours`)
+
+Daily statuses (§9) already hold icon, label, weekdays and hours, and Today already badges the avatar. Missing: a colour, a free choice of icon, and the badge on other screens.
+
+- **Contract:** `DailyStatus` gains optional `color?: string` (same format and validator as `Member.color`). No migration: `members.statuses` is JSON. Same endpoints, auth and topic (`members`).
+- **Server (backend-coder):** `shared/src/types.ts`, the status validator in `server/src/routes/members.ts:14-27`, a test.
+- **Web (frontend-coder):**
+  - `StatusEditor` (`Settings.tsx:107`): colour swatches and an emoji input; presets for "At work" and "Daycare".
+  - `Avatar` (`ui.tsx:16`): while a status with a colour applies, the ring and badge take that colour.
+  - A `useStatusNow()` hook in `context.tsx`, lifted from `Today.tsx:80,213`, so Ambient, Kid, Person and Week pass `status` to `Avatar` without four copies.
+  - `Face` (the small who-chip, about 30 uses) stays as it is.
+- **Decided by default (say if you want otherwise):** days off still hide a status; no overnight statuses; first matching status wins.
+- **Checks:** extend `scripts/check-statuses.py`: set a colour in Settings, see the ring on Today, Week and the ambient screen.
+
+### Step 4. Places on the ambient screen (`feat/ambient-places`)
+
+- **Logic (backend-coder, shared only):** `whereNow(member, day, min, occs, offCalendarIds) → { icon, label }` in `shared/src/status.ts`, with tests. First match wins:
+  1. driving someone inside the drive window → 🚗 On the road;
+  2. on a timed event now (latest start wins; all-day events are ignored) → a place from the event: pool 🏊 or rink 🏒 from its icon, else by category (school 🏫, sports 🏟️, medical 🏥, work 🏢, anything else 📍 Out);
+  3. `statusNow` → the status's own icon and label (so "🧸 Daycare" needs no table);
+  4. otherwise 🏠 Home.
+- **Web (frontend-coder):** `views/Ambient.tsx` groups the existing people pills under place cards (large emoji, label, the avatars there). Styles next to `styles.css:456-497`. Night mode keeps today's plain dim clock: no places.
+- **Art:** large emoji to start (every picture in the app is emoji; no new assets). Hand-drawn inline SVG scenes are the upgrade if the emoji look too plain: about eight scenes, 4 to 8 KB.
+- **Checks:** a new `scripts/check-ambient.py`: sample family, a status in hours, an event now; the hub's ambient screen shows each person under the right place.
+
+### Later, from the review (not scheduled)
+
+- **Security, needs a decision:** `/api/login` lockout is in memory and flat (a 4-digit PIN falls in about 33 hours); kids without a PIN let any device on the Wi-Fi sign in and read everything; `/api/bootstrap` gives statuses to signed-out devices; sessions last 400 days with no "sign out everywhere".
+- **Hub that stays on for weeks:** never reloads after a deploy (add a build id to the websocket `hello`); no ping to spot a dead socket; only goes idle on `/` (`App.tsx:90`); night clock never shifts (burn-in).
+- **Nudges:** briefing times after 11:00 or 23:00 never send (`plan.ts:116,134`); a send is recorded even when no push got through (`nudger.ts:110`); a bad push key fails the whole tick (`webpush.ts:96`); reminders over 3 days ahead fire early; leave-by nudges are matched to rides by title (`web/src/nudges.tsx:79`); hub acks use an expired unlock's name.
+- **Smaller:** renaming a plan renames a feed event (`routes/plans.ts:65`); a new plan's sheet flashes "This plan was removed." (`PlanSheet.tsx:111`); fonts load from Google's CDN (`web/index.html:15`); one timer per `useNow` caller; double refetch after each action; focus lost after `ConfirmButton`; a few emoji without `aria-hidden`; duplicate `id="set-family"`.
+- **Tests and CI:** no web tests (cheapest first: `web/src/lib.ts`); CI runs only Node 24 in UTC (add 22.18, `TZ=America/Toronto`, a boot check).
