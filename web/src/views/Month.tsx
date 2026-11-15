@@ -27,7 +27,7 @@ export function Month() {
   const last = addDays(addMonths(first, 1), -1);
   const weeks = Math.ceil((weekdayMon(first) + Number(last.slice(8))) / 7);
   const days = Array.from({ length: weeks * 7 }, (_, i) => addDays(gridStart, i));
-  const { data: occs = [], isFetching } = useOccurrences(gridStart, days[days.length - 1]);
+  const { data: occs = [], isFetching } = useOccurrences(gridStart, addDays(days[days.length - 1], 1));
   const { data: calendars = [] } = useCalendars();
   const calColor = (o: Occurrence) => calendars.find((c) => c.id === o.calendarId)?.color;
 
