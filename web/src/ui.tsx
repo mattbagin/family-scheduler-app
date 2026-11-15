@@ -84,12 +84,6 @@ export function SheetProvider({ children }: { children: ReactNode }) {
     refocus.current = null;
     if (el?.isConnected) el.focus();
   }, [stack]);
-  useEffect(() => {
-    if (!stack.length) return;
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && api.close();
-    addEventListener('keydown', onKey);
-    return () => removeEventListener('keydown', onKey);
-  }, [stack.length, api]);
   return (
     <SheetCtx.Provider value={api}>
       {children}
@@ -113,6 +107,17 @@ export function Sheet({ title, icon, sub, wide, onClose, children }: {
   useEffect(() => {
     if (ref.current && !ref.current.contains(document.activeElement)) ref.current.focus();
   }, []);
+  // Escape closes the top sheet through its own close (so an unlock prompt still resolves).
+  // Sheets under the top one are display:none, so they have no offsetParent and ignore it.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape' || e.defaultPrevented || !ref.current?.offsetParent) return;
+      e.preventDefault();
+      close();
+    };
+    addEventListener('keydown', onKey);
+    return () => removeEventListener('keydown', onKey);
+  }, [close]);
   // Keep Tab inside the sheet while it's open.
   const trap = (e: React.KeyboardEvent) => {
     if (e.key !== 'Tab' || !ref.current) return;
