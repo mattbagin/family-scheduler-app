@@ -272,6 +272,7 @@ export function chime(notes = [660, 880]) {
   if (muted || hushed) return;
   try {
     audio ??= new AudioContext();
+    if (audio.state === 'suspended') audio.resume().catch(() => {});
     notes.forEach((f, i) => {
       const o = audio!.createOscillator();
       const g = audio!.createGain();
