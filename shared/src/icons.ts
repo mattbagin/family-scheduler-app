@@ -15,7 +15,8 @@ export const CATEGORIES: { id: Category; label: string; icon: string }[] = [
 const EVENT_KEYWORDS: [RegExp, string, Category][] = [
   [/swim/, '🏊', 'sports'],
   [/soccer|football/, '⚽', 'sports'],
-  [/hockey|skat/, '⛸️', 'sports'],
+  [/hockey/, '🏒', 'sports'],
+  [/skat/, '⛸️', 'sports'],
   [/basketball/, '🏀', 'sports'],
   [/baseball|t-ball|tball/, '⚾', 'sports'],
   [/dance|ballet/, '🩰', 'sports'],
@@ -82,4 +83,4 @@ export function guessPlanIcon(title: string): string {
 
 export const MEMBER_COLORS = ['#D9487A', '#2F7DE1', '#DB8616', '#1F9C62', '#8B5CF6', '#E0533D', '#0E9AA7', '#B7791F'];
 export const MEMBER_AVATARS = ['👩', '👨', '👧', '👦', '👶', '🧒', '👵', '👴', '🧑', '👱‍♀️', '👱', '🧔', '🐶', '🐱', '🦊', '🐼', '🦄', '🦖'];
-export const EVENT_ICONS = ['📅', '🏫', '⚽', '🏊', '🩰', '🎵', '🎨', '📚', '🦷', '🩺', '🎂', '🧸', '🍽️', '🌮', '🍕', '👵', '🦃', '🎄', '🧳', '💼', '💵', '🛒', '🚗', '🏥', '🎉', '⛸️', '🏀', '⚾', '🥋', '🍿'];
+export const EVENT_ICONS = ['📅', '🏫', '⚽', '🏊', '🩰', '🎵', '🎨', '📚', '🦷', '🩺', '🎂', '🧸', '🍽️', '🌮', '🍕', '👵', '🦃', '🎄', '🧳', '💼', '💵', '🛒', '🚗', '🏥', '🎉', '⛸️', '🏒', '🏀', '⚾', '🥋', '🍿'];
