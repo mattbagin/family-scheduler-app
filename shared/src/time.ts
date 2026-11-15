@@ -22,11 +22,11 @@ export function parseYmd(s: Ymd): Date {
 }
 
 export function isYmd(s: unknown): s is Ymd {
-  return typeof s === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(s) && !Number.isNaN(parseYmd(s).getTime());
+  return typeof s === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(s) && ymd(parseYmd(s)) === s;
 }
 
 export function isLocalDateTime(s: unknown): s is LocalDateTime {
-  return typeof s === 'string' && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(s) && minutesOf(s) < 1440;
+  return typeof s === 'string' && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(s) && isYmd(s.slice(0, 10)) && +s.slice(11, 13) < 24 && +s.slice(14) < 60;
 }
 
 export function datePart(s: LocalDateTime): Ymd {
