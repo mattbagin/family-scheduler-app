@@ -103,7 +103,7 @@ const STATUS_PRESETS: Record<Role, DailyStatus[]> = {
 };
 const OTHER_STATUS: DailyStatus = { icon: '📍', label: '', days: WEEKDAYS_ONLY, start: '09:00', end: '17:00' };
 
-/** Where someone usually is on which days: shown on their face on Today and beside their name on Week. */
+/** Where someone usually is on which days: shown on their face on every screen while it applies. */
 function StatusEditor({ role, statuses, onChange }: { role: Role; statuses: DailyStatus[]; onChange: (s: DailyStatus[]) => void }) {
   const set = (i: number, p: Partial<DailyStatus>) => onChange(statuses.map((s, j) => (j === i ? { ...s, ...p } : s)));
   const unused = STATUS_PRESETS[role].filter((p) => !statuses.some((s) => s.label === p.label));
@@ -112,11 +112,15 @@ function StatusEditor({ role, statuses, onChange }: { role: Role; statuses: Dail
       <legend>Where they usually are</legend>
       {statuses.map((s, i) => (
         <div key={i} className="status-row">
-          <span className="e" aria-hidden="true">{s.icon}</span>
+          <label className="field st-icon">Icon<input value={s.icon} onChange={(e) => set(i, { icon: e.target.value.trim() })} required maxLength={16} /></label>
           <label className="field st-label">Status<input value={s.label} onChange={(e) => set(i, { label: e.target.value })} required maxLength={40} placeholder="At swim club" /></label>
           <label className="field st-from">From<input type="time" value={s.start} onChange={(e) => e.target.value && set(i, { start: e.target.value })} required /></label>
           <label className="field st-until">Until<input type="time" value={s.end} onChange={(e) => e.target.value && set(i, { end: e.target.value })} required /></label>
           <button type="button" className="icon-btn st-x" aria-label={`Remove ${s.label || 'this status'}`} onClick={() => onChange(statuses.filter((_, j) => j !== i))}>✕</button>
+          <div className="st-colors" role="group" aria-label={`Color for ${s.label || 'this status'}`}>
+            <button type="button" className="swatch none" aria-pressed={!s.color} aria-label="No color" onClick={() => set(i, { color: undefined })} />
+            {MEMBER_COLORS.map((c) => <button type="button" key={c} className="swatch" style={{ background: c }} aria-pressed={s.color === c} aria-label={`Color ${c}`} onClick={() => set(i, { color: c })} />)}
+          </div>
           <div className="toggles st-days" role="group" aria-label={`Days for ${s.label || 'this status'}`}>
             {WEEKDAYS.map((d, wd) => (
               <button type="button" key={d} className="tog plain" aria-pressed={s.days.includes(wd)} aria-label={d}

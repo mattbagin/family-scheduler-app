@@ -91,6 +91,40 @@ with sync_playwright() as p:
     editor.get_by_role('button', name='Save').click()
     check(editor.is_visible(), 'an unnamed status keeps the editor open')
 
+    mom_id = next(m['id'] for m in members if m['name'] == 'Mom')
+    # Colours: pick one on Mom's first status in Settings, then give her an all-day status so one applies now.
+    page.goto(f'{BASE}/settings')
+    page.locator('.setting-row', has_text='Mom').get_by_role('button', name='Edit').click()
+    editor = page.locator('.member-editor')
+    first_colors = editor.locator('.st-colors').first
+    check(first_colors.get_by_role('button', name='No color').get_attribute('aria-pressed') == 'true', 'a status starts with no color')
+    first_colors.get_by_role('button', name='Color #2F7DE1').click()
+    editor.get_by_role('button', name='Save').click()
+    page.get_by_text('Saved Mom').wait_for()
+    mom = next(m for m in page.request.get(f'{BASE}/api/members').json() if m['name'] == 'Mom')
+    check(mom['statuses'][0].get('color') == '#2F7DE1', 'the status colour is saved')
+    mom['statuses'].insert(0, {'icon': '🎯', 'label': 'Colour check', 'days': [0, 1, 2, 3, 4, 5, 6], 'start': '00:00', 'end': '23:59', 'color': '#E0533D'})
+    check(page.request.patch(f"{BASE}/api/members/{mom_id}", data={'statuses': mom['statuses']}).ok, 'gave Mom an all-day coloured status')
+
+    page.set_viewport_size({'width': 1280, 'height': 900})
+    ring = 'getComputedStyle(el).borderTopColor'
+    red = 'rgb(224, 83, 61)'
+    page.goto(BASE)
+    page.get_by_role('navigation', name='Family members').locator('.mem-btn', has_text='Mom').locator('.avatar').wait_for()
+    get = lambda sel: page.locator(sel).first.evaluate(f'el => {ring}')
+    check(get('.mem-btn:has-text("Mom") .avatar') == red, "Today: Mom's ring takes the status colour")
+    check(page.locator('.mem-btn:has-text("Mom") .status').first.evaluate(f'el => {ring}') == red, 'Today: her badge takes it too')
+    page.goto(f'{BASE}/week')
+    page.locator('.rowlab:has-text("Mom") .avatar').wait_for()
+    check(get('.rowlab:has-text("Mom") .avatar') == red, "Week: Mom's ring takes the status colour")
+    page.goto(BASE)
+    page.get_by_role('button', name='Ambient').click()
+    page.locator('.amb-p:has-text("Mom") .avatar').wait_for()
+    check(get('.amb-p:has-text("Mom") .avatar') == red, "Ambient: Mom's ring takes the status colour")
+    if SHOTS:
+        page.screenshot(path=f'{SHOTS}/statuses-ambient.png')
+    page.get_by_role('button', name='Wake the screen').click()
+
     # Days off: a vacation today takes Mom's status away (whatever the time).
     page.set_viewport_size({'width': 1280, 'height': 900})
     mom_id = next(m['id'] for m in members if m['name'] == 'Mom')

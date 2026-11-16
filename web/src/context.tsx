@@ -1,7 +1,9 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { ymd, type Member, type SessionInfo, type Ymd } from '@shared';
+import { statusNow, ymd, type Member, type SessionInfo, type Ymd } from '@shared';
 import { ApiError, errorText } from './api.ts';
+import { mainRange } from './lib.ts';
+import { useCalendars, useOccurrences } from './queries.ts';
 import { useToast } from './ui.tsx';
 
 export interface Family {
@@ -49,6 +51,16 @@ export function useNow() {
   const today: Ymd = ymd(now);
   const nowMin = now.getHours() * 60 + now.getMinutes() + now.getSeconds() / 60;
   return { now, today, nowMin };
+}
+
+/** Where someone is right now: `(member) => status or undefined`, hiding statuses on days off. */
+export function useStatusNow() {
+  const { today, nowMin } = useNow();
+  const range = mainRange(today);
+  const { data: occs = [] } = useOccurrences(range.from, range.to);
+  const { data: calendars = [] } = useCalendars();
+  const off = calendars.filter((c) => c.daysOff).map((c) => c.id);
+  return (m: Member) => statusNow(m, today, nowMin, occs, off);
 }
 
 /**

@@ -15,10 +15,10 @@ export function Face({ m, size }: { m: Member | undefined; size?: number }) {
 
 export function Avatar({ m, className = '', badge, status }: { m: Member; className?: string; badge?: number; status?: DailyStatus }) {
   return (
-    <span className={`avatar ${className}`} style={pc(m.color)} aria-hidden="true">
+    <span className={`avatar ${className}`} style={pc(status?.color ?? m.color)} aria-hidden="true">
       {m.avatar}
       {badge ? <i className="badge num">{badge}</i> : null}
-      {status && <i className="status">{status.icon}</i>}
+      {status && <i className={`status${status.color ? ' tint' : ''}`}>{status.icon}</i>}
     </span>
   );
 }

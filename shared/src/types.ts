@@ -23,6 +23,8 @@ export interface Member {
 export interface DailyStatus {
   icon: string;
   label: string;
+  /** Hex like `Member.color`; while the status applies, the avatar's ring and badge take it. */
+  color?: string;
   days: number[];
   start: string;
   end: string;

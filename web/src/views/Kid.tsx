@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
 import { addDays, dayDiff, dayLabel, fmtTime, minutesOf } from '@shared';
-import { useFamily, useNow } from '../context.tsx';
+import { useFamily, useNow, useStatusNow } from '../context.tsx';
 import { endAbs, mainRange, occDate, sleepsWord, startAbs } from '../lib.ts';
 import { useBedtime, useNight } from '../hub.tsx';
 import { GrownUpsNote } from '../nudges.tsx';
@@ -70,6 +70,7 @@ export function Kid() {
   // Hooks stay above the early returns below: /kid renders once without an id, then redirects to
   // /kid/:id on the same component, and a hook first called on that second render crashes React.
   const late = useBedtime();
+  const statusOf = useStatusNow();
   const kids = f.members.filter((m) => m.role === 'kid');
   const fallback = f.me?.role === 'kid' ? f.me : kids[0];
   if (!id) return fallback ? <Navigate to={`/kid/${fallback.id}`} replace /> : <p className="empty">Add a kid in Settings to use kid mode.</p>;
@@ -99,7 +100,7 @@ export function Kid() {
         <div className="kidpick">
           {kids.map((m) => (
             <Link key={m.id} to={`/kid/${m.id}`} className="kidbtn" aria-current={m.id === k.id} style={pc(m.color)}>
-              <Avatar m={m} />{m.name}
+              <Avatar m={m} status={statusOf(m)} />{m.name}
             </Link>
           ))}
         </div>

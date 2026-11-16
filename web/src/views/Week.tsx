@@ -4,7 +4,7 @@ import {
   addDays, computeFlags, dayDiff, daysLabel, hhmmToMin, fmtShortDate, fmtTime, minutesOf, startOfWeek, weekdayMon, WEEKDAYS, withMinutes, type Occurrence,
 } from '@shared';
 import { api } from '../api.ts';
-import { useAction, useFamily, useNow } from '../context.tsx';
+import { useAction, useFamily, useNow, useStatusNow } from '../context.tsx';
 import { occDate } from '../lib.ts';
 import { useChores, useOccurrences } from '../queries.ts';
 import { ChoreChip } from './Person.tsx';
@@ -19,6 +19,7 @@ export function Week() {
   const act = useAction();
   const toast = useToast();
   const { today } = useNow();
+  const statusOf = useStatusNow();
   const [offset, setOffset] = useState(0);
   const [dragKey, setDragKey] = useState<string | null>(null);
   const [over, setOver] = useState<string | null>(null);
@@ -97,7 +98,7 @@ export function Week() {
           {f.members.map((m) => (
             <Fragment key={m.id}>
               <Link to={`/person/${m.id}`} className="rowlab" style={pc(m.color)}>
-                <Avatar m={m} />{m.name}
+                <Avatar m={m} status={statusOf(m)} />{m.name}
                 {m.statuses.map((s) => (
                   <span key={s.label + s.days.join()} className="rl-status" title={`${s.label}, ${daysLabel(s.days)} ${fmtTime(hhmmToMin(s.start))}–${fmtTime(hhmmToMin(s.end))}`}>
                     <span aria-hidden="true">{s.icon}</span>{daysLabel(s.days)}<span className="sr-only">: {s.label}</span>
