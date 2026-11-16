@@ -1,7 +1,7 @@
 import { Link, Navigate, useParams } from 'react-router-dom';
 import { addDays, dayDiff, dayLabel, dayWithDate, fmtShortDate, fmtTime, weekdayMon, WEEKDAYS, type ChoreForDay } from '@shared';
 import { api } from '../api.ts';
-import { namesOf, useAction, useFamily, useNow } from '../context.tsx';
+import { namesOf, useAction, useFamily, useNow, useStatusNow } from '../context.tsx';
 import { mainRange, money, occDate, personItems, type PersonItem, relDay } from '../lib.ts';
 import { useBills, useChores, useOccurrences, usePlans, usePrep, useTodos } from '../queries.ts';
 import { ChoreSheet } from '../sheets/ChoreSheet.tsx';
@@ -78,6 +78,7 @@ export function Person() {
   const { data: bills = [] } = useBills();
   const { data: todos = [] } = useTodos();
   const { data: prep = [] } = usePrep(today, addDays(today, 2), nowMin);
+  const statusOf = useStatusNow();
   const toggleTask = useToggleTask();
   const toggleTodo = useToggleTodo();
   const m = f.byId(Number(id));
@@ -116,14 +117,14 @@ export function Person() {
     <div style={pc(m.color)} className="stack">
       <div className="person-head">
         <Link to="/" className="icon-btn">← Family</Link>
-        <Avatar m={m} className="xl" />
+        <Avatar m={m} className="xl" status={statusOf(m)} />
         <div>
           <h1>{m.name}’s schedule</h1>
           <div className="note">{dayWithDate(today, today)}</div>
         </div>
         <nav className="members small" aria-label="Switch person">
           {f.members.filter((x) => x.id !== m.id).map((x) => (
-            <Link key={x.id} to={`/person/${x.id}`} className="mem-btn" style={pc(x.color)}><Avatar m={x} />{x.name}</Link>
+            <Link key={x.id} to={`/person/${x.id}`} className="mem-btn" style={pc(x.color)}><Avatar m={x} status={statusOf(x)} />{x.name}</Link>
           ))}
         </nav>
         {isKid && <Link to={`/kid/${m.id}`} className="primary" style={{ textDecoration: 'none' }}>Open kid mode</Link>}

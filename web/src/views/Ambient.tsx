@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { fmtTime } from '@shared';
-import { namesOf, useFamily, useNow } from '../context.tsx';
+import { namesOf, useFamily, useNow, useStatusNow } from '../context.tsx';
 import { useNight, WeatherNow } from '../hub.tsx';
 import { mainRange, personItems } from '../lib.ts';
 import { useHub, useOccurrences, usePhotos } from '../queries.ts';
@@ -90,6 +90,7 @@ export function Ambient({ onWake }: { onWake: () => void }) {
   const { data: hub } = useHub();
   const { data: photos = [] } = usePhotos(!!hub?.photoDir);
   const night = useNight();
+  const statusOf = useStatusNow();
   const h = now.getHours();
 
   return (
@@ -109,7 +110,7 @@ export function Ambient({ onWake }: { onWake: () => void }) {
             const next = personItems(today, occs, m.id).find((i) => i.e > nowMin && !i.occ.allDay && i.occ.category !== 'work' && i.s < 1440);
             return (
               <div key={m.id} className="amb-p">
-                <Avatar m={m} />
+                <Avatar m={m} status={statusOf(m)} />
                 <div>
                   {m.name}
                   <small>

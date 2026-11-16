@@ -65,6 +65,9 @@ describe('setup and sign-in', () => {
     expect((await patch([{ ...school, end: '08:00' }])).json().message).toBe('statuses.0.end: must be after the start time');
     expect((await patch([{ ...school, days: [] }])).json().message).toBe('statuses.0.days: pick at least one weekday');
     expect((await patch([{ ...school, start: '8:30' }])).statusCode).toBe(400);
+    expect((await patch([{ ...school, color: 'red' }])).json().message).toBe('statuses.0.color: must be a hex color like #2F7DE1');
+    expect((await patch([{ ...school, color: '#2F7DE1' }])).json().statuses[0].color).toBe('#2F7DE1');
+    expect((await patch([{ ...school, color: null }])).json().statuses[0]).not.toHaveProperty('color');
     // Other edits leave statuses alone.
     expect((await app.inject({ method: 'PATCH', url: `/api/members/${members[2].id}`, cookies: adult, payload: { name: 'Kitty' } })).json().statuses).toHaveLength(1);
   });

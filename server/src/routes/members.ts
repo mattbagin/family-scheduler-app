@@ -21,7 +21,8 @@ const statuses = (x: unknown, f: string): DailyStatus[] => {
     }
     if (!isHhmm(s.start) || !isHhmm(s.end)) throw badRequest(`${at}: times must look like 08:30`);
     if (hhmmToMin(s.end) <= hhmmToMin(s.start)) throw badRequest(`${at}.end: must be after the start time`);
-    return { ...p, days: [...new Set(days as number[])].sort((a, b) => a - b), start: s.start, end: s.end };
+    const color = s.color == null ? {} : { color: v.color(s.color, `${at}.color`) };
+    return { ...p, ...color, days: [...new Set(days as number[])].sort((a, b) => a - b), start: s.start, end: s.end };
   });
 };
 

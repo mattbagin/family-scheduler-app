@@ -535,6 +535,13 @@ body:has(.ambient) .nudges { bottom: calc(110px + env(safe-area-inset-bottom, 0p
 .swatches { display: flex; gap: 8px; flex-wrap: wrap; }
 .swatch { width: 34px; height: 34px; border-radius: 50%; border: 3px solid var(--surface); box-shadow: 0 0 0 2px var(--line); }
 .swatch[aria-pressed="true"] { box-shadow: 0 0 0 3px var(--ink); }
+.swatch.none { background: var(--surface); position: relative; overflow: hidden; }
+.swatch.none::after { content: ""; position: absolute; inset: 50% -2px auto; height: 3px; background: var(--muted); transform: rotate(-45deg); }
+.avatar .status.tint { border-color: var(--pc); }
+
+.st-colors { grid-area: colors; display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.st-colors .swatch { width: 26px; height: 26px; border-width: 2px; }
+.st-icon { grid-area: ic; } .st-icon input { width: 4.5rem; text-align: center; font-size: 1.3rem; }
 .error { background: var(--bad-bg); color: var(--bad); border-radius: 12px; padding: 10px 12px; font-weight: 600; }
 .confirm { background: var(--bad-bg); border-radius: 18px; padding: 12px; display: flex; flex-direction: column; gap: 10px; }
 
@@ -556,14 +563,13 @@ body:has(.ambient) .nudges { bottom: calc(110px + env(safe-area-inset-bottom, 0p
 @keyframes shake { 20%, 60% { transform: translateX(-8px); } 40%, 80% { transform: translateX(8px); } }
 .status-edit { border: 0; margin: 0; padding: 0; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
 .status-edit legend { padding: 0; margin-bottom: 6px; font-size: var(--fs-small); font-weight: 700; color: var(--muted); }
-.status-row { display: grid; grid-template-columns: auto minmax(0, 1fr) 8.5rem 8.5rem auto; grid-template-areas: "ic label from until x" ". days days days days"; gap: 8px 10px; align-items: end; padding: 10px 12px; background: var(--surface); border-radius: 14px; }
-.status-row .e { grid-area: ic; align-self: center; font-size: 1.6rem; }
+.status-row { display: grid; grid-template-columns: auto minmax(0, 1fr) 8.5rem 8.5rem auto; grid-template-areas: "ic label from until x" "colors colors colors colors colors" ". days days days days"; gap: 8px 10px; align-items: end; padding: 10px 12px; background: var(--surface); border-radius: 14px; }
 .st-label { grid-area: label; } .st-from { grid-area: from; } .st-until { grid-area: until; } .st-x { grid-area: x; } .st-days { grid-area: days; gap: 6px; }
 .st-days .tog.plain { padding: 4px 10px; font-size: var(--fs-small); }
 .member-editor { display: grid; grid-template-columns: auto 1fr; gap: 12px 16px; align-items: start; background: var(--surface-2); border-radius: 18px; padding: 14px; text-align: left; }
 @media (max-width: 620px) {
   .member-editor { grid-template-columns: minmax(0, 1fr); }
-  .status-row { grid-template-columns: auto repeat(2, minmax(0, 1fr)) auto; grid-template-areas: "ic label label x" "from from until until" "days days days days"; }
+  .status-row { grid-template-columns: auto repeat(2, minmax(0, 1fr)) auto; grid-template-areas: "ic label label x" "from from until until" "colors colors colors colors" "days days days days"; }
 }
 .setting-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-top: 1px solid var(--line); flex-wrap: wrap; }
 .setting-row:first-child { border-top: 0; }

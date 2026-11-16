@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  addDays, chipLabel, hhmmToMin, statusNow, computeFlags, rideHeadsUp, rideStatus, dayDiff, dayLabel, fmtDur, dayWithDate, fmtTime, minutesOf, weatherLook, type Occurrence, type Plan,
+  addDays, chipLabel, hhmmToMin, computeFlags, rideHeadsUp, rideStatus, dayDiff, dayLabel, fmtDur, dayWithDate, fmtTime, minutesOf, weatherLook, type Occurrence, type Plan,
 } from '@shared';
 import { api } from '../api.ts';
-import { namesOf, useAction, useFamily, useNow } from '../context.tsx';
+import { namesOf, useAction, useFamily, useNow, useStatusNow } from '../context.tsx';
 import { WeatherNow } from '../hub.tsx';
 import { useActiveNudges } from '../nudges.tsx';
 import { dueLabel, endAbs, leaveBy, mainRange, money, occDate, sleepsWord, startAbs, relDay } from '../lib.ts';
@@ -76,8 +76,8 @@ export function Today() {
   const bannered = (o: Occurrence) => nudges.some((n) => n.kind === 'leave_by' && n.title.endsWith(`for ${o.title}`));
   const [openAlert, setOpenAlert] = useState<string | null>(null);
   const flags = computeFlags(occs, f.members);
+  const statusOf = useStatusNow();
   // Person color first; an unassigned event from a subscribed calendar takes the calendar's color.
-  const offCalendars = calendars.filter((c) => c.daysOff).map((c) => c.id);
   const colorOf = (o: Occurrence) => f.byId(o.memberIds[0])?.color ?? calendars.find((c) => c.id === o.calendarId)?.color;
   const openOcc = (o: Occurrence) => sheets.open(<EventSheet occ={o} />);
   const openPlan = (p: Plan) => sheets.open(<PlanSheet planId={p.id} />);
@@ -210,7 +210,7 @@ export function Today() {
         <nav className="members" aria-label="Family members">
           {f.members.map((m) => {
             const n = openCount(m.id);
-            const st = statusNow(m, today, nowMin, occs, offCalendars);
+            const st = statusOf(m);
             const where = st && `${st.label} until ${fmtTime(hhmmToMin(st.end))}`;
             return (
               <Link key={m.id} to={f.session.kind === 'hub' && m.role === 'kid' ? `/kid/${m.id}` : `/person/${m.id}`} className="mem-btn" style={pc(m.color)}

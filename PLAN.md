@@ -238,6 +238,8 @@ Daily statuses (§9) already hold icon, label, weekdays and hours, and Today alr
 - **Decided by default (say if you want otherwise):** days off still hide a status; no overnight statuses; first matching status wins.
 - **Checks:** extend `scripts/check-statuses.py`: set a colour in Settings, see the ring on Today, Week and the ambient screen.
 
+**Done 2026-11-15** on `feat/status-colours` (reviewed, minor findings only; tests and typecheck pass; `scripts/check-statuses.py` checks the colour in Settings and the ring on Today, Week and the ambient screen). `useStatusNow()` returns `(member) => status`. No presets added: "At work" and "At daycare" were already there. Left as is: on Today and Person's switcher the avatar's faint background also takes the status colour (it mixes `--pc`), not only the ring and badge; Week now also loads the main range and calendars for the hook (shared cache with Today). **Next: Step 4** (draw `home` and `rink` first and show them before the other eight).
+
 ### Step 4. Places on the ambient screen (`feat/ambient-places`)
 
 - **Logic (backend-coder, shared only):** `whereNow(member, day, min, occs, offCalendarIds) → { place, label, icon? }` in `shared/src/status.ts`, with tests. `place` is one of ten keys: `home`, `office`, `school`, `daycare`, `field`, `rink`, `pool`, `clinic`, `road`, `out`. First match wins:
