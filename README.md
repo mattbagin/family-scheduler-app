@@ -58,7 +58,7 @@ Nudges show as banners with a soft chime on the family hub, even over the ambien
 
 ## The family hub screen
 
-The shared tablet shows **Today**, **Week** and **Month** (a colored dot for each person busy that day; tap a day for its list). After two minutes without a touch it switches to the **ambient screen**: a slideshow with the clock, the weather and everyone’s next thing. Any tap wakes it. Set it up in **Settings → Family hub**:
+The shared tablet shows **Today**, **Week** and **Month** (a colored dot for each person busy that day; tap a day for its list). After two minutes without a touch it switches to the **ambient screen**: a slideshow with the clock, the weather and a little town where everyone stands at their place: home, school, the rink and so on. Where someone is comes from their events (and the drive there), then their daily status, then home. A status’s emoji picks its building: 🏢 or 💼 is the office, 🏫 school, 🧸 daycare, 🏠 home, and anything else is “out” on the signpost. Any tap wakes it. Set it up in **Settings → Family hub**:
 
 - **Photos:** paste the full path of a folder on the home computer, like `C:\Users\you\Pictures\Family` on Windows or `/Users/you/Homebase Photos` on a Mac. Pictures in folders inside it count too (JPEG, PNG, WebP, GIF, AVIF). Photos are shuffled, and portrait ones are shown whole over a blurred copy. Without a folder, the slideshow uses color scenes.
 - **Night mode** (9 PM to 6:30 AM unless you change it): photos give way to a dim, warm clock, and the hub stops chiming.

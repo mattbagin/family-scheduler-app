@@ -467,7 +467,50 @@ body:has(.ambient) .nudges { bottom: calc(110px + env(safe-area-inset-bottom, 0p
 .amb-p { display: flex; align-items: center; gap: 10px; background: rgba(10, 14, 24, .45); backdrop-filter: blur(10px); border-radius: 999px; padding: 6px 18px 6px 6px; font-weight: 600; }
 .amb-p .avatar { width: 40px; height: 40px; font-size: 22px; background: rgba(255, 255, 255, .15); }
 .amb-p small { display: block; opacity: .8; font-weight: 500; }
-.amb-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; flex-wrap: wrap; }
+/* The town: one isometric board under the clock (art in places.tsx). The map keeps a 1000:540 shape and people are
+   positioned in percent of it, so they stay on their lots at any size. */
+.amb-world { position: absolute; inset: 0; container-type: size; }
+.amb-map {
+  --av: clamp(30px, 3.7cqw, 46px);
+  --tw-ink: #26304f; --tw-grass: #8fd18b; --tw-grass-dark: #6fb870; --tw-soil-l: #a8754f; --tw-soil-r: #8a5d3f;
+  --tw-road: #6c7488; --tw-line: #fff3c4; --tw-sign: #fff8e3; --tw-pad: #e9e4d6; --tw-light: #ffe58a; --tw-sand: #f2d79a;
+  --tw-wall: #fff1d6; --tw-roof: #e8604c; --tw-brick: #b9503f; --tw-door: #8a5a3c; --tw-glass: #bfe3f5; --tw-white: #fbfcff; --tw-red: #e03e52;
+  --tw-boards: #3c78d8; --tw-ice: #e3f4fb; --tw-flag: #ff7a59; --tw-pitch: #4fae5e; --tw-water: #5ac8ef;
+  --tw-p-blue: #7fa6ff; --tw-p-red: #ef7b6a; --tw-p-pink: #f4a3c8; --tw-p-green: #6bcf8b; --tw-p-aqua: #6fd3e6; --tw-p-teal: #7ed9c3; --tw-p-yellow: #ffd25e;
+  position: absolute; left: 50%; top: 50%; translate: -50% -50%; width: min(100cqw, 100cqh * 1000 / 540); aspect-ratio: 1000 / 540;
+}
+.town { display: block; width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 14px 24px rgba(0, 0, 0, .35)); }
+.town .tw-o, .town .tw-o * { stroke: var(--tw-ink); stroke-width: 3; stroke-linejoin: round; stroke-linecap: round; }
+.town .tw-mark, .town .tw-mark * { fill: none; stroke: var(--tw-flag); stroke-width: 2; vector-effect: non-scaling-stroke; opacity: .7; }
+.town .tw-white, .town .tw-white * { stroke: #fff; opacity: .95; }
+.town .tw-rope { fill: none; stroke: var(--tw-flag); stroke-width: 3; stroke-dasharray: 5 4; }
+.town .tw-shimmer { fill: none; stroke: #fff; stroke-width: 2.5; stroke-linecap: round; animation: tw-shine 3s ease-in-out infinite; }
+.tw-smoke circle { fill: #fff; opacity: 0; stroke: var(--tw-ink); stroke-width: 2; animation: tw-puff 4.5s ease-out infinite; }
+.tw-smoke circle:nth-child(2) { animation-delay: 1.5s; }
+.tw-smoke circle:nth-child(3) { animation-delay: 3s; }
+@keyframes tw-puff { 0% { opacity: 0; transform: translate(0, 4px) scale(.5); } 15% { opacity: .95; } 100% { opacity: 0; transform: translate(14px, -30px) scale(1.5); } }
+.tw-puck { animation: tw-slide 3.6s ease-in-out infinite alternate; }
+.tw-ball { animation: tw-slide 4.4s ease-in-out infinite alternate; }
+@keyframes tw-slide { from { transform: translate(0, 0); } to { transform: translate(var(--dx), var(--dy)); } }
+.tw-blink { animation: tw-blink 4s ease-in-out infinite; }
+@keyframes tw-blink { 0%, 100% { fill: var(--tw-light); } 50% { fill: var(--tw-glass); } }
+.tw-flag { transform-box: fill-box; transform-origin: 0 50%; animation: tw-wave 1.8s ease-in-out infinite alternate; }
+@keyframes tw-wave { from { transform: scaleX(1) skewY(0deg); } to { transform: scaleX(.72) skewY(8deg); } }
+.tw-balloon { animation: tw-bob 3s ease-in-out infinite alternate; }
+@keyframes tw-bob { from { transform: translateY(0); } to { transform: translateY(-7px); } }
+@keyframes tw-shine { 0%, 100% { opacity: .15; } 50% { opacity: .9; } }
+.tw-pulse { transform-box: fill-box; transform-origin: center; animation: tw-pulse 2.6s ease-in-out infinite; }
+@keyframes tw-pulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.12); opacity: .75; } }
+.tw-car { offset-rotate: 0deg; animation: tw-drive 22s linear infinite; }
+@keyframes tw-drive { from { offset-distance: 0%; } to { offset-distance: 100%; } }
+/* A place's people stand in a tight row, feet on the anchor point, each with a small tag under them. */
+.amb-place { position: absolute; display: flex; gap: .2cqw; transform: translate(-50%, calc(-1 * var(--av))); align-items: flex-start; }
+.amb-who { display: flex; flex-direction: column; align-items: center; text-align: center; max-width: max(6.8cqw, 92px); }
+.amb-who .avatar { width: var(--av); height: var(--av); font-size: calc(var(--av) * .56); border-width: 4px; background: color-mix(in srgb, var(--pc) 22%, #fff); box-shadow: 0 6px 0 -2px rgba(0, 0, 0, .22), 0 8px 12px rgba(0, 0, 0, .25); }
+.amb-tag { display: flex; flex-direction: column; margin-top: 5px; padding: 2px 6px 3px; border-radius: 10px; background: rgba(10, 14, 24, .78); }
+.amb-tag b { font-family: var(--display); font-weight: 600; font-size: clamp(.9rem, 1.15cqw, 1.1rem); line-height: 1.15; overflow-wrap: anywhere; }
+.amb-tag small { font-size: clamp(.78rem, .95cqw, .9rem); font-weight: 500; opacity: .92; line-height: 1.15; overflow: hidden; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
+.amb-top { position: relative; z-index: 1; display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; flex-wrap: wrap; }
 .photo { position: absolute; inset: 0; animation: fadein 2.4s ease both; }
 .photo img { position: absolute; inset: 0; width: 100%; height: 100%; }
 /* A blurred copy fills the edges, so portrait and landscape photos both fit without cropping heads. */
@@ -481,7 +524,7 @@ body:has(.ambient) .nudges { bottom: calc(110px + env(safe-area-inset-bottom, 0p
 .ambient.night .amb-clock { text-shadow: none; }
 .ambient.night .amb-p { background: rgba(255, 255, 255, .04); backdrop-filter: none; }
 .ambient.night .amb-p .avatar, .ambient.night .wx-ic, .ambient.night .amb-p small { filter: grayscale(.8) brightness(.8); }
-@media (prefers-reduced-motion: reduce) { .scene, .ph-fg { animation: none; } .photo { animation-duration: .01s; } }
+@media (prefers-reduced-motion: reduce) { .scene, .ph-fg, .tw-smoke circle, .tw-puck, .tw-ball, .tw-blink, .tw-flag, .tw-balloon, .tw-pulse, .tw-car, .town .tw-shimmer { animation: none; } .tw-smoke circle { opacity: 0; } .photo { animation-duration: .01s; } }
 
 /* ---------- weather ---------- */
 .weather { display: flex; align-items: center; gap: 10px; }
