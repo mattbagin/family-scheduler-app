@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
-import { fmtTime } from '@shared';
-import { namesOf, useFamily, useNow, useStatusNow } from '../context.tsx';
+import type { PlaceKey } from '@shared';
+import { useFamily, useNow, useStatusNow, useWhereNow } from '../context.tsx';
 import { useNight, WeatherNow } from '../hub.tsx';
-import { mainRange, personItems } from '../lib.ts';
-import { useHub, useOccurrences, usePhotos } from '../queries.ts';
+import { ANCHORS, Town } from '../places.tsx';
+import { useHub, usePhotos } from '../queries.ts';
 import { Avatar } from '../ui.tsx';
 
 /** Color scenes for when there's no photo folder yet. */
@@ -79,19 +79,30 @@ function Scenes() {
 }
 
 /**
- * The hub's idle screen: the family's photos (or color scenes) with the clock, the weather and
- * everyone's next thing. At night it turns into a dim bedside clock. Tap to wake.
+ * The hub's idle screen: the family's photos (or color scenes) with the clock, the weather and a
+ * little town showing where everyone is right now. At night it turns into a dim bedside clock. Tap to wake.
  */
 export function Ambient({ onWake }: { onWake: () => void }) {
   const f = useFamily();
-  const { now, today, nowMin } = useNow();
-  const range = mainRange(today);
-  const { data: occs = [] } = useOccurrences(range.from, range.to);
+  const { now } = useNow();
   const { data: hub } = useHub();
   const { data: photos = [] } = usePhotos(!!hub?.photoDir);
   const night = useNight();
   const statusOf = useStatusNow();
+  const whereOf = useWhereNow();
   const h = now.getHours();
+
+  // Only the places with someone in them, in the order the family is listed. People in one place stand together.
+  const places: { place: PlaceKey; icons: (string | undefined)[]; people: { m: (typeof f.members)[number]; label: string }[] }[] = [];
+  for (const m of f.members) {
+    const w = whereOf(m);
+    const g = places.find((p) => p.place === w.place) ?? (places.push({ place: w.place, icons: [], people: [] }), places[places.length - 1]);
+    g.icons.push(w.icon);
+    g.people.push({ m, label: w.label });
+  }
+  // The signpost shows the one emoji everyone "out" shares, or a plain pin when they're out at different things.
+  const outIcons = new Set(places.find((g) => g.place === 'out')?.icons);
+  const outIcon = outIcons.size > 1 ? '📍' : [...outIcons][0];
 
   return (
     <button className={`ambient ${night ? 'night' : ''}`} onClick={onWake} aria-label="Wake the screen">
@@ -105,22 +116,32 @@ export function Ambient({ onWake }: { onWake: () => void }) {
           </div>
           <WeatherNow className="amb-weather" />
         </div>
-        <div className="amb-people">
-          {f.members.map((m) => {
-            const next = personItems(today, occs, m.id).find((i) => i.e > nowMin && !i.occ.allDay && i.occ.category !== 'work' && i.s < 1440);
-            return (
+        {night ? (
+          <div className="amb-people">
+            {f.members.map((m) => (
               <div key={m.id} className="amb-p">
                 <Avatar m={m} status={statusOf(m)} />
-                <div>
-                  {m.name}
-                  <small>
-                    {next ? `${next.drive ? `🚗 Drive ${namesOf(f, next.occ.memberIds)}` : `${next.occ.icon} ${next.occ.title}`} · ${fmtTime(next.s)}` : night ? 'Sleep well' : 'All done today'}
-                  </small>
-                </div>
+                <div>{m.name}<small>Sleep well</small></div>
               </div>
-            );
-          })}
-        </div>
+            ))}
+          </div>
+        ) : (
+          <div className="amb-world">
+            <div className="amb-map">
+              <Town outIcon={outIcon} />
+              {places.map((g) => (
+                <div key={g.place} className="amb-place" data-place={g.place} style={{ left: `${ANCHORS[g.place].x}%`, top: `${ANCHORS[g.place].y}%`, zIndex: Math.round(ANCHORS[g.place].y) }}>
+                  {g.people.map(({ m, label }) => (
+                    <div key={m.id} className="amb-who" data-member={m.id}>
+                      <Avatar m={m} status={statusOf(m)} />
+                      <span className="amb-tag"><b>{m.name}</b><small>{label}</small></span>
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </button>
   );

@@ -1,6 +1,6 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { statusNow, ymd, type Member, type SessionInfo, type Ymd } from '@shared';
+import { statusNow, whereNow, ymd, type Member, type SessionInfo, type Ymd } from '@shared';
 import { ApiError, errorText } from './api.ts';
 import { mainRange } from './lib.ts';
 import { useCalendars, useOccurrences } from './queries.ts';
@@ -53,14 +53,26 @@ export function useNow() {
   return { now, today, nowMin };
 }
 
-/** Where someone is right now: `(member) => status or undefined`, hiding statuses on days off. */
-export function useStatusNow() {
+/** The days-off calendar ids and the main range's occurrences, shared by the "where now" hooks. */
+function useNowData() {
   const { today, nowMin } = useNow();
   const range = mainRange(today);
   const { data: occs = [] } = useOccurrences(range.from, range.to);
   const { data: calendars = [] } = useCalendars();
   const off = calendars.filter((c) => c.daysOff).map((c) => c.id);
+  return { today, nowMin, occs, off };
+}
+
+/** Someone's daily status right now: `(member) => status or undefined`, hiding statuses on days off. */
+export function useStatusNow() {
+  const { today, nowMin, occs, off } = useNowData();
   return (m: Member) => statusNow(m, today, nowMin, occs, off);
+}
+
+/** Which place someone is in right now: `(member) => { place, label, icon? }`. */
+export function useWhereNow() {
+  const { today, nowMin, occs, off } = useNowData();
+  return (m: Member) => whereNow(m, today, nowMin, occs, off);
 }
 
 /**
