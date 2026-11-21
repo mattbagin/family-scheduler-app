@@ -99,6 +99,10 @@ export function planNudges(inp: PlanInput): NudgePlan[] {
 
   // Morning briefing: today's plan, what to bring, bills and to-dos due.
   {
+    // Open for 4 hours after it's due, but never past midnight.
+    const [mh, mm] = inp.morningAt.split(':').map(Number);
+    const end = Math.min(23 * 60 + 59, mh * 60 + mm + 240);
+    const morningUntil = `${String(Math.floor(end / 60)).padStart(2, '0')}:${String(end % 60).padStart(2, '0')}`;
     const events = agenda(today);
     const bring = packing(today);
     const bills = inp.bills.filter((b) => !b.paidAt && !b.autopay && b.due <= today).map((b) => `${b.name} ${money(b.amountCents)}`);
@@ -113,7 +117,7 @@ export function planNudges(inp: PlanInput): NudgePlan[] {
       out.push({
         key: `morning:${today}`, kind: 'morning', urgent: false, url: '/',
         title: `☀️ Today: ${events.length ? `${events.length} thing${events.length === 1 ? '' : 's'} on` : 'a quiet day'}`,
-        body: parts.join('\n'), audience: adults, at: at(inp.morningAt), until: at('11:00'),
+        body: parts.join('\n'), audience: adults, at: at(inp.morningAt), until: at(morningUntil),
       });
     }
   }
@@ -131,7 +135,7 @@ export function planNudges(inp: PlanInput): NudgePlan[] {
             : `🧹 Still to do tonight: ${list(jobs)}`,
         body: [jobs.length ? `Still to do: ${list(jobs)}` : null, pack.length ? `Pack: ${list(pack)}` : null, events.length ? list(events) : null]
           .filter(Boolean).join('\n'),
-        audience: adults, at: at(inp.eveningAt), until: at('23:00'),
+        audience: adults, at: at(inp.eveningAt), until: at('23:59'),
       });
     }
   }

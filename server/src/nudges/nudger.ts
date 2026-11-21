@@ -24,7 +24,7 @@ export interface NudgeRow {
 }
 
 export const toNudge = (r: NudgeRow): Nudge => ({
-  id: r.id, kind: r.kind, title: r.title, body: r.body, url: r.url, audience: r.audience ? r.audience.split(',').map(Number) : [],
+  id: r.id, key: r.key, kind: r.kind, title: r.title, body: r.body, url: r.url, audience: r.audience ? r.audience.split(',').map(Number) : [],
   createdAt: r.created_at, expiresAt: r.expires_at, ackedAt: r.acked_at, ackedBy: r.acked_by,
 });
 
@@ -107,7 +107,10 @@ export function createNudger(db: Db, live: Announcer): Nudger {
       const prefs = memberPrefs(db, m);
       // Held back (not dropped): if quiet hours end while it's still due, it goes out then.
       if (!prefs[PREF_OF[kind]] || inQuietHours(prefs, nowMin)) continue;
-      await pushToMember(db, vapid, m, payload, { ttl, urgent, topic: `n${row.id}` });
+      const subs = get<{ n: number }>(db, 'SELECT COUNT(*) AS n FROM push_subscriptions WHERE member_id = ?', m)!.n;
+      const delivered = await pushToMember(db, vapid, m, payload, { ttl, urgent, topic: `n${row.id}` });
+      // Every push failed: leave it pending so the next tick tries again (until the nudge expires).
+      if (subs > 0 && delivered === 0) continue;
       run(db, 'INSERT OR IGNORE INTO nudge_sends (nudge_id, member_id, sent_at) VALUES (?, ?, ?)', row.id, m, now.toISOString());
       sent = true;
     }

@@ -203,6 +203,7 @@ export interface NudgeSettings {
 /** A nudge that fired: shown as a banner on the hub and pushed to parents' phones. */
 export interface Nudge {
   id: number;
+  key: string;
   kind: NudgeKind;
   title: string;
   body: string;

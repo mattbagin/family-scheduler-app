@@ -76,7 +76,7 @@ export function NudgeBanners({ ambient = false, night = false }: { ambient?: boo
 
   const look = night ? ' night' : ambient ? ' over-photo' : '';
   // A leave-by banner's ride, so it can keep time (and be ordered by when that ride has to go).
-  const rideOf = (n: Nudge) => (n.kind === 'leave_by' ? occs.find((o) => o.driverId && occDate(o) === today && n.title.endsWith(`for ${o.title}`)) : undefined);
+  const rideOf = (n: Nudge) => (n.kind === 'leave_by' ? occs.find((o) => n.key === `leave:${o.id}:${o.originalDate}`) : undefined);
   const leaveAt = (n: Nudge) => { const o = rideOf(n); return o ? leaveBy(o) : Infinity; };
   // On a parent's own phone their own nudges lead; then time-to-leave, the earliest (most overdue)
   // first; everything else newest first.

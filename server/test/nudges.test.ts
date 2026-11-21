@@ -4,7 +4,7 @@ import type { AddressInfo } from 'node:net';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { addDays, parseLocal, ymd, type Nudge } from '../../shared/src/index.ts';
 import { buildApp } from '../src/app.ts';
-import { openDb } from '../src/db.ts';
+import { all, openDb, run, type Db } from '../src/db.ts';
 import { sessionFrom, setupFamily, type App } from './helpers.ts';
 
 /*
@@ -16,6 +16,8 @@ let server: Server;
 let base: string;
 const phones = new Map<string, Phone>();
 const gonePaths = new Set<string>();
+const failPaths = new Set<string>();
+let db: Db;
 
 const hmac = (k: Buffer, d: Buffer) => createHmac('sha256', k).update(d).digest();
 function decrypt(phone: Phone, msg: Buffer) {
@@ -51,12 +53,14 @@ const at = (hhmm: string, day = DAY) => parseLocal(`${day}T${hhmm}`);
 beforeEach(async () => {
   phones.clear();
   gonePaths.clear();
+  failPaths.clear();
   server = createServer((req, res) => {
     const chunks: Buffer[] = [];
     req.on('data', (c: Buffer) => chunks.push(c));
     req.on('end', () => {
       const phone = phones.get(req.url ?? '');
       if (!phone || gonePaths.has(phone.path)) return res.writeHead(410).end();
+      if (phone && failPaths.has(phone.path)) return res.writeHead(500).end();
       expect(req.headers['content-encoding']).toBe('aes128gcm');
       expect(req.headers.authorization).toMatch(/^vapid t=.+, k=.+$/);
       phone.inbox.push(decrypt(phone, Buffer.concat(chunks)));
@@ -65,7 +69,7 @@ beforeEach(async () => {
   });
   await new Promise<void>((r) => server.listen(0, '127.0.0.1', r));
   base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
-  app = await buildApp({ db: openDb(':memory:') });
+  app = await buildApp({ db: (db = openDb(':memory:')) });
 });
 
 afterEach(async () => {
@@ -102,6 +106,7 @@ describe('nudges', () => {
     expect(await app.nudger.tick(at('16:04'))).toEqual([]);
     const [n] = await app.nudger.tick(at('16:05'));
     expect(n).toMatchObject({ kind: 'leave_by', title: '🚗 Time to leave for Soccer practice', audience: [alex.id] });
+    expect(n.key).toMatch(/^leave:\d+:/);
     expect(alexPhone.inbox).toEqual([expect.objectContaining({ id: n.id, title: n.title, body: 'Alex is driving Kit · starts 4:30 PM' })]);
     expect(robinPhone.inbox).toEqual([]);
 
@@ -212,5 +217,63 @@ describe('nudges', () => {
     const res = (await app.inject({ method: 'POST', url: '/api/push/test', cookies: adult })).json();
     expect(res).toEqual({ devices: 1, delivered: 1 });
     expect(alexPhone.inbox[0].title).toBe('👋 Notifications are on');
+  });
+
+  it('sends a briefing set after 11:00, and one set late in the evening', async () => {
+    const { adult, kit, alexPhone } = await family();
+    await app.inject({ method: 'PATCH', url: '/api/nudge-settings', cookies: adult, payload: { morningAt: '12:00' } });
+    await app.inject({ method: 'POST', url: '/api/events', cookies: adult, payload: { title: 'Dentist', start: `${DAY}T15:00`, end: `${DAY}T16:00`, memberIds: [kit.id] } });
+    expect((await app.nudger.tick(at('12:05'))).map((x) => x.kind)).toContain('morning');
+    expect(alexPhone.inbox).toHaveLength(1);
+    // The evening digest stays open until 23:59 (this one is set for 23:00).
+    await app.inject({ method: 'PATCH', url: '/api/nudge-settings', cookies: adult, payload: { eveningAt: '23:00' } });
+    await app.inject({ method: 'POST', url: '/api/chores', cookies: adult, payload: { text: 'Garbage out' } });
+    expect((await app.nudger.tick(at('23:05'))).map((x) => x.kind)).toContain('evening');
+  });
+
+  it('forgets a phone with a bad key without losing nudges for the other parent', async () => {
+    const { adult, alex, kit, robinPhone } = await family();
+    run(db, 'DELETE FROM push_subscriptions WHERE member_id = ?', alex.id);
+    run(db, "INSERT INTO push_subscriptions (member_id, endpoint, p256dh, auth, created_at) VALUES (?, ?, 'AAAA', 'AAAA', ?)", alex.id, `${base}/push/bad`, new Date().toISOString());
+    await app.inject({ method: 'POST', url: '/api/events', cookies: adult, payload: { title: 'Dentist', start: `${DAY}T13:00`, end: `${DAY}T14:00`, memberIds: [kit.id] } });
+    await app.nudger.tick(at('07:00'));
+    expect(robinPhone.inbox).toHaveLength(1);
+    expect(run(db, 'DELETE FROM push_subscriptions WHERE member_id = ?', alex.id).changes).toBe(0);
+  });
+
+  it('keeps a nudge pending while every push fails, then sends it once', async () => {
+    const { adult, alex, kit, alexPhone } = await family();
+    await app.inject({
+      method: 'POST', url: '/api/events', cookies: adult,
+      payload: { title: 'Swim', start: `${DAY}T17:00`, end: `${DAY}T18:00`, memberIds: [kit.id], driverId: alex.id, travelMin: 20 },
+    });
+    failPaths.add(alexPhone.path);
+    await app.nudger.tick(at('16:30'));
+    expect(alexPhone.inbox).toEqual([]);
+    expect(all(db, 'SELECT * FROM nudge_sends')).toEqual([]);
+    failPaths.clear();
+    await app.nudger.tick(at('16:31'));
+    await app.nudger.tick(at('16:32'));
+    expect(alexPhone.inbox).toHaveLength(1);
+  });
+
+  it('refuses reminders longer than a day', async () => {
+    const { adult, kit } = await family();
+    const res = await app.inject({
+      method: 'POST', url: '/api/events', cookies: adult,
+      payload: { title: 'Trip', start: `${DAY}T09:00`, end: `${DAY}T10:00`, memberIds: [kit.id], reminders: [10080] },
+    });
+    expect(res.statusCode).toBe(400);
+  });
+
+  it('ignores an expired hub unlock when recording who answered', async () => {
+    const { adult, alex, robin, kit } = await family();
+    await app.inject({ method: 'POST', url: '/api/events', cookies: adult, payload: { title: 'Dentist', start: `${DAY}T13:00`, end: `${DAY}T14:00`, memberIds: [kit.id] } });
+    const briefing = (await app.nudger.tick(at('07:00'))).find((x) => x.kind === 'morning')!;
+    const hub = sessionFrom(await app.inject({ method: 'POST', url: '/api/login', payload: { memberId: alex.id, pin: '2468', asHub: true } }));
+    await app.inject({ method: 'POST', url: '/api/unlock', cookies: hub, payload: { memberId: robin.id, pin: '1357' } });
+    run(db, 'UPDATE sessions SET elevated_until = ?', Date.now() - 1000);
+    const ack = await app.inject({ method: 'POST', url: `/api/nudges/${briefing.id}/ack`, cookies: hub });
+    expect(ack.json<Nudge>()).toMatchObject({ ackedBy: null });
   });
 });

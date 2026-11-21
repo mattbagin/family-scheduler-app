@@ -93,7 +93,6 @@ export interface PushOptions {
 
 /** Sends one message. `gone` means the subscription no longer exists and should be forgotten. */
 export async function sendPush(target: PushTarget, payload: object, vapid: Vapid, opts: PushOptions): Promise<{ ok: boolean; gone: boolean; status: number }> {
-  const body = encryptPayload(Buffer.from(JSON.stringify(payload)), unb64u(target.p256dh), unb64u(target.auth));
   const headers: Record<string, string> = {
     TTL: String(opts.ttl),
     Urgency: opts.urgency,
@@ -104,6 +103,12 @@ export async function sendPush(target: PushTarget, payload: object, vapid: Vapid
   // Topics are limited to 32 URL-safe characters.
   if (opts.topic) headers.Topic = opts.topic.replace(/[^A-Za-z0-9_-]/g, '').slice(0, 32);
   try {
+    let body: Buffer;
+    try {
+      body = encryptPayload(Buffer.from(JSON.stringify(payload)), unb64u(target.p256dh), unb64u(target.auth));
+    } catch {
+      return { ok: false, gone: true, status: 0 }; // a bad key never works, so forget the subscription
+    }
     const res = await fetch(target.endpoint, { method: 'POST', headers, body, signal: AbortSignal.timeout(15_000) });
     await res.body?.cancel();
     return { ok: res.ok, gone: res.status === 404 || res.status === 410, status: res.status };
