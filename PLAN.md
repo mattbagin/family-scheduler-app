@@ -308,3 +308,5 @@ Chosen 2026-11-20 from the list above. Researched and confirmed in the code the 
 **Owners:** backend-coder (live.ts, app.ts, a test for `hello.build` and the ping) and frontend-coder (queries.ts, App.tsx, styles.css) in parallel, since the contract is fixed and the files don't overlap.
 
 **Checks:** `npm test`, `npm run typecheck`; browser-checker: idle on `/week` goes ambient after 2 minutes; restarting the server after a rebuild reloads an ambient hub; night content's position changes over time.
+
+**Done 2026-11-20** on `fix/hub-uptime` (128 tests, typecheck clean; `scripts/check-hub-uptime.py` passes: idle on `/week` and `/kid`, not with a sheet open, hello build and ping, reload after a rebuild and restart, night drift, no console errors). As planned; `buildApp` takes `pingMs` for tests, and the `online` event also forces a reconnect. Not checked in a browser: the phone reload when its tab is hidden, and the 50 s silence reconnect (needs a real network drop; try unplugging the router once with the hub on). §12 is complete.

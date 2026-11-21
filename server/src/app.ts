@@ -1,4 +1,5 @@
-import { existsSync } from 'node:fs';
+import { existsSync, statSync } from 'node:fs';
+import { join } from 'node:path';
 import cookie from '@fastify/cookie';
 import fastifyStatic from '@fastify/static';
 import websocket from '@fastify/websocket';
@@ -35,6 +36,8 @@ export interface AppOptions {
   weatherApi?: WeatherApi;
   /** Database backups; omitted means none (tests), `nightly` adds the nightly timer. */
   backup?: BackupOptions;
+  /** Milliseconds between websocket pings (tests shorten it). */
+  pingMs?: number;
 }
 
 declare module 'fastify' {
@@ -43,12 +46,20 @@ declare module 'fastify' {
   }
 }
 
-export async function buildApp({ db, webDist, logger = false, pollFeeds = false, runNudges = false, weatherApi = OPEN_METEO, backup }: AppOptions) {
+export async function buildApp({ db, webDist, logger = false, pollFeeds = false, runNudges = false, weatherApi = OPEN_METEO, backup, pingMs = 20_000 }: AppOptions) {
   const app = Fastify({ logger: logger ? { level: 'info' } : false, bodyLimit: 256 * 1024 });
   await app.register(cookie);
   await app.register(websocket);
 
-  const live = new LiveHub();
+  let build = 'dev';
+  try {
+    if (webDist) build = String(statSync(join(webDist, 'index.html')).mtimeMs);
+  } catch {
+    // no built web app: stay 'dev'
+  }
+  const live = new LiveHub(build);
+  const heartbeat = setInterval(() => live.ping(), pingMs);
+  app.addHook('onClose', async () => clearInterval(heartbeat));
   const ctx: Ctx = { db, changed: (...topics: LiveTopic[]) => live.broadcast(topics) };
 
   app.decorateRequest('auth', null);

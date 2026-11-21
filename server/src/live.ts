@@ -12,10 +12,21 @@ const OPEN = 1;
 export class LiveHub {
   private sockets = new Set<Socket>();
 
+  /** `build` identifies the served web build, so a screen can reload when it changes. */
+  private build: string;
+  constructor(build = 'dev') {
+    this.build = build;
+  }
+
   add(socket: Socket) {
     this.sockets.add(socket);
     socket.on('close', () => this.sockets.delete(socket));
-    socket.send(JSON.stringify({ type: 'hello' }));
+    socket.send(JSON.stringify({ type: 'hello', build: this.build }));
+  }
+
+  /** Heartbeat: lets a screen notice a dead connection. */
+  ping() {
+    this.send({ type: 'ping' });
   }
 
   broadcast(topics: LiveTopic[]) {
