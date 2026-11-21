@@ -29,8 +29,8 @@ const eventSchema = {
   fun: v.bool,
   memberIds: v.ids,
   reminders: ((x, f) => {
-    if (!Array.isArray(x) || x.length > 4 || !x.every((n) => Number.isInteger(n) && n >= 0 && n <= 7 * 1440)) {
-      throw badRequest(`${f}: must list up to 4 reminders, in minutes before the start (0 to 10080)`);
+    if (!Array.isArray(x) || x.length > 4 || !x.every((n) => Number.isInteger(n) && n >= 0 && n <= 1440)) {
+      throw badRequest(`${f}: must list up to 4 reminders, in minutes before the start (0 to 1440, which is a day). Pick a shorter time.`);
     }
     return [...new Set(x as number[])].sort((a, b) => a - b);
   }) as (x: unknown, f: string) => number[],

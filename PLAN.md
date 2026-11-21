@@ -272,3 +272,39 @@ Daily statuses (§9) already hold icon, label, weekdays and hours, and Today alr
 - **Nudges:** briefing times after 11:00 or 23:00 never send (`plan.ts:116,134`); a send is recorded even when no push got through (`nudger.ts:110`); a bad push key fails the whole tick (`webpush.ts:96`); reminders over 3 days ahead fire early; leave-by nudges are matched to rides by title (`web/src/nudges.tsx:79`); hub acks use an expired unlock's name.
 - **Smaller:** renaming a plan renames a feed event (`routes/plans.ts:65`); a new plan's sheet flashes "This plan was removed." (`PlanSheet.tsx:111`); fonts load from Google's CDN (`web/index.html:15`); one timer per `useNow` caller; double refetch after each action; focus lost after `ConfirmButton`; a few emoji without `aria-hidden`; duplicate `id="set-family"`.
 - **Tests and CI:** no web tests (cheapest first: `web/src/lib.ts`); CI runs only Node 24 in UTC (add 22.18, `TZ=America/Toronto`, a boot check).
+
+## 12. Next: nudge bugs, then a hub that stays on for weeks
+
+Chosen 2026-11-20 from the list above. Researched and confirmed in the code the same day. Two branches, each from main; the second is cut after the first is merged.
+
+### Step 1. Nudge bugs (`fix/nudges`, one commit per line below)
+
+| # | Where | Problem | Fix |
+|---|---|---|---|
+| a | `server/src/nudges/plan.ts:116,134` | The morning window ends at a fixed 11:00 and the evening one at 23:00, so a briefing set at 11:30 or 23:00 or later never sends. | Morning: `until` = `morningAt` + 4 h, capped at 23:59. Evening: until 23:59. Test: morning at 12:00 sends at 12:05. |
+| b | `server/src/nudges/webpush.ts:96` | `encryptPayload` runs outside the `try`, so one subscription with a bad key throws out of `tick()`; every later nudge in that tick is skipped, every 30 s. | Move it inside the `try` and return `gone: true` (the key can never work, so the row is deleted). Test: a bad-key phone for one parent, a good one for the other; the tick doesn't throw and the good phone gets its nudge. |
+| c | `server/src/nudges/nudger.ts:110` | A send is recorded even when no push got through, so the person is never retried and escalation starts from a send that didn't happen. | Record the send only if at least one push was delivered or the person has no subscriptions; otherwise leave it pending for the next tick (bounded by the nudge's `until`). Test: the fake push service gets a `failPaths` set (500); no `nudge_sends` row, then it arrives once the failure is cleared. |
+| d | `server/src/routes/events.ts:33` | Reminders accept up to 7 days, but the nudger looks only 3 days ahead (`nudger.ts:156`), so a long reminder fires late. The UI offers at most 1 day. | Cap reminders at 1440 minutes, matching the UI; the error says so. Test: `reminders: [10080]` → 400. |
+| e | `server/src/auth.ts:73` | `elevatedBy` is returned after the 10-minute unlock has expired, so a kid's tap on the hub today is acked as “Robin’s got it” from yesterday's unlock. | Return `elevatedBy` only while `elevated_until` is in the future. Test: expire the unlock in the db; the ack has `ackedBy: null`. |
+| f | `web/src/nudges.tsx:79` | Leave-by banners are matched to rides by title, so two same-titled events on one day show the wrong leave time. | Add `key: string` to `Nudge` (`shared/src/types.ts`) and `toNudge` (`nudger.ts:26`); match `n.key === \`leave:${o.id}:${o.originalDate}\``. Test: assert the key in the first `nudges.test.ts` test. |
+
+**Owners:** backend-coder does a to f's server and shared parts (plan.ts, webpush.ts, nudger.ts, events.ts, auth.ts, types.ts, server/test); then frontend-coder does f's one web line in `web/src/nudges.tsx`. No migration, no new topic.
+
+**Checks:** `npm test`, `npm run typecheck`. No browser check: f is one comparison, covered by typecheck and the key test.
+
+**Done 2026-11-20** on `fix/nudges` (126 tests, typecheck clean). As planned, plus: when every push to someone fails, nothing escalates either until one gets through; a leave-by banner now matches only its own ride's key (the old today/driver filter went with the title match). **Next: Step 2**, on a fresh branch from main once this is merged.
+
+### Step 2. A hub that stays on for weeks (`fix/hub-uptime`, after Step 1 is merged)
+
+**Contract:** the websocket `hello` becomes `{ type: 'hello', build: string }`; the server also sends `{ type: 'ping' }` every 20 s. The build id is the mtime of `<webDist>/index.html`, read once at startup, or `'dev'` when there is no `webDist` (so `npm run dev` never reloads).
+
+| # | Problem | Fix | Files |
+|---|---|---|---|
+| a | A hub never reloads after a deploy. | The client keeps the first `hello`'s build; a later `hello` with another build marks the page stale. A stale page calls `location.reload()` when it goes ambient (or is in night mode) with no sheet open, or, on a phone, when the tab is hidden. | server: `live.ts`, `app.ts`; web: `queries.ts`, `App.tsx` |
+| b | A half-open socket (Wi-Fi drop, router reboot) never closes, so the hub stops updating with no “Reconnecting” banner. | Server ping every 20 s (interval cleared on close). Client: any message sets `lastSeen`; after 50 s of silence, drop the socket and reconnect. Also reconnect on `online`. | server: `live.ts`; web: `queries.ts` |
+| c | Idle goes ambient only on `/` (`App.tsx:90`). | Drop the path check; keep the input and open-sheet guards. Kid mode goes ambient too. | web: `App.tsx` |
+| d | The night clock never moves (burn-in). | A slow CSS drift of `.ambient.night .amb-content` (a few vw/vh over about 10 minutes); stepped, not smooth, under reduced motion, but still moving. | web: `styles.css` |
+
+**Owners:** backend-coder (live.ts, app.ts, a test for `hello.build` and the ping) and frontend-coder (queries.ts, App.tsx, styles.css) in parallel, since the contract is fixed and the files don't overlap.
+
+**Checks:** `npm test`, `npm run typecheck`; browser-checker: idle on `/week` goes ambient after 2 minutes; restarting the server after a rebuild reloads an ambient hub; night content's position changes over time.

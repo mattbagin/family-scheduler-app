@@ -70,7 +70,7 @@ export function loadAuth(db: Db, token: string): Auth | null {
   if (!s) return null;
   const row = s.member_id ? get<MemberRow>(db, 'SELECT * FROM members WHERE id = ?', s.member_id) : undefined;
   if (s.kind === 'member' && !row) return null;
-  return { token, kind: s.kind, member: row ? toMember(row) : null, elevatedUntil: s.elevated_until, elevatedBy: s.elevated_by };
+  return { token, kind: s.kind, member: row ? toMember(row) : null, elevatedUntil: s.elevated_until, elevatedBy: (s.elevated_until ?? 0) > Date.now() ? s.elevated_by : null };
 }
 
 export function canEdit(a: Auth | null): boolean {
