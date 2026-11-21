@@ -6,7 +6,7 @@ import { api, errorText, onSignedOut, onUnlockNeeded } from './api.ts';
 import { FamilyProvider, useAction, useFamily } from './context.tsx';
 import { useBoardDay, useNight } from './hub.tsx';
 import { NudgeBanners } from './nudges.tsx';
-import { useBootstrap, useLiveSync } from './queries.ts';
+import { isStale, useBootstrap, useLiveSync } from './queries.ts';
 import { UnlockSheet } from './sheets/PinPad.tsx';
 import { QuickAdd } from './sheets/QuickAdd.tsx';
 import { Avatar, setHushed, setMuted, SheetProvider, useMuted, useSheets } from './ui.tsx';
@@ -87,7 +87,7 @@ function Shell() {
 
   // The hub goes ambient when nobody has touched it for a while.
   useEffect(() => {
-    if (f.session.kind !== 'hub' || location.pathname !== '/') return;
+    if (f.session.kind !== 'hub') return;
     let last = Date.now();
     const bump = () => { last = Date.now(); };
     const events = ['pointerdown', 'keydown', 'wheel', 'touchstart'] as const;
@@ -99,7 +99,20 @@ function Shell() {
       clearInterval(t);
       events.forEach((e) => removeEventListener(e, bump));
     };
-  }, [f.session.kind, location.pathname]);
+  }, [f.session.kind]);
+
+  // After a deploy, pick up the new build when nobody is looking: hub when ambient or at night, phones when the tab is hidden.
+  useEffect(() => {
+    const reload = () => window.location.reload();
+    if (!isHub) {
+      const onHide = () => { if (document.hidden && isStale()) reload(); };
+      document.addEventListener('visibilitychange', onHide);
+      return () => document.removeEventListener('visibilitychange', onHide);
+    }
+    if (!ambient && !night) return;
+    const t = setInterval(() => { if (isStale() && !document.querySelector('.scrim')) reload(); }, 5000);
+    return () => clearInterval(t);
+  }, [isHub, ambient, night]);
 
   const isKidScreen = location.pathname.startsWith('/kid');
   // In the evening the hub's Today becomes the Tomorrow board, until night mode ends.

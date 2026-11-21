@@ -520,7 +520,13 @@ body:has(.ambient) .nudges { bottom: calc(110px + env(safe-area-inset-bottom, 0p
 /* Night: no photos, just a dim, warm bedside clock. */
 .ambient.night { background: #000; color: var(--bedside); }
 .ambient.night .amb-shade { display: none; }
-.ambient.night .amb-content { opacity: .55; }
+.ambient.night .amb-content { opacity: .55; animation: amb-drift 600s linear infinite alternate; }
+/* Burn-in guard: the whole night layout creeps a little over about ten minutes. */
+@keyframes amb-drift { 0% { transform: translate(-1.5vw, -1vh); } 50% { transform: translate(1.5vw, .5vh); } 100% { transform: translate(-.5vw, 1.5vh); } }
+@media (prefers-reduced-motion: reduce) {
+  /* Still moves, but in a few jumps instead of a glide. */
+  .ambient.night .amb-content { animation: amb-drift 600s steps(10, end) infinite alternate !important; }
+}
 .ambient.night .amb-clock { text-shadow: none; }
 .ambient.night .amb-p { background: rgba(255, 255, 255, .04); backdrop-filter: none; }
 .ambient.night .amb-p .avatar, .ambient.night .wx-ic, .ambient.night .amb-p small { filter: grayscale(.8) brightness(.8); }

@@ -61,6 +61,11 @@ const TOPIC_KEYS: Record<LiveTopic, string[][]> = {
   hub: [['hub'], ['weather'], ['photos']],
 };
 
+// The server build this page loaded under; a different one later means a deploy happened.
+let firstBuild: string | null = null;
+let stale = false;
+export const isStale = () => stale;
+
 /**
  * Keeps this screen in sync with every other device: the server pushes which topics changed
  * and we refetch those. Reconnects with backoff; returns whether we're connected.
@@ -74,15 +79,22 @@ export function useLiveSync(enabled: boolean): boolean {
     let retry = 0;
     let timer: ReturnType<typeof setTimeout> | undefined;
     let stopped = false;
+    let lastSeen = Date.now();
     const connect = () => {
       ws = new WebSocket(`${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/api/live`);
+      lastSeen = Date.now();
       ws.onopen = () => {
         if (retry > 0) qc.invalidateQueries(); // catch up on anything missed while offline
         retry = 0;
         setConnected(true);
       };
       ws.onmessage = (e) => {
-        const msg = JSON.parse(e.data as string) as { type: string; topics?: LiveTopic[] };
+        lastSeen = Date.now();
+        const msg = JSON.parse(e.data as string) as { type: string; build?: string; topics?: LiveTopic[] };
+        if (msg.type === 'hello' && typeof msg.build === 'string' && msg.build !== 'dev') {
+          if (firstBuild === null) firstBuild = msg.build;
+          else if (msg.build !== firstBuild) stale = true;
+        }
         // A nudge just fired somewhere: the banner component decides whether to chime.
         if (msg.type === 'nudge') dispatchEvent(new CustomEvent('hb-nudge', { detail: msg }));
         if (msg.type !== 'changed') return;
@@ -96,9 +108,23 @@ export function useLiveSync(enabled: boolean): boolean {
       };
     };
     connect();
+    // A half-open socket (Wi-Fi drop, router reboot) never closes: after 50 s of silence, start over.
+    const reset = () => {
+      if (stopped || !ws) return;
+      ws.onopen = ws.onmessage = ws.onclose = null;
+      ws.close();
+      setConnected(false);
+      clearTimeout(timer);
+      retry++;
+      connect();
+    };
+    const watch = setInterval(() => { if (Date.now() - lastSeen > 50_000) reset(); }, 10_000);
+    addEventListener('online', reset);
     return () => {
       stopped = true;
       clearTimeout(timer);
+      clearInterval(watch);
+      removeEventListener('online', reset);
       ws?.close();
     };
   }, [enabled, qc]);
