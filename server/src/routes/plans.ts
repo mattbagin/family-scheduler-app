@@ -4,7 +4,7 @@ import { requireAuth, requireCanComplete, requireEditor } from '../auth.ts';
 import type { Ctx } from '../context.ts';
 import { all, get, run, tx, type Db } from '../db.ts';
 import { badRequest, HttpError, idParam, parseBody, parsePatch, v } from '../http.ts';
-import { getEvent, getPlan, getTask, listPlans } from '../repo.ts';
+import { feedOf, getEvent, getPlan, getTask, listPlans } from '../repo.ts';
 import { eventDefaults, insertEvent } from './events.ts';
 
 export function createPlan(db: Db, eventId: number, title: string, icon: string, notes: string | null = null): number {
@@ -62,7 +62,8 @@ export function planRoutes(app: FastifyInstance, { db, changed }: Ctx) {
     tx(db, () => {
       run(db, 'UPDATE plans SET title = ?, icon = ?, notes = ? WHERE id = ?', p.title ?? plan.title, p.icon ?? plan.icon,
         p.notes === undefined ? plan.notes : p.notes, plan.id);
-      if (p.title) run(db, 'UPDATE events SET title = ? WHERE id = ?', p.title, plan.eventId);
+      // A feed event's title belongs to the feed.
+      if (p.title && !feedOf(db, getEvent(db, plan.eventId))) run(db, 'UPDATE events SET title = ? WHERE id = ?', p.title, plan.eventId);
     });
     changed('plans', 'events');
     return getPlan(db, plan.id);
