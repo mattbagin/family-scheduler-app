@@ -1,3 +1,5 @@
+@font-face { font-family: "Fredoka"; font-style: normal; font-weight: 300 700; font-display: swap; src: url(/fonts/fredoka.woff2) format("woff2"); }
+@font-face { font-family: "Figtree"; font-style: normal; font-weight: 300 900; font-display: swap; src: url(/fonts/figtree.woff2) format("woff2"); }
 :root {
   --bg: #EEF1F7; --surface: #FFFFFF; --surface-2: #F5F7FB; --ink: #18203A; --muted: #5B6583; --line: #DCE1EC;
   --focus: #2569C9;
