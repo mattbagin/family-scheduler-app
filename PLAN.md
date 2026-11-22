@@ -310,3 +310,23 @@ Chosen 2026-11-20 from the list above. Researched and confirmed in the code the 
 **Checks:** `npm test`, `npm run typecheck`; browser-checker: idle on `/week` goes ambient after 2 minutes; restarting the server after a rebuild reloads an ambient hub; night content's position changes over time.
 
 **Done 2026-11-20** on `fix/hub-uptime` (128 tests, typecheck clean; `scripts/check-hub-uptime.py` passes: idle on `/week` and `/kid`, not with a sheet open, hello build and ping, reload after a rebuild and restart, night drift, no console errors). As planned; `buildApp` takes `pingMs` for tests, and the `online` event also forces a reconnect. Not checked in a browser: the phone reload when its tab is hidden, and the 50 s silence reconnect (needs a real network drop; try unplugging the router once with the hub on). §12 is complete.
+
+## 13. Next: smaller review fixes (`chore/review-polish`, one commit per line below)
+
+Chosen 2026-11-21 from the **Smaller** list in §11 “Later, from the review”; each item confirmed in the current code the same day. No API change, no migration, no new topic.
+
+| # | Where | Problem | Fix | Owner |
+|---|---|---|---|---|
+| a | `server/src/routes/plans.ts:65` | Renaming a plan also writes the title of its event, even a feed (ICS) event, whose title belongs to the feed. | Skip the event title update when `feedOf(db, event)` (repo.ts) is set. Normal events still get renamed with their plan. Test: plan on a feed event, rename it, the event title is unchanged. | backend-coder |
+| b | `web/src/sheets/PlanSheet.tsx:117` | A new plan's sheet opens before `['plans']` has refetched, so it flashes “This plan was removed.” | Show the loading state while `usePlans()` is fetching and the plan isn't found yet. | frontend-coder |
+| c | `web/index.html:15-17` | Fredoka and Figtree load from Google's CDN, so they're missing when the internet is down. | **Decided: font files in the repo, no package.** Latin variable woff2 for both fonts in `web/public/fonts/`, `@font-face` blocks at the top of `styles.css` (weight ranges covering 400–900 as used), `font-display: swap`; remove the three `<link>` tags. Note the font licence (OFL) in a `web/public/fonts/README` or similar one-liner. | frontend-coder |
+| d | `web/src/context.tsx:45-54` | Each of ~25 `useNow` callers runs its own 20 s interval. | One module-level clock: a listener set and one interval started by the first subscriber, read with `useSyncExternalStore`. Same return shape. | frontend-coder |
+| e | `web/src/ui.tsx:156-170` | `ConfirmButton` swaps elements, so focus drops to `body` on “Remove” and on “Keep it”. | Focus the confirm button when asking starts; focus the trigger again after “Keep it”. | frontend-coder |
+| f | `web/src/sheets/PlanSheet.tsx:52`, `web/src/views/Person.tsx:191` | Decorative emoji next to text without `aria-hidden`. | Wrap in `<span aria-hidden="true">`. | frontend-coder |
+| g | `web/src/views/Settings.tsx:70` | `id="set-family"` is on the section (jump-nav target, `:67`) and again on the family-name input. | Remove the input's id (its `<label>` wraps it). | frontend-coder |
+
+**Not doing (decided 2026-11-21):** the double refetch after each action. It's wasted work only, and removing the local invalidate risks screens that stop updating.
+
+**Checks:** `npm test`, `npm run typecheck`; browser-checker: a new plan's sheet never shows “removed”; the page makes no request to fonts.googleapis.com / fonts.gstatic.com and `document.fonts` reports Fredoka and Figtree loaded; Tab focus lands on the confirm button after “Remove” and back on “Remove” after “Keep it”; clocks still tick (Today's time advances); only one `id="set-family"` in Settings.
+
+**Done 2026-11-21** on `chore/review-polish` (reviewed, minor findings only; 129 tests, typecheck clean; `scripts/check-review-polish.py` passes at phone and desktop: new plan from an event and from quick add never shows “removed”, a removed plan closes the sheet, Today and ambient clocks advance and agree, no console errors, no Google font requests). As planned. Fonts: `web/public/fonts/fredoka.woff2` (30 KB, weights 300–700, the same range Google served before) and `figtree.woff2` (20 KB, 300–900), latin subset. Not checked: a plan removed from another screen while its sheet is open. The rest of §11's “Later” list (security, tests and CI) is still open and needs the owner to choose.

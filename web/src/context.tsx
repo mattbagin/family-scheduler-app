@@ -1,5 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query';
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useMemo, useSyncExternalStore, type ReactNode } from 'react';
 import { statusNow, whereNow, ymd, type Member, type SessionInfo, type Ymd } from '@shared';
 import { ApiError, errorText } from './api.ts';
 import { mainRange } from './lib.ts';
@@ -41,13 +41,26 @@ export function useFamily(): Family {
 export const namesOf = (f: Family, ids: number[]) =>
   ids.length > 1 && ids.length === f.members.length ? 'everyone' : ids.map((id) => f.byId(id)?.name).filter(Boolean).join(' & ');
 
+// One shared clock: a single interval runs while anything is subscribed.
+let clock = new Date();
+const clockListeners = new Set<() => void>();
+let clockTimer: ReturnType<typeof setInterval> | undefined;
+function subscribeClock(fn: () => void) {
+  if (!clockListeners.size) {
+    clock = new Date();
+    clockTimer = setInterval(() => { clock = new Date(); clockListeners.forEach((l) => l()); }, 20_000);
+  }
+  clockListeners.add(fn);
+  return () => {
+    clockListeners.delete(fn);
+    if (!clockListeners.size) clearInterval(clockTimer);
+  };
+}
+const clockNow = () => clock;
+
 /** The current time, refreshed every 20 seconds; `today` rolls over at midnight. */
 export function useNow() {
-  const [now, setNow] = useState(() => new Date());
-  useEffect(() => {
-    const t = setInterval(() => setNow(new Date()), 20_000);
-    return () => clearInterval(t);
-  }, []);
+  const now = useSyncExternalStore(subscribeClock, clockNow);
   const today: Ymd = ymd(now);
   const nowMin = now.getHours() * 60 + now.getMinutes() + now.getSeconds() / 60;
   return { now, today, nowMin };

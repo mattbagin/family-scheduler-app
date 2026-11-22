@@ -67,6 +67,22 @@ describe('calendar subscriptions', () => {
     expect(bad.json().message).toMatch(/calendar file/);
   });
 
+  it('renaming a plan leaves a feed event’s title alone but renames a normal event', async () => {
+    const { adult } = await setupFamily(app);
+    await app.inject({ method: 'POST', url: '/api/calendars', cookies: adult, payload: { url: feedUrl, name: 'Soccer club', color: '#1F9C62' } });
+    const trip = (await app.inject({ url: `/api/occurrences?from=${today}&to=${day(20)}`, cookies: adult })).json<Occurrence[]>()
+      .find((o) => o.title === 'Tournament trip')!;
+    const own = (await app.inject({ method: 'POST', url: '/api/plans', cookies: adult, payload: { title: 'Picnic', start: `${day(2)}T12:00` } })).json();
+    const plan = (await app.inject({ method: 'POST', url: '/api/plans', cookies: adult, payload: { eventId: trip.id } })).json();
+    const rename = (id: number) => app.inject({ method: 'PATCH', url: `/api/plans/${id}`, cookies: adult, payload: { title: 'Renamed' } });
+    const eventTitle = async (id: number) => (await app.inject({ url: `/api/events/${id}`, cookies: adult })).json<EventRecord>().title;
+
+    expect((await rename(plan.id)).json().title).toBe('Renamed');
+    expect(await eventTitle(trip.id)).toBe('Tournament trip');
+    await rename(own.id);
+    expect(await eventTitle(own.eventId)).toBe('Renamed');
+  });
+
   it('subscribes, keeps family changes through re-syncs, and follows upstream edits', async () => {
     const { adult, members } = await setupFamily(app);
     const [alex, robin, kit] = members;

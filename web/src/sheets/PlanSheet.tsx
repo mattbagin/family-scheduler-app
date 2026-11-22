@@ -49,7 +49,7 @@ export function TaskRow({ task, plan, showPlan }: { task: PlanTask; plan: Plan; 
       <span className="e" aria-hidden="true">{task.icon}</span>
       <span className="task-main">
         <b>{task.text}</b>
-        <span className={`note ${late ? 'late' : ''}`}>{showPlan ? `${plan.icon} ${plan.title} · ` : ''}{when}</span>
+        <span className={`note ${late ? 'late' : ''}`}>{showPlan ? <><span aria-hidden="true">{plan.icon}</span> {plan.title} · </> : ''}{when}</span>
       </span>
       {who ? <Face m={who} /> : !showPlan && <span className="pill muted">Anyone</span>}
     </>
@@ -107,14 +107,14 @@ export function PlanSheet({ planId }: { planId: number }) {
   const act = useAction();
   const sheets = useSheets();
   const { today } = useNow();
-  const { data: plans } = usePlans();
+  const { data: plans, isFetching } = usePlans();
   const plan = plans?.find((p) => p.id === planId);
   const eventDay = plan?.start.slice(0, 10) ?? today;
   const [text, setText] = useState('');
   const [who, setWho] = useState('');
   const [due, setDue] = useState(() => (dayDiff(today, eventDay) > 0 ? addDays(eventDay, -1) : today));
 
-  if (!plan) return <Sheet title="Plan">{plans ? <p>This plan was removed.</p> : <p className="note">Loading…</p>}</Sheet>;
+  if (!plan) return <Sheet title="Plan">{plans && !isFetching ? <p>This plan was removed.</p> : <p className="note">Loading…</p>}</Sheet>;
 
   const done = plan.tasks.filter((t) => t.doneAt).length;
   const perPerson = f.members

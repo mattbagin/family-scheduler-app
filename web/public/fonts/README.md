@@ -1,0 +1,1 @@
+Fredoka (variable, weights 300-700) and Figtree (variable, weights 300-900): Latin subset woff2 files from Google Fonts, self-hosted so the app works offline. Both are licensed under the SIL Open Font License 1.1 (https://openfontlicense.org).
