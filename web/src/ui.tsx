@@ -157,12 +157,20 @@ export function ConfirmButton({ label, confirmText, onConfirm, className = 'icon
   label: string; confirmText: string; onConfirm: () => void; className?: string;
 }) {
   const [asking, setAsking] = useState(false);
-  if (!asking) return <button className={className} onClick={() => setAsking(true)}>{label}</button>;
+  const trigger = useRef<HTMLButtonElement>(null);
+  const confirm = useRef<HTMLButtonElement>(null);
+  const asked = useRef(false); // skip the first render, so only a real "Keep it" moves focus back
+  useEffect(() => {
+    if (asking) confirm.current?.focus();
+    else if (asked.current) trigger.current?.focus();
+    asked.current = asking || asked.current;
+  }, [asking]);
+  if (!asking) return <button ref={trigger} className={className} onClick={() => setAsking(true)}>{label}</button>;
   return (
     <div className="confirm">
       <span>{confirmText}</span>
       <div className="row">
-        <button className="primary" onClick={onConfirm}>Yes, {label.toLowerCase()}</button>
+        <button ref={confirm} className="primary" onClick={onConfirm}>Yes, {label.toLowerCase()}</button>
         <button className="icon-btn" onClick={() => setAsking(false)}>Keep it</button>
       </div>
     </div>
