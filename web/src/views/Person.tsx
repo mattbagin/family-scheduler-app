@@ -188,7 +188,7 @@ export function Person() {
                 ))}
                 {tasks.map(({ t, p }) => (
                   <button key={t.id} className={`tile ${t.doneAt ? 'is-done' : ''}`} aria-pressed={!!t.doneAt} onClick={(e) => toggleTask(t, p, e.currentTarget)}>
-                    <span className="e" aria-hidden="true">{t.icon}</span>{t.text}<span className="note">{p.icon} {dayLabel(today, t.due)}</span>
+                    <span className="e" aria-hidden="true">{t.icon}</span>{t.text}<span className="note"><span aria-hidden="true">{p.icon}</span> {dayLabel(today, t.due)}</span>
                   </button>
                 ))}
               </div>

@@ -49,7 +49,7 @@ export function TaskRow({ task, plan, showPlan }: { task: PlanTask; plan: Plan; 
       <span className="e" aria-hidden="true">{task.icon}</span>
       <span className="task-main">
         <b>{task.text}</b>
-        <span className={`note ${late ? 'late' : ''}`}>{showPlan ? `${plan.icon} ${plan.title} · ` : ''}{when}</span>
+        <span className={`note ${late ? 'late' : ''}`}>{showPlan ? <><span aria-hidden="true">{plan.icon}</span> {plan.title} · </> : ''}{when}</span>
       </span>
       {who ? <Face m={who} /> : !showPlan && <span className="pill muted">Anyone</span>}
     </>
