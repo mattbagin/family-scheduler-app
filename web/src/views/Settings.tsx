@@ -67,7 +67,7 @@ function FamilySection() {
     <section className="panel" id="set-family">
       <h2>Family</h2>
       <form className="row" onSubmit={(e) => { e.preventDefault(); act(() => api('/settings', { method: 'PATCH', body: { familyName: name.trim() } }), 'Family name saved'); }}>
-        <label className="field" style={{ flex: 1 }}>Family name<input id="set-family" value={name} onChange={(e) => setName(e.target.value)} maxLength={60} required /></label>
+        <label className="field" style={{ flex: 1 }}>Family name<input value={name} onChange={(e) => setName(e.target.value)} maxLength={60} required /></label>
         <button className="icon-btn" style={{ alignSelf: 'end' }} disabled={name.trim() === f.familyName || !name.trim()}>Save</button>
       </form>
       <div>
